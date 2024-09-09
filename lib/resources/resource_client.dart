@@ -1,7 +1,7 @@
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
-import 'package:crud_o/resources/resource.dart';
+import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/resource_factory.dart';
 
 class ResourceClient<T> extends RestClient {
@@ -22,6 +22,12 @@ class ResourceClient<T> extends RestClient {
     restResponse.data = (decodedBody["data"] as List).map((e) => resourceFactory.createFromJson(e)).toList();
 
     return restResponse;
+  }
+
+
+  Future<T> getById(String endpoint, String id) async {
+    var decodedBody = await get("$endpoint/$id");
+    return resourceFactory.createFromJson(decodedBody["data"]);
   }
 
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:crud_o/core/models/traced_error.dart';
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
-import 'package:crud_o/resources/resource.dart';
+import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'crudo_table_event.dart';
 import 'crudo_table_state.dart';

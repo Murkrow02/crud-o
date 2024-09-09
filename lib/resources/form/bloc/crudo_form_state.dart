@@ -1,3 +1,4 @@
+import 'package:crud_o/core/models/traced_error.dart';
 import 'package:equatable/equatable.dart';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 
@@ -5,6 +6,8 @@ abstract class CrudoFormState extends Equatable {
   @override
   List<Object?> get props => [];
 }
+
+class FormInitialState extends CrudoFormState {}
 
 class FormLoadingState extends CrudoFormState {}
 
@@ -18,7 +21,7 @@ class FormReadyState<T extends Object> extends CrudoFormState {
 }
 
 class FormErrorState extends CrudoFormState {
-  final Object error;
+  final TracedError error;
 
   FormErrorState({required this.error});
 

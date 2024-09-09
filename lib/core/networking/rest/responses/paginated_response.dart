@@ -1,5 +1,5 @@
 
-import 'package:crud_o/resources/resource.dart';
+import 'package:crud_o/resources/crudo_resource.dart';
 
 class PaginatedResourceResponse<T> {
 

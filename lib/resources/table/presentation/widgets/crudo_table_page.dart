@@ -6,13 +6,13 @@ import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_column_menu.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_footer.dart';
-import 'package:crud_o/resources/resource.dart';
+import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 
-class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel> extends StatelessWidget {
-
+class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
+    extends StatelessWidget {
   late PlutoGridStateManager tableManager;
 
   CrudoTablePage({super.key});
@@ -20,7 +20,7 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel> extends St
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CrudoTableBloc>(
-        create: (context) => CrudoTableBloc<TResource,TModel>(
+        create: (context) => CrudoTableBloc<TResource, TModel>(
             resource: context.read<TResource>()),
         child: Builder(builder: (context) {
           return Scaffold(
@@ -60,10 +60,25 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel> extends St
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
+      actions: context.read<TResource>().canCreate
+          ? [
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            context.read<TResource>().formPage!),
+                  );
+                },
+              )
+            ]
+          : [],
       title: BlocBuilder<CrudoTableBloc, CrudoTableState>(
         builder: (context, state) {
           return AnimatedSearchBar(
-            label: 'Articoli',
+            label: context.read<TResource>().pluralName(),
             labelStyle: const TextStyle(
               color: Colors.black,
               fontSize: 20,
@@ -100,13 +115,13 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel> extends St
       BuildContext context, PaginatedResourceResponse<TModel> response) {
     tableManager.removeAllRows();
     for (var item in response.data) {
-      
       // Create data row from the item
       var dataRow = PlutoRow(cells: context.read<TResource>().toCells(item));
 
       // Create actions cell
       if (context.read<TResource>().tableActions().isNotEmpty) {
-        dataRow.cells['actions'] = PlutoCell(value: context.read<TResource>().getId(item));
+        dataRow.cells['actions'] =
+            PlutoCell(value: context.read<TResource>().getId(item));
       }
 
       tableManager.refRows.add(dataRow);
@@ -127,7 +142,7 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel> extends St
       Toaster.error(state.error.toString());
     }
   }
-  
+
   // Build actions cell
   PlutoColumn _buildActionsColumn() {
     return PlutoColumn(
@@ -146,10 +161,11 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel> extends St
       renderer: (columnContext) => PopupMenuButton(
         padding: const EdgeInsets.only(right: 10),
         icon: const Icon(Icons.more_vert),
-        itemBuilder: (context) => context.read<TResource>().tableActions().map((action) {
+        itemBuilder: (context) =>
+            context.read<TResource>().tableActions().map((action) {
           return PopupMenuItem(
             onTap: () {
-              action.execute(context, data:  {'id': columnContext.cell.value});
+              action.execute(context, data: {'id': columnContext.cell.value});
             },
             child: ListTile(
               leading: Icon(action.icon, color: action.color),
@@ -157,8 +173,7 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel> extends St
             ),
           );
         }).toList(),
-        ),
+      ),
     );
   }
-
 }

@@ -98,6 +98,11 @@ class RestClient {
           "Internal server error, please try again later", response.statusCode);
     }
 
+    // Check if response is empty
+    if (response.body.isEmpty) {
+      return null;
+    }
+
     // Decode response body
     dynamic decodedBody = json.decode(response.body);
 

@@ -7,11 +7,16 @@ abstract class CrudoFormEvent extends Equatable {
 
 class LoadFormModelEvent<T> extends CrudoFormEvent {
 
-  final int id;
+  final String id;
   LoadFormModelEvent({required this.id});
 
   @override
   List<Object?> get props => [id];
+}
+
+class InitFormModelEvent extends CrudoFormEvent {
+  @override
+  List<Object?> get props => [];
 }
 
 

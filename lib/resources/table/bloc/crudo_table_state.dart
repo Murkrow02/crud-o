@@ -1,7 +1,7 @@
 import 'package:crud_o/core/models/traced_error.dart';
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
-import 'package:crud_o/resources/resource.dart';
+import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class CrudoTableState extends Equatable {
