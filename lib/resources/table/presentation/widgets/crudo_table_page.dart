@@ -42,8 +42,20 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       columns.add(_buildActionsColumn());
     }
     return PlutoGrid(
-      configuration: const PlutoGridConfiguration(
-        columnSize: PlutoGridColumnSizeConfig(
+      configuration:  PlutoGridConfiguration(
+        style:PlutoGridStyleConfig(
+          columnTextStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 14,
+          ),
+          gridBackgroundColor: Theme.of(context).colorScheme.surface,
+          cellTextStyle: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontSize: 14,
+          ),
+          rowColor: Theme.of(context).colorScheme.surface,
+        ),
+        columnSize: const PlutoGridColumnSizeConfig(
           autoSizeMode: PlutoAutoSizeMode.none,
           resizeMode: PlutoResizeMode.none,
         ),
@@ -175,28 +187,32 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       enableFilterMenuItem: false,
       type: PlutoColumnType.text(),
       renderer: (columnContext) =>
-          PopupMenuButton(
-            padding: const EdgeInsets.only(right: 10),
-            icon: const Icon(Icons.more_vert),
-            itemBuilder: (context) =>
-                context.read<TResource>().tableActions().map((action) {
-                  return PopupMenuItem(
-                    onTap: () async {
-                      action.execute(
-                          context, data: {'id': columnContext.cell.value})
-                          .then((needToRefresh) {
-                        if (needToRefresh == true) {
-                          context.read<CrudoTableBloc>().add(LoadTableEvent());
-                        }
-                      });
-                    },
-                    child: ListTile(
-                      leading: Icon(action.icon, color: action.color),
-                      title: Text(
-                          action.label, style: TextStyle(color: action.color)),
-                    ),
-                  );
-                }).toList(),
+          Builder(
+            builder: (context) {
+              return PopupMenuButton(
+                padding: const EdgeInsets.only(right: 10),
+                icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.onSurface),
+                itemBuilder: (context) =>
+                    context.read<TResource>().tableActions().map((action) {
+                      return PopupMenuItem(
+                        onTap: () async {
+                          action.execute(
+                              context, data: {'id': columnContext.cell.value})
+                              .then((needToRefresh) {
+                            if (needToRefresh == true) {
+                              context.read<CrudoTableBloc>().add(LoadTableEvent());
+                            }
+                          });
+                        },
+                        child: ListTile(
+                          leading: Icon(action.icon, color: action.color),
+                          title: Text(
+                              action.label, style: TextStyle(color: action.color)),
+                        ),
+                      );
+                    }).toList(),
+              );
+            }
           ),
     );
   }
