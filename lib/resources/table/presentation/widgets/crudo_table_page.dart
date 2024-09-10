@@ -20,8 +20,9 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CrudoTableBloc>(
-        create: (context) => CrudoTableBloc<TResource, TModel>(
-            resource: context.read<TResource>()),
+        create: (context) =>
+            CrudoTableBloc<TResource, TModel>(
+                resource: context.read<TResource>()),
         child: Builder(builder: (context) {
           return Scaffold(
             appBar: _buildAppBar(context),
@@ -34,7 +35,10 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
   // The actual table widget
   Widget _buildTable(BuildContext context) {
     var columns = context.read<TResource>().getColumns();
-    if (context.read<TResource>().tableActions().isNotEmpty) {
+    if (context
+        .read<TResource>()
+        .tableActions()
+        .isNotEmpty) {
       columns.add(_buildActionsColumn());
     }
     return PlutoGrid(
@@ -60,20 +64,24 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      actions: context.read<TResource>().canCreate
+      actions: context
+          .read<TResource>()
+          .canCreate
           ? [
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            context.read<TResource>().formPage!),
-                  );
-                },
-              )
-            ]
+        IconButton(
+          icon: const Icon(Icons.add),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                  context
+                      .read<TResource>()
+                      .formPage!),
+            );
+          },
+        )
+      ]
           : [],
       title: BlocBuilder<CrudoTableBloc, CrudoTableState>(
         builder: (context, state) {
@@ -111,15 +119,22 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
   }
 
   /// Called when got new data from the bloc
-  void onDataLoaded(
-      BuildContext context, PaginatedResourceResponse<TModel> response) {
+  void onDataLoaded(BuildContext context,
+      PaginatedResourceResponse<TModel> response) {
     tableManager.removeAllRows();
     for (var item in response.data) {
       // Create data row from the item
-      var dataRow = PlutoRow(cells: context.read<TResource>().toCells(item));
+      var dataRow = PlutoRow(cells: context
+          .read<TResource>()
+          .repository
+          .serializer
+          .serializeToCells(item));
 
       // Create actions cell
-      if (context.read<TResource>().tableActions().isNotEmpty) {
+      if (context
+          .read<TResource>()
+          .tableActions()
+          .isNotEmpty) {
         dataRow.cells['actions'] =
             PlutoCell(value: context.read<TResource>().getId(item));
       }
@@ -140,6 +155,7 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
     }
     if (state is TableErrorState) {
       Toaster.error(state.error.toString());
+      throw state.error;
     }
   }
 
@@ -158,22 +174,30 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       enableContextMenu: false,
       enableFilterMenuItem: false,
       type: PlutoColumnType.text(),
-      renderer: (columnContext) => PopupMenuButton(
-        padding: const EdgeInsets.only(right: 10),
-        icon: const Icon(Icons.more_vert),
-        itemBuilder: (context) =>
-            context.read<TResource>().tableActions().map((action) {
-          return PopupMenuItem(
-            onTap: () {
-              action.execute(context, data: {'id': columnContext.cell.value});
-            },
-            child: ListTile(
-              leading: Icon(action.icon, color: action.color),
-              title: Text(action.label, style: TextStyle(color: action.color)),
-            ),
-          );
-        }).toList(),
-      ),
+      renderer: (columnContext) =>
+          PopupMenuButton(
+            padding: const EdgeInsets.only(right: 10),
+            icon: const Icon(Icons.more_vert),
+            itemBuilder: (context) =>
+                context.read<TResource>().tableActions().map((action) {
+                  return PopupMenuItem(
+                    onTap: () async {
+                      action.execute(
+                          context, data: {'id': columnContext.cell.value})
+                          .then((needToRefresh) {
+                        if (needToRefresh == true) {
+                          context.read<CrudoTableBloc>().add(LoadTableEvent());
+                        }
+                      });
+                    },
+                    child: ListTile(
+                      leading: Icon(action.icon, color: action.color),
+                      title: Text(
+                          action.label, style: TextStyle(color: action.color)),
+                    ),
+                  );
+                }).toList(),
+          ),
     );
   }
 }

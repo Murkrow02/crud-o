@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
-class CrudoAction{
-  Function(BuildContext context, Map<String, dynamic>? data)? action;
+class CrudoAction {
+  Function(BuildContext context, Map<String, dynamic>? data) action;
   final String label;
   IconData? icon;
   Color? color;
 
-  CrudoAction({required this.label, this.icon, this.color, this.action});
+  CrudoAction(
+      {required this.label, this.icon, this.color, required this.action});
 
-  void execute(BuildContext context, {Map<String, dynamic>? data}){
-    if(action != null){
-      action!(context, data);
-    }
+  Future<dynamic> execute(BuildContext context, {Map<String, dynamic>? data}) async {
+    return await action(context, data);
   }
 }

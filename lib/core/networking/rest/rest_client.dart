@@ -47,8 +47,9 @@ class RestClient {
   }
 
   // Function to perform a PUT request
-  Future<dynamic> put(String endpoint, dynamic data, {RestRequest? request}) async {
+  Future<dynamic> put(String endpoint, Map<String, dynamic> data, {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
+    validateJson(data);
     logger.d("PUT: $uri");
     final response = await http
         .put(
@@ -61,9 +62,9 @@ class RestClient {
   }
 
   // Function to perform a POST request
-  Future<dynamic> post(String endpoint, dynamic data, {RestRequest? request}) async {
+  Future<dynamic> post(String endpoint, Map<String, dynamic> data, {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
-    logger.d("POST: $uri");
+    validateJson(data);
     final response = await http
         .post(
         uri,
@@ -134,6 +135,25 @@ class RestClient {
     }
 
     return decodedBody;
+  }
+
+
+  void validateJson(Map<String, dynamic> json) {
+    // Check the dynamic values to be int, string or bool
+    json.forEach((key, value) {
+      if (value is! int && value is! String && value is! bool) {
+
+        // Check if is datetime, try to parse it
+        if (value is DateTime) {
+          json[key] = value.toIso8601String();
+          return;
+        }
+
+
+        throw Exception(
+            "Invalid json, value of key $key is not int, string or bool");
+      }
+    });
   }
 
 

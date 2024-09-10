@@ -9,15 +9,18 @@ abstract class CrudoFormState extends Equatable {
 
 class FormInitialState extends CrudoFormState {}
 
+// Form is in a saved state for a fraction, only to indicate the UI that data has changed
+// While in this state form should still show a loading spinner
+class FormSavedState extends CrudoFormState {}
 class FormLoadingState extends CrudoFormState {}
 
-class FormReadyState<T extends Object> extends CrudoFormState {
-  final T model;
+class FormReadyState extends CrudoFormState {
+  final Map<String, dynamic> formData;
 
-  FormReadyState({required this.model});
+  FormReadyState({required this.formData});
 
   @override
-  List<Object> get props => [model];
+  List<Object> get props => [formData];
 }
 
 class FormErrorState extends CrudoFormState {
@@ -29,13 +32,12 @@ class FormErrorState extends CrudoFormState {
   List<Object> get props => [error];
 }
 
-class FormValidationErrorState<T extends Object> extends CrudoFormState {
+class FormValidationErrorState extends CrudoFormState {
   final ApiValidationException validationException;
-  final T model;
+  final Map<String, dynamic> formData;
 
-  FormValidationErrorState({required this.validationException, required this.model});
+  FormValidationErrorState({required this.validationException, required this.formData});
 
   @override
-  List<Object?> get props => [validationException, model];
+  List<Object> get props => [validationException, formData];
 }
-

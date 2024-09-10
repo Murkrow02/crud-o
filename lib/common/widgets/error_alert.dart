@@ -20,20 +20,22 @@ class ErrorAlert extends StatelessWidget {
 
     // Display error
     var displayMessage = kDebugMode ? error.error.toString() : 'Si é verificato un errore';
-    return Expanded(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(displayMessage, style:  TextStyle(color: Theme.of(context).colorScheme.error)),
-              Visibility(
-                visible: kDebugMode,
-                child: Text(error.stackTrace.toString(), style: TextStyle(color: Theme.of(context).colorScheme.error)),
-              )
-            ],
-          )
+    return SingleChildScrollView(
+      child: Expanded(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(18.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(displayMessage, style:  TextStyle(color: Theme.of(context).colorScheme.error)),
+                Visibility(
+                  visible: kDebugMode,
+                  child: Text(error.stackTrace.toString(), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                )
+              ],
+            )
+          ),
         ),
       ),
     );
