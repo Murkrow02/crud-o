@@ -1,15 +1,16 @@
 import 'package:crud_o/auth/bloc/crudo_auth_wrapper_bloc.dart';
 import 'package:crud_o/auth/bloc/crudo_auth_wrapper_event.dart';
 import 'package:crud_o/auth/bloc/crudo_auth_wrapper_state.dart';
+import 'package:crud_o/resources/resource_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
+
 
 /*
 * CrudoAuthWrapper is a widget that wraps the entire application and checks if the user is logged in or not.
  */
 class CrudoAuthWrapper extends StatelessWidget {
-
-
   /// Widget to render if the user is logged in
   final Widget loggedIn;
 
@@ -25,7 +26,6 @@ class CrudoAuthWrapper extends StatelessWidget {
 
   /// Called just before showing the logout widget
   final Function onLogout;
-
 
   const CrudoAuthWrapper(
       {super.key,
@@ -47,7 +47,6 @@ class CrudoAuthWrapper extends StatelessWidget {
             onLogout();
             return loggedOut;
           } else {
-
             // Check if the user is logged in and dispatch the appropriate event
             authCheck().then((loggedIn) {
               if (loggedIn) {
@@ -63,23 +62,5 @@ class CrudoAuthWrapper extends StatelessWidget {
         },
       ),
     );
-
-    // return FutureBuilder<bool>(
-    //   future: loggedInWhen(),
-    //   builder: (context, snapshot) {
-    //     if (snapshot.connectionState == ConnectionState.done) {
-    //       if (snapshot.hasError) {
-    //         throw snapshot.error!;
-    //       }
-    //       if (snapshot.data == true) {
-    //         return loggedIn;
-    //       } else {
-    //         return loggedOut;
-    //       }
-    //     } else {
-    //       return checkingAuth ?? const Scaffold(body: Center());
-    //     }
-    //   },
-    // );
   }
 }

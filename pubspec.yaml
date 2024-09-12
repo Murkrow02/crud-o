@@ -17,6 +17,7 @@ dependencies:
   http: ^1.2.2
   logger: ^2.4.0
   pluto_grid_plus: ^8.4.2
+  provider: ^6.1.2
   shared_preferences: ^2.3.2
   toastification: ^2.2.0
 
