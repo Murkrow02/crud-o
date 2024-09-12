@@ -64,7 +64,7 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
 
           return Scaffold(
             appBar: AppBar(
-              title: Text(context.read<TResource>().singularName()),
+              title: Text(context.read<TResource>().singularName(),style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.save),

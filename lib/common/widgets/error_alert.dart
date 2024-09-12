@@ -14,10 +14,6 @@ class ErrorAlert extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    // Log error
-    logger.e(error.error.toString());
-    logger.e(error.stackTrace.toString());
-
     // Display error
     var displayMessage = kDebugMode ? error.error.toString() : 'Si é verificato un errore';
     return SingleChildScrollView(

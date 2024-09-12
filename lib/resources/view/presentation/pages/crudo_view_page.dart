@@ -32,7 +32,7 @@ class CrudoViewPage<TResource extends CrudoResource<TModel>,
       child: Builder(builder: (context) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(context.read<TResource>().singularName()),
+            title: Text(context.read<TResource>().singularName(), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
             actions: context.read<TResource>().editAction() != null
                 ? [
                     IconButton(

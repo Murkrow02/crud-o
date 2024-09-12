@@ -47,7 +47,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
     var actions = <CrudoAction>[];
     if(editAction() != null) actions.add(editAction()!);
     if(viewAction() != null) actions.add(viewAction()!);
-    actions.add(deleteAction());
+    if(canDelete) actions.add(deleteAction());
     return actions;
   }
 
@@ -128,4 +128,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   /// Override this method to define if the resource can be created
   bool get canCreate => formPage != null;
+
+  /// Override this method to define if the resource can be deleted
+  bool get canDelete => true;
 }

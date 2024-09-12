@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 import 'package:crud_o/core/exceptions/rest_exception.dart';
+import 'package:crud_o/core/exceptions/unauthorized_exception.dart';
 import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
 import 'package:crud_o/core/networking/rest/rest_client_configuration.dart';
 import 'package:crud_o/core/utility/toaster.dart';
@@ -92,11 +93,18 @@ class RestClient {
   // Generic response handler, returns response as dynamic after decoding and handling errors
   Future<dynamic> handleResponseAndDecodeBody(
       http.Response response) async {
+
     // Internal server error
     if (response.statusCode == 500) {
       logger.e("Request: ${response.request?.url} failed. \n ${response.body}");
       throw RestException(
           "Internal server error, please try again later", response.statusCode);
+    }
+
+    // Unauthorized
+    if (response.statusCode == 401) {
+      logger.e("Request: ${response.request?.url} failed. \n ${response.body}");
+      throw UnauthorizedException("Unauthorized");
     }
 
     // Check if response is empty

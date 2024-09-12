@@ -36,7 +36,10 @@ class CrudoTableFooter extends StatelessWidget {
             ],
           );
         }
-        return const LinearProgressIndicator();
+        else if (state is TableLoadingState) {
+          return const LinearProgressIndicator();
+        }
+        return const SizedBox();
       },
     );
   }

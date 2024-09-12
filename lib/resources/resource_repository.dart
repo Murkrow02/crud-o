@@ -45,8 +45,10 @@ abstract class ResourceRepository<T> {
     return await _client.delete("$endpoint/$id");
   }
 
-  Future<List<T>> getAll({RestRequest? parameters})=> throw UnimplementedError();
-
+  Future<List<T>> getAll({RestRequest? parameters}) async {
+    var decodedBody = await _client.get(endpoint, request: parameters);
+    return (decodedBody["data"] as List).map((e) => factory.createFromJson(e)).toList();
+  }
 
   Future<T> add(T model) async {
     var decodedBody = await _client.post(endpoint, serializer.serializeToJson(model));

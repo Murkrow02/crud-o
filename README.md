@@ -67,3 +67,12 @@ that it needs to refresh the data.
 ### ViewPage
 The `ViewPage` is a page that displays the details of an item from the backend.
 
+
+## Auth
+The auth mechanism is set up using the `CrudoAuthWrapper` widget. This widget will wrap your
+application and will provide the auth context to all the pages that need it. You can also provide
+a custom Future `loggedInWhen` to check if the user is logged in or not, then you can pass the
+`loggedIn` and `loggedOut` widgets to show the user the login page or the main page.
+
+The `CrudoAuthWrapper` will also provide a `login` and `logout` extension on the BuildContext so
+you can easily call these methods from anywhere in your app to login or logout the user.

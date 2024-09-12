@@ -99,17 +99,19 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
         builder: (context, state) {
           return AnimatedSearchBar(
             label: context.read<TResource>().pluralName(),
-            labelStyle: const TextStyle(
-              color: Colors.black,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+            labelStyle:  TextStyle(
+              color: Theme.of(context).colorScheme.onPrimary,
             ),
             duration: const Duration(milliseconds: 300),
             animationDuration: const Duration(milliseconds: 300),
-            searchDecoration: const InputDecoration(
+            searchDecoration:  InputDecoration(
               hintText: 'Cerca',
+              hintStyle: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
+              ),
               alignLabelWithHint: true,
               border: InputBorder.none,
+
             ),
             height: 50,
             onFieldSubmitted: (value) {
@@ -166,8 +168,6 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       onDataLoaded(context, state.response);
     }
     if (state is TableErrorState) {
-      Toaster.error(state.error.toString());
-      throw state.error;
     }
   }
 
