@@ -34,6 +34,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   IconData icon() => Icons.folder;
 
+  String group() => '';
 
   /// **************************************************************************************************
   /// TABLE
