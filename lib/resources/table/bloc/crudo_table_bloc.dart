@@ -22,7 +22,7 @@ class CrudoTableBloc<TResource extends CrudoResource<TModel>, TModel> extends Bl
       final response = await resource.repository.getPaginated(request: request);
       emit(TableLoadedState<TModel>(response: response, request: request));
     } catch (e, s) {
-      emit(TableErrorState(error: TracedError(e, s)));
+      emit(TableErrorState(tracedError: TracedError(e, s)));
     }
   }
 
@@ -33,7 +33,7 @@ class CrudoTableBloc<TResource extends CrudoResource<TModel>, TModel> extends Bl
       final response = await resource.repository.getPaginated(request: event.request);
       emit(TableLoadedState<TModel>(response: response, request: event.request));
     } catch (e, s) {
-      emit(TableErrorState(error: TracedError(e, s)));
+      emit(TableErrorState(tracedError: TracedError(e, s)));
     }
   }
 }

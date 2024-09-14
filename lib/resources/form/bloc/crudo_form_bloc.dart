@@ -25,7 +25,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       emit(FormReadyState(
           formData: resource.repository.serializer.serializeToFormData(model)));
     } catch (e, s) {
-      emit(FormErrorState(error: TracedError(e, s)));
+      emit(FormErrorState(tracedError: TracedError(e, s)));
     }
   }
 
@@ -48,7 +48,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       emit(FormValidationErrorState(
           validationException: e, formData: event.formData));
     } catch (e, s) {
-      emit(FormErrorState(error: TracedError(e, s)));
+      emit(FormErrorState(tracedError: TracedError(e, s)));
     }
   }
 
@@ -64,7 +64,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       emit(FormValidationErrorState(
           validationException: e, formData: event.formData));
     } catch (e, s) {
-      emit(FormErrorState(error: TracedError(e, s)));
+      emit(FormErrorState(tracedError: TracedError(e, s)));
     }
   }
 }

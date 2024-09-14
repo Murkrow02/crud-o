@@ -20,10 +20,10 @@ class ViewReadyState<T extends Object> extends CrudoViewState {
 }
 
 class ViewErrorState extends CrudoViewState {
-  final TracedError error;
+  final TracedError tracedError;
 
-  ViewErrorState({required this.error});
+  ViewErrorState({required this.tracedError});
 
   @override
-  List<Object> get props => [error];
+  List<Object> get props => [tracedError];
 }

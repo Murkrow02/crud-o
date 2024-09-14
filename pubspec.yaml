@@ -19,6 +19,7 @@ dependencies:
   pluto_grid_plus: ^8.4.2
   provider: ^6.1.2
   shared_preferences: ^2.3.2
+  smooth_counter: ^0.2.0
   toastification: ^2.2.0
 
 dev_dependencies:

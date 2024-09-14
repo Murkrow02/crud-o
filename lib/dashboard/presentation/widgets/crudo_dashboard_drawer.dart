@@ -17,8 +17,6 @@ class CrudoDashboardDrawer extends StatelessWidget {
         child: Column(
           children: [
             _buildDrawerHeader(context),
-            if (afterAvatar != null) afterAvatar!,
-         //   const Divider(),
             _buildResourceTiles(context),
             const Divider(),
             ListTile(
@@ -49,6 +47,7 @@ class CrudoDashboardDrawer extends StatelessWidget {
       if (!groupedResources.containsKey(group)) {
         groupedResources[group] = [];
       }
+      if(resource.showInDrawer)
       groupedResources[group]!.add(MapEntry(resource, table));
     }
 
@@ -59,15 +58,21 @@ class CrudoDashboardDrawer extends StatelessWidget {
             for (var group in groupedResources.keys)
               Column(
                 children: [
+
+                  // If group is not empty, show expansion tile
                   if (group != '')
                     ExpansionTile(
+                      shape: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
                       initiallyExpanded: true,
                       title: Text(group),
                       children: [
                         for (var entry in groupedResources[group]!)
                           _buildResourceTile(context, entry.key, entry.value),
+                          const SizedBox(height: 15),
                       ],
                     ),
+
+                  // Default group, just show tiles
                   if (group == '')
                     for (var entry in groupedResources[group]!)
                       _buildResourceTile(context, entry.key, entry.value),
@@ -77,18 +82,6 @@ class CrudoDashboardDrawer extends StatelessWidget {
         ),
       ),
     );
-
-
-    // return Expanded(
-    //   child: SingleChildScrollView(
-    //     child: Column(
-    //       children: [
-    //         for (int i = 0; i < tables.length; i++)
-    //           _buildResourceTile(context, resources[i], tables[i]),
-    //       ],
-    //     ),
-    //   ),
-    // );
   }
 
 
@@ -117,16 +110,23 @@ class CrudoDashboardDrawer extends StatelessWidget {
   Widget _buildDrawerHeader(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(10),
-      height: 50,
-      color: Theme.of(context).colorScheme.tertiary,
-      child: const Row(
+      color: Theme.of(context).colorScheme.surfaceContainer,
+      child: Column(
         children: [
-          CircleAvatar(
-            radius: 50,
-            backgroundImage: NetworkImage('https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50'),
+           Row(
+            children: [
+              const SizedBox(
+                height: 60,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage('https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text('John Doe', style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.onSurface)),
+            ],
           ),
-          SizedBox(width: 10),
-          Text('John Doe'),
+          if (afterAvatar != null) afterAvatar!,
         ],
       ),
     );

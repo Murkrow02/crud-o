@@ -11,7 +11,8 @@ import 'package:provider/provider.dart';
 class CrudoDashboard extends StatelessWidget {
 
   final Widget? afterAvatar;
-  const CrudoDashboard({super.key, this.afterAvatar});
+  final Widget child;
+  const CrudoDashboard({super.key, this.afterAvatar, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -20,20 +21,7 @@ class CrudoDashboard extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Dashboard'),
       ),
-      body: const Center(
-        child: Wrap(
-          spacing: 0,
-          children: [
-            CrudoDashboardWidget.half(),
-            CrudoDashboardWidget.half(),
-            CrudoDashboardWidget.full(),
-            CrudoDashboardWidget.full(),
-            CrudoDashboardWidget.third(),
-            CrudoDashboardWidget.third(),
-            CrudoDashboardWidget.third(),
-          ],
-        ),
-      ),
+      body: child,
     );
   }
 }

@@ -5,17 +5,17 @@ import 'package:crud_o/core/models/traced_error.dart';
 
 class ErrorAlert extends StatelessWidget {
 
-  final TracedError error;
+  final TracedError tracedError;
   final Logger logger = Logger(
     printer: PrettyPrinter(),
   );
-  ErrorAlert(this.error, {super.key});
+  ErrorAlert(this.tracedError, {super.key});
 
   @override
   Widget build(BuildContext context) {
 
     // Display error
-    var displayMessage = kDebugMode ? error.error.toString() : 'Si é verificato un errore';
+    var displayMessage = kDebugMode ? tracedError.error.toString() : 'Si é verificato un errore';
     return SingleChildScrollView(
       child: Expanded(
         child: Center(
@@ -27,7 +27,7 @@ class ErrorAlert extends StatelessWidget {
                 Text(displayMessage, style:  TextStyle(color: Theme.of(context).colorScheme.error)),
                 Visibility(
                   visible: kDebugMode,
-                  child: Text(error.stackTrace.toString(), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  child: Text(tracedError.stackTrace.toString(), style: TextStyle(color: Theme.of(context).colorScheme.error)),
                 )
               ],
             )

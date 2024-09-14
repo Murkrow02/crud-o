@@ -130,7 +130,7 @@ class RestClient {
       if (message != null && message.isNotEmpty) {
         Toaster.error(message);
       }
-      throw RestException(message ?? "An error occurred", response.statusCode);
+      throw RestException(message != null ? "" : "An error occurred", response.statusCode);
     }
 
     // Display success message

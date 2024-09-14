@@ -97,7 +97,7 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
                   return _buildForm(context, state.formData,
                       genericValidationErrors: genericValidationErrors);
                 } else if (state is FormErrorState) {
-                  return ErrorAlert(state.error);
+                  return ErrorAlert(state.tracedError);
                 }
                 return ErrorAlert(TracedError(
                     UnexpectedStateException(state), StackTrace.current));

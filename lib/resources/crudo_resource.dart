@@ -1,5 +1,6 @@
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
+import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/form/presentation/pages/crudo_form_page.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_serializer.dart';
@@ -35,6 +36,8 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   IconData icon() => Icons.folder;
 
   String group() => '';
+
+  bool get showInDrawer => true;
 
   /// **************************************************************************************************
   /// TABLE
@@ -111,7 +114,13 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
           }
 
           // Actually delete the resource
-          await repository.delete(data?['id']);
+          try{
+            await repository.delete(data?['id']);
+          }
+          catch(e){
+            Toaster.error('Errore durante l\'eliminazione');
+            return;
+          }
 
           // Get table state and reload
           var tableState = context.read<CrudoTableBloc>().state;
@@ -134,4 +143,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   /// Override this method to define if the resource can be deleted
   bool get canDelete => true;
+
+  /// Override this method to define if the resource can be searched in the table
+  bool get canSearch => false;
 }

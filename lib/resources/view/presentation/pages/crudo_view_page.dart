@@ -63,7 +63,7 @@ class CrudoViewPage<TResource extends CrudoResource<TModel>,
 
               // Some error occurred
               else if (state is ViewErrorState) {
-                return ErrorAlert(state.error);
+                return ErrorAlert(state.tracedError);
               } else if (state is ViewLoadingState) {
                 return _buildLoading(context);
               }

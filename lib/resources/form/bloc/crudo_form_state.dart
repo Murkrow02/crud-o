@@ -24,12 +24,12 @@ class FormReadyState extends CrudoFormState {
 }
 
 class FormErrorState extends CrudoFormState {
-  final TracedError error;
+  final TracedError tracedError;
 
-  FormErrorState({required this.error});
+  FormErrorState({required this.tracedError});
 
   @override
-  List<Object> get props => [error];
+  List<Object> get props => [tracedError];
 }
 
 class FormValidationErrorState extends CrudoFormState {

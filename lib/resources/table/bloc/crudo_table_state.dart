@@ -28,10 +28,10 @@ class TableLoadedState<TModel> extends CrudoTableState {
 }
 
 class TableErrorState extends CrudoTableState {
-  final TracedError error;
+  final TracedError tracedError;
 
-  TableErrorState({required this.error});
+  TableErrorState({required this.tracedError});
 
   @override
-  List<Object> get props => [error];
+  List<Object> get props => [tracedError];
 }

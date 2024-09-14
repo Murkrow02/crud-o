@@ -20,9 +20,8 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CrudoTableBloc>(
-        create: (context) =>
-            CrudoTableBloc<TResource, TModel>(
-                resource: context.read<TResource>()),
+        create: (context) => CrudoTableBloc<TResource, TModel>(
+            resource: context.read<TResource>()),
         child: Builder(builder: (context) {
           return Scaffold(
             appBar: _buildAppBar(context),
@@ -35,15 +34,12 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
   // The actual table widget
   Widget _buildTable(BuildContext context) {
     var columns = context.read<TResource>().getColumns();
-    if (context
-        .read<TResource>()
-        .tableActions()
-        .isNotEmpty) {
+    if (context.read<TResource>().tableActions().isNotEmpty) {
       columns.add(_buildActionsColumn());
     }
     return PlutoGrid(
-      configuration:  PlutoGridConfiguration(
-        style:PlutoGridStyleConfig(
+      configuration: PlutoGridConfiguration(
+        style: PlutoGridStyleConfig(
           columnTextStyle: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 14,
@@ -76,79 +72,79 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      actions: context
-          .read<TResource>()
-          .canCreate
+      actions: context.read<TResource>().canCreate
           ? [
-        IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                  context
-                      .read<TResource>()
-                      .formPage!),
-            );
-          },
-        )
-      ]
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            context.read<TResource>().formPage!),
+                  );
+                },
+              )
+            ]
           : [],
-      title: BlocBuilder<CrudoTableBloc, CrudoTableState>(
-        builder: (context, state) {
-          return AnimatedSearchBar(
-            label: context.read<TResource>().pluralName(),
-            labelStyle:  TextStyle(
+      title: context.read<TResource>().canSearch
+          ? _buildSearchBar(context)
+          : Text(context.read<TResource>().pluralName()),
+    );
+  }
+
+  Widget _buildSearchBar(BuildContext context) {
+    return BlocBuilder<CrudoTableBloc, CrudoTableState>(
+      builder: (context, state) {
+        return AnimatedSearchBar(
+          label: context.read<TResource>().pluralName(),
+          labelStyle:  TextStyle(
+            color: Theme.of(context).colorScheme.onPrimary,
+          ),
+          duration: const Duration(milliseconds: 300),
+          animationDuration: const Duration(milliseconds: 300),
+          searchDecoration:  InputDecoration(
+            hintText: 'Cerca',
+            hintStyle: TextStyle(
               color: Theme.of(context).colorScheme.onPrimary,
             ),
-            duration: const Duration(milliseconds: 300),
-            animationDuration: const Duration(milliseconds: 300),
-            searchDecoration:  InputDecoration(
-              hintText: 'Cerca',
-              hintStyle: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
-              alignLabelWithHint: true,
-              border: InputBorder.none,
+            alignLabelWithHint: true,
+            border: InputBorder.none,
 
-            ),
-            height: 50,
-            onFieldSubmitted: (value) {
-              if (state is TableLoadedState<TModel>) {
-                context.read<CrudoTableBloc>().add(UpdateTableEvent(
-                    state.request.copyWith(search: value, page: 1)));
-              }
-            },
-            onClose: () {
-              if (state is TableLoadedState<TModel>) {
-                context.read<CrudoTableBloc>().add(UpdateTableEvent(
-                    state.request.copyWith(search: '', page: 1)));
-              }
-            },
-          );
-        },
-      ),
+          ),
+          height: 50,
+          onFieldSubmitted: (value) {
+            if (state is TableLoadedState<TModel>) {
+              context.read<CrudoTableBloc>().add(UpdateTableEvent(
+                  state.request.copyWith(search: value, page: 1)));
+            }
+          },
+          onClose: () {
+            if (state is TableLoadedState<TModel>) {
+              context.read<CrudoTableBloc>().add(UpdateTableEvent(
+                  state.request.copyWith(search: '', page: 1)));
+            }
+          },
+        );
+      },
     );
   }
 
   /// Called when got new data from the bloc
-  void onDataLoaded(BuildContext context,
-      PaginatedResourceResponse<TModel> response) {
+  void onDataLoaded(
+      BuildContext context, PaginatedResourceResponse<TModel> response) {
     tableManager.removeAllRows();
     for (var item in response.data) {
       // Create data row from the item
-      var dataRow = PlutoRow(cells: context
-          .read<TResource>()
-          .repository
-          .serializer
-          .serializeToCells(item));
+      var dataRow = PlutoRow(
+          cells: context
+              .read<TResource>()
+              .repository
+              .serializer
+              .serializeToCells(item));
 
       // Create actions cell
-      if (context
-          .read<TResource>()
-          .tableActions()
-          .isNotEmpty) {
+      if (context.read<TResource>().tableActions().isNotEmpty) {
         dataRow.cells['actions'] =
             PlutoCell(value: context.read<TResource>().getId(item));
       }
@@ -167,7 +163,8 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
     if (state is TableLoadedState<TModel>) {
       onDataLoaded(context, state.response);
     }
-    if (state is TableErrorState) {
+    if (state is TableErrorState && state.tracedError.error.toString() != '') {
+      Toaster.error(state.tracedError.error.toString());
     }
   }
 
@@ -186,34 +183,32 @@ class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       enableContextMenu: false,
       enableFilterMenuItem: false,
       type: PlutoColumnType.text(),
-      renderer: (columnContext) =>
-          Builder(
-            builder: (context) {
-              return PopupMenuButton(
-                padding: const EdgeInsets.only(right: 10),
-                icon: Icon(Icons.more_vert, color: Theme.of(context).colorScheme.onSurface),
-                itemBuilder: (context) =>
-                    context.read<TResource>().tableActions().map((action) {
-                      return PopupMenuItem(
-                        onTap: () async {
-                          action.execute(
-                              context, data: {'id': columnContext.cell.value})
-                              .then((needToRefresh) {
-                            if (needToRefresh == true) {
-                              context.read<CrudoTableBloc>().add(LoadTableEvent());
-                            }
-                          });
-                        },
-                        child: ListTile(
-                          leading: Icon(action.icon, color: action.color),
-                          title: Text(
-                              action.label, style: TextStyle(color: action.color)),
-                        ),
-                      );
-                    }).toList(),
-              );
-            }
-          ),
+      renderer: (columnContext) => Builder(builder: (context) {
+        return PopupMenuButton(
+          padding: const EdgeInsets.only(right: 10),
+          icon: Icon(Icons.more_vert,
+              color: Theme.of(context).colorScheme.onSurface),
+          itemBuilder: (context) =>
+              context.read<TResource>().tableActions().map((action) {
+            return PopupMenuItem(
+              onTap: () async {
+                action.execute(context, data: {
+                  'id': columnContext.cell.value
+                }).then((needToRefresh) {
+                  if (needToRefresh == true) {
+                    context.read<CrudoTableBloc>().add(LoadTableEvent());
+                  }
+                });
+              },
+              child: ListTile(
+                leading: Icon(action.icon, color: action.color),
+                title:
+                    Text(action.label, style: TextStyle(color: action.color)),
+              ),
+            );
+          }).toList(),
+        );
+      }),
     );
   }
 }
