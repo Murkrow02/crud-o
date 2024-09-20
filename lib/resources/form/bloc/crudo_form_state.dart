@@ -16,8 +16,8 @@ class FormLoadingState extends CrudoFormState {}
 
 class FormReadyState extends CrudoFormState {
   final Map<String, dynamic> formData;
-
-  FormReadyState({required this.formData});
+  final ApiValidationException? validationException;
+  FormReadyState({required this.formData, this.validationException});
 
   @override
   List<Object> get props => [formData];
@@ -30,14 +30,4 @@ class FormErrorState extends CrudoFormState {
 
   @override
   List<Object> get props => [tracedError];
-}
-
-class FormValidationErrorState extends CrudoFormState {
-  final ApiValidationException validationException;
-  final Map<String, dynamic> formData;
-
-  FormValidationErrorState({required this.validationException, required this.formData});
-
-  @override
-  List<Object> get props => [validationException, formData];
 }

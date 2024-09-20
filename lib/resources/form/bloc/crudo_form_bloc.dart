@@ -45,8 +45,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       emit(FormSavedState());
       emit(FormReadyState(formData: resource.repository.serializer.serializeToFormData(apiModel)));
     } on ApiValidationException catch (e) {
-      emit(FormValidationErrorState(
-          validationException: e, formData: event.formData));
+      emit(FormReadyState(formData: event.formData, validationException: e));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
@@ -61,8 +60,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       emit(FormSavedState());
       emit(FormReadyState(formData: resource.repository.serializer.serializeToFormData(apiModel)));
     } on ApiValidationException catch (e) {
-      emit(FormValidationErrorState(
-          validationException: e, formData: event.formData));
+      emit(FormReadyState(formData: event.formData, validationException: e));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }

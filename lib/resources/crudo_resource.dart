@@ -146,4 +146,5 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   /// Override this method to define if the resource can be searched in the table
   bool get canSearch => false;
+
 }

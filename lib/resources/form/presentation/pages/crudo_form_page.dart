@@ -64,7 +64,9 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
 
           return Scaffold(
             appBar: AppBar(
-              title: Text(context.read<TResource>().singularName(),style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
+              title: Text(context.read<TResource>().singularName(),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary)),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.save),
@@ -75,30 +77,24 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
             body:
                 BlocConsumer<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
               builder: (context, state) {
-                if (state is FormLoadingState || state is FormSavedState ||
+                // Loading, saved or initial state
+                if (state is FormLoadingState ||
+                    state is FormSavedState ||
                     state is FormInitialState) {
                   return buildLoading();
-                } else if (state is FormReadyState) {
+                }
+
+                // Form ready, display the form
+                if (state is FormReadyState) {
                   return _buildForm(context, state.formData);
-                } else if (state is FormValidationErrorState) {
-                  List<String> genericValidationErrors = [];
-                  for (var key in state.validationException.errors.keys) {
-                    // Validation error can be displayed in the form field
-                    if (formKey.currentState!.fields.containsKey(key)) {
-                      formKey.currentState!.fields[key]!.invalidate(
-                          state.validationException.errors[key]!.join('\n'));
-                    }
-                    // Validation error is a generic error
-                    else {
-                      genericValidationErrors.add(
-                          '$key: ${state.validationException.errors[key]!.join('\n')}');
-                    }
-                  }
-                  return _buildForm(context, state.formData,
-                      genericValidationErrors: genericValidationErrors);
-                } else if (state is FormErrorState) {
+                }
+
+                // Form error, display the error
+                if (state is FormErrorState) {
                   return ErrorAlert(state.tracedError);
                 }
+
+                // Unexpected state
                 return ErrorAlert(TracedError(
                     UnexpectedStateException(state), StackTrace.current));
               },
@@ -115,36 +111,52 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
     );
   }
 
-  Widget _buildForm(BuildContext context, Map<String, dynamic> formData,
-      {List<String> genericValidationErrors = const []}) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          if (genericValidationErrors.isNotEmpty)
-            ...genericValidationErrors.map((e) => Text(
-                  e,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                )),
-          FormBuilder(
-            key: formKey,
-            initialValue: formData,
-            child: buildForm(context, formData),
-          ),
-        ],
-      ),
+  Widget _buildForm(BuildContext context, Map<String, dynamic> previousData,
+      {List<String> validationErrors = const []}) {
+
+    List<String> nonFormErrors = [];  // Errors that are not related to a specific field
+    for (var key in validationErrors) {
+      if (!formKey.currentState!.fields.containsKey(key)) {
+        nonFormErrors.add(key);
+      }
+      else {
+        // Invalidation of the form field
+        formKey.currentState!.fields[key]!.invalidate(validationErrors.join('\n'));
+      }
+    }
+
+    return Column(
+      children: [
+        buildNonFormErrors(context, nonFormErrors),
+        FormBuilder(
+          key: formKey,
+          initialValue: previousData,
+          child: buildForm(context, previousData),
+        ),
+      ],
     );
   }
 
-  Widget buildForm(BuildContext context, Map<String, dynamic> formData);
+  /// Override to create your form
+  Widget buildForm(BuildContext context, Map<String, dynamic> previousData);
 
+  /// These are errors that are not related to a specific field
+  Widget buildNonFormErrors(BuildContext context, List<String> errors) {
+    return Column(
+      children: errors.map((e) => Text(e)).toList(),
+    );
+  }
+
+  /// Widget rendered when the form is loading
   Widget buildLoading() {
     return const Center(
       child: CircularProgressIndicator(),
     );
   }
 
+  /// Called when the save button is pressed
   void onSave(BuildContext context) {
+
     // Validate and save the form
     var validationSuccess = formKey.currentState!.saveAndValidate();
     if (!validationSuccess) {

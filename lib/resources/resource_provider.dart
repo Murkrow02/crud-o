@@ -15,7 +15,7 @@ class RegisteredResources {
       }
       _types.add(TResource);
      _resources.add(resource);
-     _tables.add(CrudoTablePage<TResource, TModel>());
+     if(resource.getColumns().isNotEmpty) _tables.add(CrudoTablePage<TResource, TModel>());
    }
    List<CrudoTablePage> get tables => _tables;
     List<CrudoResource> get resources => _resources;
