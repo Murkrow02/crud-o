@@ -8,6 +8,7 @@ import 'package:crud_o/resources/resource_serializer.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
+import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
 import 'package:crud_o/resources/view/presentation/pages/crudo_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -116,6 +117,9 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   /// View to show the resource
   CrudoViewPage? viewPage;
+
+  // Table to show the resource
+  CrudoTablePage? tablePage;
 
   /// Override this method to define if the resource can be created
   bool get canCreate => formPage != null;

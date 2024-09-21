@@ -2,9 +2,11 @@ import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
+import 'package:crud_o/resources/resource_provider.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_bloc.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
+import 'package:crud_o/resources/table/data/models/crudo_table_column.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_column_menu.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_footer.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
@@ -21,11 +23,12 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
 
   @override
   Widget build(BuildContext context) {
-    resource = resource;
+    // Get resource
+    resource = context.read();
+
     return BlocProvider<CrudoTableBloc>(
         create: (context) =>
-            CrudoTableBloc<TResource, TModel>(
-                resource: resource),
+            CrudoTableBloc<TResource, TModel>(resource: resource),
         child: Builder(builder: (context) {
           return Scaffold(
             appBar: _buildAppBar(context),
@@ -45,27 +48,15 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       configuration: PlutoGridConfiguration(
         style: PlutoGridStyleConfig(
           columnTextStyle: TextStyle(
-            color: Theme
-                .of(context)
-                .colorScheme
-                .onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 14,
           ),
-          gridBackgroundColor: Theme
-              .of(context)
-              .colorScheme
-              .surface,
+          gridBackgroundColor: Theme.of(context).colorScheme.surface,
           cellTextStyle: TextStyle(
-            color: Theme
-                .of(context)
-                .colorScheme
-                .onSurface,
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 14,
           ),
-          rowColor: Theme
-              .of(context)
-              .colorScheme
-              .surface,
+          rowColor: Theme.of(context).colorScheme.surface,
         ),
         columnSize: const PlutoGridColumnSizeConfig(
           autoSizeMode: PlutoAutoSizeMode.none,
@@ -90,18 +81,16 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
     return AppBar(
       actions: resource.canCreate
           ? [
-        IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                  resource.formPage!),
-            );
-          },
-        )
-      ]
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => resource.formPage!),
+                  );
+                },
+              )
+            ]
           : [],
       title: resource.canSearch
           ? _buildSearchBar(context)
@@ -115,24 +104,17 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
         return AnimatedSearchBar(
           label: resource.pluralName(),
           labelStyle: TextStyle(
-            color: Theme
-                .of(context)
-                .colorScheme
-                .onPrimary,
+            color: Theme.of(context).colorScheme.onPrimary,
           ),
           duration: const Duration(milliseconds: 300),
           animationDuration: const Duration(milliseconds: 300),
           searchDecoration: InputDecoration(
             hintText: 'Cerca',
             hintStyle: TextStyle(
-              color: Theme
-                  .of(context)
-                  .colorScheme
-                  .onPrimary,
+              color: Theme.of(context).colorScheme.onPrimary,
             ),
             alignLabelWithHint: true,
             border: InputBorder.none,
-
           ),
           height: 50,
           onFieldSubmitted: (value) {
@@ -153,21 +135,20 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
   }
 
   /// Called when got new data from the bloc
-  void onDataLoaded(BuildContext context,
-      PaginatedResourceResponse<TModel> response) {
+  void onDataLoaded(
+      BuildContext context, PaginatedResourceResponse<TModel> response) {
     tableManager.removeAllRows();
     for (var item in response.data) {
+
       // Create data row from the item
-      var dataRow = PlutoRow(
-          cells: createCells(item));
+      var dataRow = PlutoRow(cells: getCells(item));
 
-          // Create actions cell
-          if (tableActions().isNotEmpty) {
-    dataRow.cells['actions'] =
-    PlutoCell(value: resource.getId(item));
-    }
+      // Create actions cell
+      if (tableActions().isNotEmpty) {
+        dataRow.cells['actions'] = PlutoCell(value: resource.getId(item));
+      }
 
-    tableManager.refRows.add(dataRow);
+      tableManager.refRows.add(dataRow);
     }
   }
 
@@ -201,61 +182,56 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       enableContextMenu: false,
       enableFilterMenuItem: false,
       type: PlutoColumnType.text(),
-      renderer: (columnContext) =>
-          Builder(builder: (context) {
-            return PopupMenuButton(
-              padding: const EdgeInsets.only(right: 10),
-              icon: Icon(Icons.more_vert,
-                  color: Theme
-                      .of(context)
-                      .colorScheme
-                      .onSurface),
-              itemBuilder: (context) =>
-                  tableActions().map((action) {
-                    return PopupMenuItem(
-                      onTap: () async {
-                        action.execute(context, data: {
-                          'id': columnContext.cell.value
-                        }).then((needToRefresh) {
-                          if (needToRefresh == true) {
-                            context.read<CrudoTableBloc>().add(
-                                LoadTableEvent());
-                          }
-                        });
-                      },
-                      child: ListTile(
-                        leading: Icon(action.icon, color: action.color),
-                        title:
-                        Text(action.label, style: TextStyle(
-                            color: action.color)),
-                      ),
-                    );
-                  }).toList(),
+      renderer: (columnContext) => Builder(builder: (context) {
+        return PopupMenuButton(
+          padding: const EdgeInsets.only(right: 10),
+          icon: Icon(Icons.more_vert,
+              color: Theme.of(context).colorScheme.onSurface),
+          itemBuilder: (context) => tableActions().map((action) {
+            return PopupMenuItem(
+              onTap: () async {
+                action.execute(context, data: {
+                  'id': columnContext.cell.value
+                }).then((needToRefresh) {
+                  if (needToRefresh == true) {
+                    context.read<CrudoTableBloc>().add(LoadTableEvent());
+                  }
+                });
+              },
+              child: ListTile(
+                leading: Icon(action.icon, color: action.color),
+                title:
+                    Text(action.label, style: TextStyle(color: action.color)),
+              ),
             );
-          }),
+          }).toList(),
+        );
+      }),
     );
   }
-
-
-  /// By default, cells are created from the 'serializeToMap' method of the resource
-  /// Override this method to customize how cells are created
-  Map<String, PlutoCell> createCells(TModel model) {
-    return resource.serializer.serializeToMap(model).map((propertyName,
-        propertyValue) {
-      return MapEntry(propertyName, PlutoCell(value: propertyValue));
-    });
-  }
-
-  /// Override this method to define the columns of the table
-  List<PlutoColumn> getColumns();
 
   /// Override this method to define the actions that can be performed on the resource in the table
   List<CrudoAction> tableActions() {
     var actions = <CrudoAction>[];
-    // if(editAction() != null) actions.add(editAction()!);
-    // if(viewAction() != null) actions.add(viewAction()!);
-    // if(canDelete) actions.add(deleteAction());
+    if (resource.editAction() != null) actions.add(resource.editAction()!);
+    if (resource.viewAction() != null) actions.add(resource.viewAction()!);
+    if (resource.canDelete) actions.add(resource.deleteAction());
     return actions;
   }
 
+  /// Override this method to create the table columns and cells
+  List<CrudoTableColumn<TModel>> buildColumns();
+
+  /// Get only the columns from the buildColumns method
+  List<PlutoColumn> getColumns() {
+    return buildColumns().map((mapping) => mapping.column).toList();
+  }
+
+  Map<String, PlutoCell> getCells(TModel model) {
+    return Map.fromEntries(
+      buildColumns().map(
+        (mapping) => MapEntry(mapping.column.field, mapping.cellBuilder(model)),
+      ),
+    );
+  }
 }

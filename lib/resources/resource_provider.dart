@@ -6,32 +6,42 @@ import 'package:provider/provider.dart';
 import 'crudo_resource.dart';
 
 class RegisteredResources {
-   final List<CrudoResource> _resources = [];
-   final List<CrudoTablePage> _tables = [];
-   final List<Type> _types = [];
-   void registerResource<TResource extends CrudoResource<TModel>, TModel>(TResource resource) {
-      if (_types.contains(TResource)) {
-        return;
-      }
-      _types.add(TResource);
-     _resources.add(resource);
-   }
-   List<CrudoTablePage> get tables => _tables;
-    List<CrudoResource> get resources => _resources;
+  final List<CrudoResource> _resources = [];
+  final List<CrudoTablePage> _tables = [];
+  final List<Type> _registeredResourceTypes = [];
+  List<CrudoTablePage> get tables => _tables;
+  List<CrudoResource> get resources => _resources;
+
+  void registerResource<TResource extends CrudoResource<TModel>, TModel>(
+      TResource resource) {
+    if (_registeredResourceTypes.contains(TResource)) {
+      return;
+    }
+
+    // Register resource
+    _registeredResourceTypes.add(TResource);
+    _resources.add(resource);
+
+    // Register table
+    if (resource.tablePage != null) {
+      _tables.add(resource.tablePage!);
+    }
+  }
 }
 
-class ResourceProvider<TResource extends CrudoResource, TModel> extends Provider<TResource> {
-
+class ResourceProvider<TResource extends CrudoResource, TModel>
+    extends Provider<TResource> {
   final TResource Function(BuildContext context) create;
+
   ResourceProvider({
     required this.create,
     super.key,
     super.child,
     super.lazy,
   }) : super(
-    create: create,
-    dispose: (_, __) {},
-  );
+          create: create,
+          dispose: (_, __) {},
+        );
 
   ResourceProvider.value({
     required super.value,
@@ -48,10 +58,10 @@ class ResourceProvider<TResource extends CrudoResource, TModel> extends Provider
     } catch (e) {
       resources = RegisteredResources();
     }
+
     resources.registerResource(create(context));
     return Provider(
-        create: (_) => resources,
-        child: super.buildWithChild(context, child));
+        create: (_) => resources, child: super.buildWithChild(context, child));
   }
 
   /// Method to access the repository instance from the context.
@@ -74,9 +84,7 @@ class ResourceProvider<TResource extends CrudoResource, TModel> extends Provider
   }
 }
 
-
 class MultiResourceProvider extends MultiProvider {
-  final List<dynamic> _createdRepositories = [];
 
   MultiResourceProvider({
     required super.providers,

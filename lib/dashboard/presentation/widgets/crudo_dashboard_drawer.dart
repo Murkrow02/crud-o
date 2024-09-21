@@ -36,19 +36,20 @@ class CrudoDashboardDrawer extends StatelessWidget {
 
     // Get table and resources
     var tables = context.read<RegisteredResources>().tables;
-    var resources = context.read<RegisteredResources>().resources;
+    var resourcesWithTables = context.read<RegisteredResources>().resources.where((e) => e.tablePage != null).toList();
 
     // Group resources by group
     var groupedResources = <String, List<MapEntry<CrudoResource, CrudoTablePage>>>{};
-    for (int i = 0; i < resources.length; i++) {
-      var resource = resources[i];
+    for (int i = 0; i < resourcesWithTables.length; i++) {
+      var resource = resourcesWithTables[i];
       var table = tables[i];
       var group = resource.group();
       if (!groupedResources.containsKey(group)) {
         groupedResources[group] = [];
       }
-      if(resource.showInDrawer)
-      groupedResources[group]!.add(MapEntry(resource, table));
+      if(resource.showInDrawer) {
+        groupedResources[group]!.add(MapEntry(resource, table));
+      }
     }
 
     return Expanded(
