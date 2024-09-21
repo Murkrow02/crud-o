@@ -18,10 +18,4 @@ abstract class ResourceSerializer<T>
   Map<String, dynamic> serializeToFormData(T model) {
     return serializeToMap(model);
   }
-
-  Map<String, PlutoCell> serializeToCells(T model) {
-    return serializeToMap(model).map((propertyName, propertyValue) {
-      return MapEntry(propertyName, PlutoCell(value: propertyValue));
-    });
-  }
 }

@@ -15,6 +15,7 @@ dependencies:
   flutter_bloc: ^8.1.6
   flutter_form_builder: ^9.4.1
   http: ^1.2.2
+  interact_cli: ^2.4.0
   logger: ^2.4.0
   pluto_grid_plus: ^8.4.2
   provider: ^6.1.2

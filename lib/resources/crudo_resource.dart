@@ -3,6 +3,7 @@ import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/form/presentation/pages/crudo_form_page.dart';
 import 'package:crud_o/resources/resource_context.dart';
+import 'package:crud_o/resources/resource_factory.dart';
 import 'package:crud_o/resources/resource_serializer.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
@@ -15,8 +16,8 @@ import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 import 'table/bloc/crudo_table_bloc.dart';
 
 abstract class CrudoResource<TModel extends dynamic> extends Object {
-
   final ResourceRepository<TModel> repository;
+
   CrudoResource({required this.repository});
 
   /// **************************************************************************************************
@@ -38,25 +39,6 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   String group() => '';
 
   bool get showInDrawer => true;
-
-  /// **************************************************************************************************
-  /// TABLE
-  /// **************************************************************************************************
-
-  /// Override this method to define the columns of the table
-  List<PlutoColumn> getColumns() {
-    return [];
-  }
-
-  /// Override this method to define the actions that can be performed on the resource in the table
-  List<CrudoAction> tableActions() {
-    var actions = <CrudoAction>[];
-    if(editAction() != null) actions.add(editAction()!);
-    if(viewAction() != null) actions.add(viewAction()!);
-    if(canDelete) actions.add(deleteAction());
-    return actions;
-  }
-
 
   /// **************************************************************************************************
   /// ACTIONS
@@ -101,23 +83,20 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         icon: Icons.delete,
         color: Colors.red,
         action: (context, data) async {
-
           // Ask for confirmation
           var confirmed = await ConfirmationDialog.ask(
               context: context,
               title: 'Elimina ${singularName()}',
-              message: 'Sei sicuro di voler procedere?'
-          );
+              message: 'Sei sicuro di voler procedere?');
 
           if (!confirmed) {
             return;
           }
 
           // Actually delete the resource
-          try{
+          try {
             await repository.delete(data?['id']);
-          }
-          catch(e){
+          } catch (e) {
             Toaster.error('Errore durante l\'eliminazione');
             return;
           }
@@ -146,5 +125,11 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   /// Override this method to define if the resource can be searched in the table
   bool get canSearch => false;
+
+  /// **************************************************************************************************
+  /// SHORTCUTS
+  /// **************************************************************************************************
+  ResourceFactory<TModel> get factory => repository.factory;
+  ResourceSerializer<TModel> get serializer => repository.serializer;
 
 }
