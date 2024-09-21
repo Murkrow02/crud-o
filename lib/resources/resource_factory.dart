@@ -21,9 +21,4 @@ abstract class ResourceFactory<T>
   {
     return createFromJson(json);
   }
-
-  // Called when deserializing a model from a form data
-  T createFromFormData(Map<String, dynamic> formData){
-    return createFromMap(formData);
-  }
 }

@@ -117,7 +117,10 @@ class RestClient {
 
     // Validation error, throw exception that will be handled in UI
     if (response.statusCode == 422) {
-      var errors = Map<String, List<dynamic>>.from(decodedBody['errors']);
+      Map<String, List<String>> errors = {};
+      for (var key in decodedBody['errors'].keys) {
+        errors[key] = decodedBody['errors'][key].cast<String>();
+      }
       throw ApiValidationException(errors);
     }
 

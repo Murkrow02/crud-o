@@ -1,7 +1,6 @@
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
-import 'package:crud_o/resources/form/presentation/pages/crudo_form_page.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_factory.dart';
 import 'package:crud_o/resources/resource_serializer.dart';
@@ -113,10 +112,10 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   }
 
   /// Form to edit/create the resource
-  CrudoFormPage? formPage;
+  Widget? formPage;
 
   /// View to show the resource
-  CrudoViewPage? viewPage;
+  Widget? viewPage;
 
   // Table to show the resource
   CrudoTablePage? tablePage;

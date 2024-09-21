@@ -1,5 +1,5 @@
 
 class ApiValidationException implements Exception {
-  final Map<String, List<dynamic>> errors;
+  final Map<String, List<String>> errors;
   ApiValidationException(this.errors);
 }

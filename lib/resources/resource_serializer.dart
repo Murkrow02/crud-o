@@ -14,8 +14,4 @@ abstract class ResourceSerializer<T>
   {
     return serializeToMap(model);
   }
-
-  Map<String, dynamic> serializeToFormData(T model) {
-    return serializeToMap(model);
-  }
 }

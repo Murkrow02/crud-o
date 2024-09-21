@@ -19,20 +19,22 @@ class InitFormModelEvent extends CrudoFormEvent {
   List<Object?> get props => [];
 }
 
-class CreateFormModelEvent extends CrudoFormEvent {
+class CreateFormModelEvent<T> extends CrudoFormEvent {
+  final T model;
   final Map<String, dynamic> formData;
-
-  CreateFormModelEvent({required this.formData});
+  CreateFormModelEvent({required this.model, required this.formData});
 
   @override
-  List<Object?> get props => [formData];
+  List<Object?> get props => [model, formData];
 }
 
-class UpdateFormModelEvent extends CrudoFormEvent {
+class UpdateFormModelEvent<T> extends CrudoFormEvent {
+  final T model;
   final String id;
   final Map<String, dynamic> formData;
-  UpdateFormModelEvent({required this.id, required this.formData});
+
+  UpdateFormModelEvent({required this.model, required this.id, required this.formData});
 
   @override
-  List<Object?> get props => [id, formData];
+  List<Object?> get props => [model, id, formData];
 }
