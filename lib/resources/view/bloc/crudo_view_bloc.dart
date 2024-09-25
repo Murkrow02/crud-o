@@ -19,7 +19,7 @@ class CrudoViewBloc<TResource extends CrudoResource<TModel>,
     emit(ViewLoadingState());
     try {
       final model = await resource.repository.getById(event.id);
-      emit(ViewReadyState<TModel>(previewFields: resource.repository.serializer.serializeToView(model)));
+      emit(ViewReadyState<TModel>(model: model));
     } catch (e, s) {
       emit(ViewErrorState(tracedError: TracedError(e, s)));
     }

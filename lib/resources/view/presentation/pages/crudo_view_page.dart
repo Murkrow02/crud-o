@@ -16,29 +16,30 @@ class CrudoViewPage<TResource extends CrudoResource<TModel>,
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
 
   late String id;
-
+  late TResource resource;
   CrudoViewPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    resource = context.read();
     id = context.read<ResourceContext>().id;
 
     return BlocProvider(
       create: (context) =>
-          CrudoViewBloc<TResource, TModel>(resource: context.read<TResource>())
+          CrudoViewBloc<TResource, TModel>(resource: resource)
             ..add(
               LoadViewEvent<TModel>(id: id),
             ),
       child: Builder(builder: (context) {
         return Scaffold(
           appBar: AppBar(
-            title: Text(context.read<TResource>().singularName(), style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
-            actions: context.read<TResource>().editAction() != null
+            title: Text(resource.singularName()),
+            actions: resource.editAction() != null
                 ? [
                     IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () async {
-                        var action = context.read<TResource>().editAction()!;
+                        var action = resource.editAction()!;
                         action.execute(context, data: {'id': id}).then(
                           (shouldRefresh) {
                             if (shouldRefresh == true) {
@@ -57,15 +58,14 @@ class CrudoViewPage<TResource extends CrudoResource<TModel>,
             builder: (context, state) {
               // Model is ready
               if (state is ViewReadyState<TModel>) {
-                return SingleChildScrollView(
-                    child: buildView(context, state.previewFields));
+                return buildView(context, modelToView(state.model));
               }
 
               // Some error occurred
               else if (state is ViewErrorState) {
                 return ErrorAlert(state.tracedError);
               } else if (state is ViewLoadingState) {
-                return _buildLoading(context);
+                return buildLoading(context);
               }
 
               return ErrorAlert(TracedError(
@@ -77,18 +77,27 @@ class CrudoViewPage<TResource extends CrudoResource<TModel>,
     );
   }
 
+  /// Override this method to build custom view
   Widget buildView(BuildContext context, Map<String, dynamic> previewFields) {
-    return Column(
-      children: [
-        for (var key in previewFields.keys)
-          ViewField(name: key, value: previewFields[key].toString()),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          for (var key in previewFields.keys)
+            ViewField(name: key, value: previewFields[key].toString()),
+        ],
+      ),
     );
   }
 
-  Widget _buildLoading(BuildContext context) {
+  /// Override this method to build custom loading widget
+  Widget buildLoading(BuildContext context) {
     return const Center(
       child: CircularProgressIndicator(),
     );
+  }
+  
+  /// Override this method to convert model to view fields
+  Map<String, dynamic> modelToView(TModel model) {
+    return resource.toMap(model);
   }
 }

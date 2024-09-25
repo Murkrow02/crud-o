@@ -43,7 +43,7 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
         create: (context) =>
             CrudoFormBloc<TResource, TModel>(resource: resource)
               ..add(editMode
-                  ? LoadFormModelEvent<TModel>(id: id!)
+                  ? LoadFormModelEvent(id: id!)
                   : InitFormModelEvent()),
         child: Builder(builder: (context) {
           return buildFormWrapper(
@@ -61,7 +61,7 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
                 if (state is FormReadyState<TModel> ||
                     state is FormSavingState) {
                   var formData = state is FormReadyState<TModel>
-                      ? _cleanFormData(modelToForm(state.model))
+                      ? modelToForm(state.model)
                       : (state as FormSavingState).formData;
                   return FormBuilder(
                       key: formKey,
@@ -71,7 +71,7 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
 
                 // Form not valid, display the form with errors
                 if (state is FormNotValidState) {
-                  var formData = _cleanFormData(state.oldFormData);
+                  var formData = state.oldFormData;
                   if (state.formErrors.isNotEmpty) {
                     _invalidateFormFields(state.formErrors);
                   }
@@ -147,31 +147,19 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
     }
 
     // Update or create
-    var model = formToModel(formKey.currentState!.value);
+    var formData = formKey.currentState!.value;
     if (editMode) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
             UpdateFormModelEvent(
-                formData: formKey.currentState!.value, id: id!, model: model),
+                formData: formData, id: id!),
           );
     } else {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
-            CreateFormModelEvent(
-                formData: formKey.currentState!.value, model: model),
+            CreateFormModelEvent(formData: formData),
           );
     }
   }
 
-  /// Form builder needs all values to be string so we ensure that here
-  Map<String, dynamic> _cleanFormData(Map<String, dynamic> formData) {
-    return formData.map((key, value) {
-      // Date time is good
-      if (value is DateTime) {
-        return MapEntry(key, value);
-      }
-
-      return MapEntry(key, value.toString());
-    });
-  }
 
   /// Acts after the form has been rendered to invalidate the fields
   /// Goes in reverse order to focus the first error first
@@ -187,8 +175,7 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
   /// By default, form falls back to the resource serializer to serialize the form data
   /// Override this method to customize the serialization
   Map<String, dynamic> modelToForm(TModel model) {
-    return resource.serializer.serializeToMap(model);
+    return resource.toMap(model);
   }
 
-  TModel formToModel(Map<String, dynamic> formData);
 }

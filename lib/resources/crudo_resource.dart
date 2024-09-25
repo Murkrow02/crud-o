@@ -3,16 +3,12 @@ import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_factory.dart';
-import 'package:crud_o/resources/resource_serializer.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
 import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
-import 'package:crud_o/resources/view/presentation/pages/crudo_view_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pluto_grid_plus/pluto_grid_plus.dart';
-
 import 'table/bloc/crudo_table_bloc.dart';
 
 abstract class CrudoResource<TModel extends dynamic> extends Object {
@@ -39,6 +35,8 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   String group() => '';
 
   bool get showInDrawer => true;
+
+  Map<String, dynamic> toMap(TModel model);
 
   /// **************************************************************************************************
   /// ACTIONS
@@ -133,6 +131,5 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// SHORTCUTS
   /// **************************************************************************************************
   ResourceFactory<TModel> get factory => repository.factory;
-  ResourceSerializer<TModel> get serializer => repository.serializer;
 
 }

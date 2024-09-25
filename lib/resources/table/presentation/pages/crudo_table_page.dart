@@ -104,7 +104,7 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
         return AnimatedSearchBar(
           label: resource.pluralName(),
           labelStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onPrimary,
+            fontSize: 20,
           ),
           duration: const Duration(milliseconds: 300),
           animationDuration: const Duration(milliseconds: 300),

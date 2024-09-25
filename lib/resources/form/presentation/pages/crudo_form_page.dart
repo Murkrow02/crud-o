@@ -25,9 +25,7 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
             },
             child: Scaffold(
                 appBar: AppBar(
-                  title: Text(context.read<TResource>().singularName(),
-                      style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary)),
+                  title: Text(context.read<TResource>().singularName()),
                   actions: [
                     if (state is FormSavingState)
                       const CircularProgressIndicator.adaptive()

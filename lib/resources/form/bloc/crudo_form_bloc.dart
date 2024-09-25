@@ -11,14 +11,14 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   final TResource resource;
 
   CrudoFormBloc({required this.resource}) : super(FormInitialState()) {
-    on<LoadFormModelEvent<TModel>>(_onLoadFormModel);
+    on<LoadFormModelEvent>(_onLoadFormModel);
     on<InitFormModelEvent>(_onInitModel);
-    on<UpdateFormModelEvent<TModel>>(_onUpdateItem);
-    on<CreateFormModelEvent<TModel>>(_onCreateItem);
+    on<UpdateFormModelEvent>(_onUpdateItem);
+    on<CreateFormModelEvent>(_onCreateItem);
   }
 
   Future<void> _onLoadFormModel(
-      LoadFormModelEvent<TModel> event, Emitter<CrudoFormState> emit) async {
+      LoadFormModelEvent event, Emitter<CrudoFormState> emit) async {
     emit(FormLoadingState());
     try {
       final model = await resource.repository.getById(event.id);
@@ -37,7 +37,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       UpdateFormModelEvent event, Emitter<CrudoFormState> emit) async {
     try {
       emit(FormSavingState(formData: event.formData));
-      var apiModel = await resource.repository.update(event.model, event.id);
+      var apiModel = await resource.repository.update(event.id, event.formData);
       emit(FormSavedState());
       emit(FormReadyState(model: apiModel));
     } on ApiValidationException catch (e) {
@@ -52,7 +52,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     try {
       emit(FormSavingState(formData: event.formData));
       var apiModel = await resource.repository
-          .add(event.model);
+          .add(event.formData);
       emit(FormSavedState());
       emit(FormReadyState(model: apiModel));
     } on ApiValidationException catch (e) {

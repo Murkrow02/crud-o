@@ -9,7 +9,6 @@ import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 
 class RestClient {
-
   // Logger instance
   final logger = Logger(printer: PrettyPrinter());
 
@@ -40,7 +39,7 @@ class RestClient {
     logger.d("GET: $uri");
     final response = await http
         .get(
-        uri,
+          uri,
           headers: await configuration.getHeaders!(),
         )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
@@ -48,14 +47,15 @@ class RestClient {
   }
 
   // Function to perform a PUT request
-  Future<dynamic> put(String endpoint, Map<String, dynamic> data, {RestRequest? request}) async {
+  Future<dynamic> put(String endpoint, Map<String, dynamic> data,
+      {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
-    validateJson(data);
+    var validatedData = validateJson(data);
     logger.d("PUT: $uri");
     final response = await http
         .put(
-        uri,
-          body: jsonEncode(data),
+          uri,
+          body: jsonEncode(validatedData),
           headers: await configuration.getHeaders!(),
         )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
@@ -63,13 +63,14 @@ class RestClient {
   }
 
   // Function to perform a POST request
-  Future<dynamic> post(String endpoint, Map<String, dynamic> data, {RestRequest? request}) async {
+  Future<dynamic> post(String endpoint, Map<String, dynamic> data,
+      {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
-    validateJson(data);
+    var validatedData = validateJson(data);
     final response = await http
         .post(
-        uri,
-          body: jsonEncode(data),
+          uri,
+          body: jsonEncode(validatedData),
           headers: await configuration.getHeaders!(),
         )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
@@ -82,18 +83,15 @@ class RestClient {
     logger.d("DELETE: $uri");
     final response = await http
         .delete(
-        uri,
+          uri,
           headers: await configuration.getHeaders!(),
         )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
 
-
   // Generic response handler, returns response as dynamic after decoding and handling errors
-  Future<dynamic> handleResponseAndDecodeBody(
-      http.Response response) async {
-
+  Future<dynamic> handleResponseAndDecodeBody(http.Response response) async {
     // Internal server error
     if (response.statusCode == 500) {
       logger.e("Request: ${response.request?.url} failed. \n ${response.body}");
@@ -133,7 +131,8 @@ class RestClient {
       if (message != null && message.isNotEmpty) {
         Toaster.error(message);
       }
-      throw RestException(message != null ? "" : "An error occurred", response.statusCode);
+      throw RestException(
+          message != null ? "" : "An error occurred", response.statusCode);
     }
 
     // Display success message
@@ -148,24 +147,15 @@ class RestClient {
     return decodedBody;
   }
 
-
-  void validateJson(Map<String, dynamic> json) {
-    // Check the dynamic values to be int, string or bool
+  Map<String, dynamic> validateJson(Map<String, dynamic> json) {
+    Map<String, dynamic> validatedJson = {};
     json.forEach((key, value) {
-      if (value is! int && value is! String && value is! bool) {
-
-        // Check if is datetime, try to parse it
-        if (value is DateTime) {
-          json[key] = value.toIso8601String();
-          return;
-        }
-
-
-        throw Exception(
-            "Invalid json, value of key $key is not int, string or bool");
+      if (value is DateTime) {
+        validatedJson[key] = value.toIso8601String();
+      } else {
+        validatedJson[key] = value;
       }
     });
+    return validatedJson;
   }
-
-
 }

@@ -12,11 +12,11 @@ class ViewInitialState extends CrudoViewState {}
 class ViewLoadingState extends CrudoViewState {}
 
 class ViewReadyState<T extends Object> extends CrudoViewState {
-  final Map<String, dynamic> previewFields;
-  ViewReadyState({required this.previewFields});
+  final T model;
+  ViewReadyState({required this.model});
 
   @override
-  List<Object> get props => [previewFields];
+  List<Object> get props => [model];
 }
 
 class ViewErrorState extends CrudoViewState {

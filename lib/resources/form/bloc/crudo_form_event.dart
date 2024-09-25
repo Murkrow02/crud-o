@@ -5,9 +5,8 @@ abstract class CrudoFormEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadFormModelEvent<T> extends CrudoFormEvent {
+class LoadFormModelEvent extends CrudoFormEvent {
   final String id;
-
   LoadFormModelEvent({required this.id});
 
   @override
@@ -19,22 +18,20 @@ class InitFormModelEvent extends CrudoFormEvent {
   List<Object?> get props => [];
 }
 
-class CreateFormModelEvent<T> extends CrudoFormEvent {
-  final T model;
+class CreateFormModelEvent extends CrudoFormEvent {
   final Map<String, dynamic> formData;
-  CreateFormModelEvent({required this.model, required this.formData});
+  CreateFormModelEvent({required this.formData});
 
   @override
-  List<Object?> get props => [model, formData];
+  List<Object?> get props => [formData];
 }
 
-class UpdateFormModelEvent<T> extends CrudoFormEvent {
-  final T model;
+class UpdateFormModelEvent extends CrudoFormEvent {
   final String id;
   final Map<String, dynamic> formData;
 
-  UpdateFormModelEvent({required this.model, required this.id, required this.formData});
+  UpdateFormModelEvent({required this.id, required this.formData});
 
   @override
-  List<Object?> get props => [model, id, formData];
+  List<Object?> get props => [id, formData];
 }
