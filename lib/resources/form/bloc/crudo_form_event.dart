@@ -13,6 +13,15 @@ class LoadFormModelEvent extends CrudoFormEvent {
   List<Object?> get props => [id];
 }
 
+class ReloadFormEvent<T> extends CrudoFormEvent {
+  final Map<String, dynamic> formData;
+
+  ReloadFormEvent({required this.formData});
+
+  @override
+  List<Object?> get props => [formData];
+}
+
 class InitFormModelEvent extends CrudoFormEvent {
   @override
   List<Object?> get props => [];

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 import 'package:crud_o/core/models/traced_error.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
@@ -15,6 +17,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     on<InitFormModelEvent>(_onInitModel);
     on<UpdateFormModelEvent>(_onUpdateItem);
     on<CreateFormModelEvent>(_onCreateItem);
+    on<ReloadFormEvent>(_onReloadForm);
   }
 
   Future<void> _onLoadFormModel(
@@ -22,7 +25,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     emit(FormLoadingState());
     try {
       final model = await resource.repository.getById(event.id);
-      emit(FormReadyState(model: model));
+      emit(FormModelLoadedState(model: model));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
@@ -30,7 +33,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
 
   Future<void> _onInitModel(
       InitFormModelEvent event, Emitter<CrudoFormState> emit) async {
-    emit(FormReadyState(model: resource.factory.create()));
+    emit(FormModelLoadedState(model: resource.factory.create()));
   }
 
   Future<void> _onUpdateItem(
@@ -39,7 +42,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       emit(FormSavingState(formData: event.formData));
       var apiModel = await resource.repository.update(event.id, event.formData);
       emit(FormSavedState());
-      emit(FormReadyState(model: apiModel));
+      emit(FormModelLoadedState(model: apiModel));
     } on ApiValidationException catch (e) {
       _handleApiValidationException(emit, event.formData, e);
     } catch (e, s) {
@@ -54,7 +57,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       var apiModel = await resource.repository
           .add(event.formData);
       emit(FormSavedState());
-      emit(FormReadyState(model: apiModel));
+      emit(FormModelLoadedState(model: apiModel));
     } on ApiValidationException catch (e) {
       _handleApiValidationException(emit, event.formData, e);
     } catch (e, s) {
@@ -85,5 +88,9 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
         oldFormData: formData,
         formErrors: formErrors,
         nonFormErrors: globalErrors));
+  }
+
+  void _onReloadForm(ReloadFormEvent event, Emitter<CrudoFormState> emit) {
+    emit(FormReadyState(formData: event.formData));
   }
 }

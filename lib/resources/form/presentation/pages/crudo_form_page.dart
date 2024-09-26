@@ -29,8 +29,7 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
                   actions: [
                     if (state is FormSavingState)
                       const CircularProgressIndicator.adaptive()
-                    else if (state is FormReadyState<TModel> ||
-                        state is FormNotValidState)
+                    else if (state is FormNotValidState || state is FormReadyState)
                       IconButton(
                         icon: const Icon(Icons.save),
                         onPressed: () => onSave(context),

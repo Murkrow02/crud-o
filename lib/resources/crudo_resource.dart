@@ -36,7 +36,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   bool get showInDrawer => true;
 
-  Map<String, dynamic> toMap(TModel model);
+  Map<String, dynamic> toMap(TModel model) => throw UnimplementedError();
 
   /// **************************************************************************************************
   /// ACTIONS

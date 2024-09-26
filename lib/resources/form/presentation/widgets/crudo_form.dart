@@ -12,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 
 abstract class CrudoForm<TResource extends CrudoResource<TModel>,
-    TModel extends Object> extends StatelessWidget {
+TModel extends Object> extends StatelessWidget {
   late TResource resource;
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
 
@@ -29,84 +29,89 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
 
   @override
   Widget build(BuildContext context) {
+    // Get resource from context
     resource = context.read();
 
     // Try to get editing resource id
     try {
-      id = context.read<ResourceContext>().id;
+      id = context
+          .read<ResourceContext>()
+          .id;
     } catch (e) {
       // If the id is not present, it means we are creating a new resource
       editMode = false;
     }
 
     return BlocProvider(
-        create: (context) =>
-            CrudoFormBloc<TResource, TModel>(resource: resource)
-              ..add(editMode
-                  ? LoadFormModelEvent(id: id!)
-                  : InitFormModelEvent()),
-        child: Builder(builder: (context) {
-          return buildFormWrapper(
-            context,
-            BlocConsumer<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
-              builder: (context, state) {
-                // Loading, saved or initial state
-                if (state is FormLoadingState ||
-                    state is FormSavedState ||
-                    state is FormInitialState) {
-                  return buildLoading();
-                }
+      create: (context) =>
+      CrudoFormBloc<TResource, TModel>(resource: resource)
+        ..add(editMode ? LoadFormModelEvent(id: id!) : InitFormModelEvent()),
+      child: Builder(builder: (context) {
+        return buildFormWrapper(
+          context,
+          BlocConsumer<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
+            builder: (context, state) {
+              // Loading, saved or initial state
+              if (state is FormLoadingState ||
+                  state is FormSavedState ||
+                  state is FormInitialState) {
+                return buildLoading();
+              }
 
-                // Form ready (or saving), display the form
-                if (state is FormReadyState<TModel> ||
-                    state is FormSavingState) {
-                  var formData = state is FormReadyState<TModel>
-                      ? modelToForm(state.model)
-                      : (state as FormSavingState).formData;
-                  return FormBuilder(
-                      key: formKey,
-                      initialValue: formData,
-                      child: buildForm(context, formData));
-                }
+              if (state is FormReadyState) {
+                return buildFormBuilder(context, state.formData);
+              }
 
-                // Form not valid, display the form with errors
-                if (state is FormNotValidState) {
-                  var formData = state.oldFormData;
-                  if (state.formErrors.isNotEmpty) {
-                    _invalidateFormFields(state.formErrors);
-                  }
-                  return Column(
-                    children: [
-                      buildNonFormErrors(context, state.nonFormErrors),
-                      FormBuilder(
-                          key: formKey,
-                          initialValue: formData,
-                          child: buildForm(
-                            context,
-                            formData,
-                          ))
-                    ],
-                  );
-                }
+              if (state is FormSavingState) {
+                return buildFormBuilder(context, state.formData);
+              }
 
-                // Form error, display the error
-                if (state is FormErrorState) {
-                  return ErrorAlert(state.tracedError);
+              // Form not valid, display the form with errors
+              if (state is FormNotValidState) {
+                var formData = state.oldFormData;
+                if (state.formErrors.isNotEmpty) {
+                  _invalidateFormFields(state.formErrors);
                 }
+                return Column(
+                  children: [
+                    buildNonFormErrors(context, state.nonFormErrors),
+                    buildFormBuilder(context, formData),
+                  ],
+                );
+              }
 
-                // Unexpected state
-                return ErrorAlert(TracedError(
-                    UnexpectedStateException(state), StackTrace.current));
-              },
-              listener: (BuildContext context, CrudoFormState state) {
-                if (state is FormSavedState) {
-                  updatedApi = true;
-                  Toaster.success("Salvato!");
-                }
-              },
-            ),
-          );
-        }));
+              // Form error, display the error
+              if (state is FormErrorState) {
+                return ErrorAlert(state.tracedError);
+              }
+
+              // Unexpected state
+              return ErrorAlert(TracedError(
+                  UnexpectedStateException(state), StackTrace.current));
+            },
+            listener: (BuildContext context, CrudoFormState state) {
+              if (state is FormSavedState) {
+                updatedApi = true;
+                Toaster.success("Salvato!");
+              }
+              if (state is FormModelLoadedState<TModel>) {
+                context.read<CrudoFormBloc<TResource, TModel>>().add(
+                    ReloadFormEvent(formData: toFormData(state.model)));
+              }
+            },
+          ),
+        );
+      }),
+    );
+  }
+
+// New method for building FormBuilder
+  Widget buildFormBuilder(BuildContext context, Map<String, dynamic> formData) {
+    return FormBuilder(
+      key: formKey,
+      initialValue: formData,
+      child: buildForm(context, formData),
+    );
   }
 
   /// Override to create your form
@@ -116,8 +121,12 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
   Widget buildNonFormErrors(BuildContext context, List<String> errors) {
     return Column(
         children: errors
-            .map((e) => Text(e,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)))
+            .map((e) =>
+            Text(e,
+                style: TextStyle(color: Theme
+                    .of(context)
+                    .colorScheme
+                    .error)))
             .toList());
   }
 
@@ -150,22 +159,22 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
     var formData = formKey.currentState!.value;
     if (editMode) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
-            UpdateFormModelEvent(
-                formData: formData, id: id!),
-          );
+        UpdateFormModelEvent(formData: formData, id: id!),
+      );
     } else {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
-            CreateFormModelEvent(formData: formData),
-          );
+        CreateFormModelEvent(formData: formData),
+      );
     }
   }
-
 
   /// Acts after the form has been rendered to invalidate the fields
   /// Goes in reverse order to focus the first error first
   void _invalidateFormFields(Map<String, List> formErrors) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      for (var key in formErrors.keys.toList().reversed) {
+      for (var key in formErrors.keys
+          .toList()
+          .reversed) {
         formKey.currentState!.fields[key]!
             .invalidate(formErrors[key]!.join("\n"));
       }
@@ -174,8 +183,16 @@ abstract class CrudoForm<TResource extends CrudoResource<TModel>,
 
   /// By default, form falls back to the resource serializer to serialize the form data
   /// Override this method to customize the serialization
-  Map<String, dynamic> modelToForm(TModel model) {
-    return resource.toMap(model);
-  }
+  Map<String, dynamic> toFormData(TModel model);
 
+  /// Reloads the form
+  void reloadForm(BuildContext context) {
+    var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
+    var formState = formBloc.state;
+    if (formState is FormReadyState)
+      {
+        formKey.currentState!.save();
+        formBloc.add(ReloadFormEvent(formData: formKey.currentState!.value));
+      }
+  }
 }

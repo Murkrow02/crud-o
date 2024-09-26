@@ -13,22 +13,27 @@ class FormInitialState extends CrudoFormState {}
 // While in this state form should still show a loading spinner
 class FormSavedState extends CrudoFormState {}
 class FormLoadingState extends CrudoFormState {}
+class FormModelLoadedState<T extends Object> extends CrudoFormState {
+  final T model;
+  FormModelLoadedState({required this.model});
+
+  @override
+  List<Object> get props => [model];
+}
+class FormReadyState extends CrudoFormState {
+  final Map<String, dynamic> formData;
+  FormReadyState({required this.formData});
+
+  @override
+  List<Object> get props => [formData];
+}
 class FormSavingState extends CrudoFormState {
   final Map<String, dynamic> formData;
-
   FormSavingState({required this.formData});
 
   @override
   List<Object> get props => [formData];
 }
-class FormReadyState<T extends Object> extends CrudoFormState {
-  final T model;
-  FormReadyState({required this.model});
-
-  @override
-  List<Object> get props => [model];
-}
-
 class FormNotValidState extends CrudoFormState {
   final Map<String, dynamic> oldFormData;
   final Map<String, List<dynamic>> formErrors;
