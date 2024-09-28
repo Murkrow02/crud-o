@@ -78,17 +78,13 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
+    var createAction = resource.createAction();
     return AppBar(
-      actions: resource.canCreate
+      actions: createAction != null
           ? [
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => resource.formPage!),
-                  );
-                },
+                onPressed: () => createAction.execute(context),
               )
             ]
           : [],

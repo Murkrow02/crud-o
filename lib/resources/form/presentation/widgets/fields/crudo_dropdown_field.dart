@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 
-class CrudoDropdownField<TModel, TValue> extends CrudoField {
+class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
+
+  final CrudoFieldConfiguration config;
   final String errorText;
   final InputDecoration decoration;
   final Widget Function(TModel item) itemBuilder;
@@ -14,13 +16,8 @@ class CrudoDropdownField<TModel, TValue> extends CrudoField {
   final Function(TModel? item)? onSelected;
   const CrudoDropdownField({
     super.key,
-    required super.name,
+    required this.config,
     required this.items,
-    super.label = "",
-    super.required = false,
-    super.visible,
-    super.visibleOn,
-    super.enabledOn,
     required this.itemBuilder,
     required this.valueBuilder,
     this.decoration = const InputDecoration(),
@@ -30,11 +27,16 @@ class CrudoDropdownField<TModel, TValue> extends CrudoField {
   });
 
   @override
-  Widget buildField(BuildContext context) {
-    return CrudoFutureDropdownField(name: name,
+  Widget build(BuildContext context) {
+
+    if (!config.shouldRenderField(context)) {
+      return const SizedBox();
+    }
+
+    return CrudoFutureDropdownField(
+      config: config,
         itemBuilder: itemBuilder,
         valueBuilder: valueBuilder,
-        label: label,
         future: Future.value(items),
       onSelected: onSelected,
     );

@@ -1,28 +1,22 @@
 import 'package:crud_o/resources/form/data/form_context_container.dart';
-import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 
-class CrudoTextField extends CrudoField {
+import 'crudo_field.dart';
+
+class CrudoTextField extends StatelessWidget {
+  final CrudoFieldConfiguration config;
   final TextInputType keyboardType;
   final ValueTransformer<String?>? valueTransformer;
   final FormFieldValidator<String>? validator;
   final bool numeric;
   final int maxLines;
+
   const CrudoTextField({
     super.key,
-
-    // Super fields
-    required super.name,
-    super.label,
-    super.required = false,
-    super.visible,
-    super.visibleOn,
-    super.enabledOn,
-
-    // This class fields
+    required this.config,
     this.keyboardType = TextInputType.text,
     this.valueTransformer,
     this.validator,
@@ -31,28 +25,44 @@ class CrudoTextField extends CrudoField {
   });
 
   @override
-  Widget buildField(BuildContext context) {
+  Widget build(BuildContext context) {
+    if (!config.shouldRenderField(context)) {
+      return const SizedBox();
+    }
 
-    return FormBuilderTextField(
-      name: name,
-      initialValue: context.readFormContext().formData[name]?.toString() ?? '',
-      validator: FormBuilderValidators.compose([
-        if (this.required) FormBuilderValidators.required(),
-        if (this.numeric) FormBuilderValidators.numeric(),
-      ]),
-      decoration: defaultDecoration.copyWith(labelText: label),
-      keyboardType: numeric ? TextInputType.number : keyboardType,
-      valueTransformer: valueTransformer ?? (numeric ? numericTransformer : null),
-      maxLines: this.maxLines,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Builder(builder: (context) {
+
+        // Detect if preview
+        if(config.shouldRenderViewField(context)) {
+          return config.renderViewField(context);
+        }
+
+        // Edit or create
+        return FormBuilderTextField(
+          name: config.name,
+          initialValue:
+              context.readFormContext().formData[config.name]?.toString() ?? '',
+          validator: FormBuilderValidators.compose([
+            if (config.required) FormBuilderValidators.required(),
+            if (numeric) FormBuilderValidators.numeric(),
+          ]),
+          decoration: defaultDecoration.copyWith(labelText: config.label),
+          keyboardType: numeric ? TextInputType.number : keyboardType,
+          valueTransformer:
+              valueTransformer ?? (numeric ? numericTransformer : null),
+          maxLines: maxLines,
+        );
+      }),
     );
   }
 
-  num? numericTransformer(String? value)
-  {
+  num? numericTransformer(String? value) {
     return value == null
         ? null
         : value == ''
-        ? 0
-        : num.tryParse(value.toString()) ?? 0;
+            ? 0
+            : num.tryParse(value.toString()) ?? 0;
   }
 }

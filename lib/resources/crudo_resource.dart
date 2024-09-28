@@ -42,6 +42,25 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// **************************************************************************************************
   /// ACTIONS
   /// **************************************************************************************************
+  CrudoAction? createAction() {
+    if (formPage == null) return null;
+    return CrudoAction(
+        label: 'Crea',
+        icon: Icons.add,
+        action: (context, data) async {
+          return await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => RepositoryProvider(
+                      create: (context) => ResourceContext(
+                          id: "",
+                          operationType: ResourceOperationType.create),
+                      child: formPage,
+                    )),
+          );
+        });
+  }
+
   CrudoAction? editAction() {
     if (formPage == null) return null;
     return CrudoAction(
@@ -52,8 +71,10 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             context,
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(id: data?['id'], operationType: ResourceOperationType.edit),
-                      child: formPage!,
+                      create: (context) => ResourceContext(
+                          id: data?['id'],
+                          operationType: ResourceOperationType.edit),
+                      child: formPage,
                     )),
           );
         });
@@ -64,13 +85,15 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
     return CrudoAction(
         label: 'Visualizza',
         icon: Icons.remove_red_eye,
-        action: (context, data) {
-          Navigator.push(
+        action: (context, data) async {
+         return await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(id: data?['id'], operationType: ResourceOperationType.view),
-                      child: formPage!,
+                      create: (context) => ResourceContext(
+                          id: data?['id'],
+                          operationType: ResourceOperationType.view),
+                      child: formPage,
                     )),
           );
         });
@@ -110,14 +133,11 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  /// Form to edit/create the resource
+  /// Form to edit/create/view the resource
   Widget? formPage;
 
   /// Table to show the resource
   CrudoTablePage? tablePage;
-
-  /// Override this method to define if the resource can be created
-  bool get canCreate => formPage != null;
 
   /// Override this method to define if the resource can be deleted
   bool get canDelete => true;
@@ -126,5 +146,4 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// SHORTCUTS
   /// **************************************************************************************************
   ResourceFactory<TModel> get factory => repository.factory;
-
 }
