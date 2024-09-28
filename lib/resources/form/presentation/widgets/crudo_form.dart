@@ -161,10 +161,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Execute the futures registered with registerFutures before loading the form
   void _executeFutures(BuildContext context) async {
-    if (registerFutures == null) return;
 
     // Allow child to register futures
-    var futures = registerFutures!(context);
+    var futures = registerFutures?.call(context) ?? {};
 
     // Execute futures
     for (var key in futures.keys) {

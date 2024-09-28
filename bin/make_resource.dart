@@ -103,7 +103,7 @@ ${imports.join('\n')}
 
 class ${titleCaseResource}Resource extends CrudoResource<$titleCaseResource> {
 
-  ${titleCaseResource}Resource() : super(repository: ${titleCaseResourcePlural}Repository());
+  ${titleCaseResource}Resource() : super(repository: ${titleCaseResource}Repository());
 
   $formPageOverride
 
@@ -154,9 +154,9 @@ String repositoryStub(String name) {
 import 'package:crud_o/resources/resource_repository.dart';
 import '${name}_factory.dart';
 
-class ${titleCaseResourcePlural}Repository extends ResourceRepository<$titleCaseResource> {
+class ${titleCaseResource}Repository extends ResourceRepository<$titleCaseResource> {
 
-  ${titleCaseResourcePlural}Repository() : super(endpoint: "$name", factory: ${titleCaseResource}Factory());
+  ${titleCaseResource}Repository() : super(endpoint: "${name}s", factory: ${titleCaseResource}Factory());
 }
   ''';
 }
@@ -167,6 +167,8 @@ String formPageStub(String name) {
 import 'package:flutter/material.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
 import '../${name}_resource.dart';
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_text_field.dart';
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 
 class ${titleCaseResource}FormPage extends StatelessWidget {
   ${titleCaseResource}FormPage({super.key});
@@ -175,7 +177,14 @@ class ${titleCaseResource}FormPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return CrudoForm<${titleCaseResource}Resource, $titleCaseResource> (
       formBuilder: (context, formData, futureResults, formController) => Column(children: [
-        // Define form fields here
+         CrudoTextField(
+            config: CrudoFieldConfiguration(
+              name: 'name',
+              label: 'Nome',
+              required: true,
+            ),
+          ),
+          // Add more fields here
       ]),
       toFormData: (model) => {
         'id': model.id,
