@@ -6,26 +6,25 @@ import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o/resources/form/data/form_context_container.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:provider/provider.dart';
 
 abstract class CrudoForm<TResource extends CrudoResource<TModel>,
 TModel extends Object> extends StatelessWidget {
   late TResource resource;
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
-
-  // If in edit mode, the id of the resource
   String? id;
-
-  // Indicates edit/create mode
   bool editMode = true;
-
-  // Indicates if the api has been updated with the new data, used to refresh the table
   bool updatedApi = false;
 
   CrudoForm({super.key});
+
+  Map<String, dynamic> _futureResults = {};
 
   @override
   Widget build(BuildContext context) {
@@ -43,10 +42,13 @@ TModel extends Object> extends StatelessWidget {
     }
 
     return BlocProvider(
-      create: (context) =>
-      CrudoFormBloc<TResource, TModel>(resource: resource)
-        ..add(editMode ? LoadFormModelEvent(id: id!) : InitFormModelEvent()),
+      create: (context) => CrudoFormBloc<TResource, TModel>(resource: resource),
       child: Builder(builder: (context) {
+
+        // Execute futures
+        _executeFutures(context);
+
+        // Build form
         return buildFormWrapper(
           context,
           BlocConsumer<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
@@ -95,8 +97,9 @@ TModel extends Object> extends StatelessWidget {
                 Toaster.success("Salvato!");
               }
               if (state is FormModelLoadedState<TModel>) {
-                context.read<CrudoFormBloc<TResource, TModel>>().add(
-                    ReloadFormEvent(formData: toFormData(state.model)));
+                context
+                    .read<CrudoFormBloc<TResource, TModel>>()
+                    .add(ReloadFormEvent(formData: toFormData(state.model)));
               }
             },
           ),
@@ -107,10 +110,20 @@ TModel extends Object> extends StatelessWidget {
 
 // New method for building FormBuilder
   Widget buildFormBuilder(BuildContext context, Map<String, dynamic> formData) {
-    return FormBuilder(
-      key: formKey,
-      initialValue: formData,
-      child: buildForm(context, formData),
+    return Provider(
+      create: (context) =>
+          FormContextContainer(
+            formData: formData,
+            formBloc: context.read<CrudoFormBloc<TResource, TModel>>(),
+            operationType: editMode
+                ? ResourceOperationType.edit
+                : ResourceOperationType.create,
+          ),
+      child: FormBuilder(
+        key: formKey,
+        initialValue: formData,
+        child: buildForm(context, formData),
+      ),
     );
   }
 
@@ -156,7 +169,7 @@ TModel extends Object> extends StatelessWidget {
     }
 
     // Update or create
-    var formData = formKey.currentState!.value;
+    var formData = beforeSave(Map.from(formKey.currentState!.value));
     if (editMode) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
         UpdateFormModelEvent(formData: formData, id: id!),
@@ -185,14 +198,48 @@ TModel extends Object> extends StatelessWidget {
   /// Override this method to customize the serialization
   Map<String, dynamic> toFormData(TModel model);
 
+  /// Interceptor to modify the form data before saving
+  Map<String, dynamic> beforeSave(Map<String, dynamic> formData) {
+    return formData;
+  }
+
   /// Reloads the form
   void reloadForm(BuildContext context) {
     var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
     var formState = formBloc.state;
-    if (formState is FormReadyState)
-      {
-        formKey.currentState!.save();
-        formBloc.add(ReloadFormEvent(formData: formKey.currentState!.value));
-      }
+    if (formState is FormReadyState) {
+      formKey.currentState!.save();
+      formBloc.add(ReloadFormEvent(formData: formKey.currentState!.value));
+    }
   }
+
+  /// Register a list of futures to be executed when the form is loaded
+  Map<String, Future> registerFutures(BuildContext context) {
+    return {};
+  }
+
+  /// Gets the result of a future registered with registerFutures
+  T getFutureResult<T>(String key) {
+    return _futureResults[key] as T;
+  }
+
+  void _executeFutures(BuildContext context) async {
+    // Allow child to register futures
+    var futures = registerFutures(context);
+
+    // Execute futures
+    for (var key in futures.keys) {
+      try {
+        var result = await futures[key];
+        _futureResults[key] = result;
+      } catch (e) {
+        _futureResults[key] = null;
+      }
+    }
+
+    // Actually load the form data
+    context
+        .read<CrudoFormBloc<TResource, TModel>>()
+        .add(editMode ? LoadFormModelEvent(id: id!) : InitFormModelEvent());
+    }
 }

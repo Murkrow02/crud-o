@@ -1,71 +1,79 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:collection/collection.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
 import 'package:futuristic/futuristic.dart';
 import 'package:provider/provider.dart';
 
-class FormBuilderFutureDropdown<TModel, TValue> extends StatelessWidget {
-  final String name;
+class CrudoFutureDropdownField<TModel, TValue> extends CrudoField {
+
   final String errorText;
-  final InputDecoration decoration;
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
   final bool multiple;
   final Future<List<TModel>> future;
   final Function(TModel? item)? onSelected;
-  const FormBuilderFutureDropdown({
+  const CrudoFutureDropdownField({
     super.key,
+    required super.name,
+    super.label = "",
+    super.required = false,
+    super.visible,
+    super.visibleOn,
+    super.enabledOn,
     required this.itemBuilder,
-    required this.name,
     required this.valueBuilder,
     required this.future,
-    this.decoration = const InputDecoration(),
     this.multiple = false,
     this.errorText = 'Errore nel caricamento dei dati',
     this.onSelected
   });
 
   @override
-  Widget build(BuildContext context) {
-    return FormBuilderField<dynamic>(
-      name: name,
-      builder: (FormFieldState<dynamic> field) {
-        return Futuristic<List<TModel>>(
-          autoStart: true,
-          futureBuilder: ()=> future,
-          busyBuilder: (context) =>
-              _buildDropdown([], context, field, enabled: false),
-          errorBuilder: (context, error, retry) {
-            print(error);
-            return Container(
-            padding: const EdgeInsets.all(16),
-            width: double.infinity,
-            color: Theme.of(context).colorScheme.error.withOpacity(0.4),
-            child: Column(
-              children: [
-                Text(errorText),
-                const SizedBox(height: 8),
-                ElevatedButton(
-                  onPressed: retry,
-                  child: const Text('Riprova'),
-                ),
-              ],
-            ),
-          );
-          },
-          dataBuilder: (context, data) =>
-              _buildDropdown(data ?? [], context, field),
-        );
-      },
+  Widget buildField(BuildContext context) {
+    return
+        FormBuilderField<dynamic>(
+              name: name,
+              builder: (FormFieldState<dynamic> field) {
+                return Futuristic<List<TModel>>(
+                  autoStart: true,
+                  futureBuilder: ()=> future,
+                  busyBuilder: (context) =>
+                      _buildDropdown([], context, field, enabled: false),
+                  errorBuilder: (context, error, retry) {
+                    print(error);
+                    return Container(
+                    padding: const EdgeInsets.all(16),
+                    width: double.infinity,
+                    color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+                    child: Column(
+                      children: [
+                        Text(errorText),
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: retry,
+                          child: const Text('Riprova'),
+                        ),
+                      ],
+                    ),
+                  );
+                  },
+                  dataBuilder: (context, data) =>
+                      _buildDropdown(data ?? [], context, field),
+                );
+              },
     );
   }
 
   Widget _buildDropdown(
       List<TModel> items, BuildContext context, FormFieldState<dynamic> field,
       {bool enabled = true}) {
-    var hintText = decoration.labelText;
+
+
+    var hintText = label;
     listItemBuilder(context, item, isSelected, onItemSelect) {
       return itemBuilder(item);
     }
@@ -110,7 +118,7 @@ class FormBuilderFutureDropdown<TModel, TValue> extends StatelessWidget {
       headerBuilder: (context, selectedItem, enabled) {
         return selectedItem != null
             ? itemBuilder(selectedItem)
-            : Text(hintText ?? 'Select an item');
+            : Text(hintText ?? 'Seleziona un $label');
       },
       onChanged: (value) {
         if (value != null) {
