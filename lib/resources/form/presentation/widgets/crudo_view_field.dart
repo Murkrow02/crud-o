@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class ViewField extends StatelessWidget {
+class CrudoViewField extends StatelessWidget {
   final String name;
   final String value;
 
-  const ViewField({
+  const CrudoViewField({
     super.key,
     required this.name,
     required this.value,
@@ -29,7 +29,7 @@ class ViewField extends StatelessWidget {
               Text(
                 name,
                 textAlign: TextAlign.start,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                  // color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 20.0,
@@ -37,7 +37,7 @@ class ViewField extends StatelessWidget {
               ),
               Text(
                 value,
-                style:  TextStyle(
+                style:  const TextStyle(
                   fontSize: 16.0,
                  // color: Theme.of(context).colorScheme.onSurface,
                 ),

@@ -92,7 +92,7 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
               )
             ]
           : [],
-      title: resource.canSearch
+      title: canSearch
           ? _buildSearchBar(context)
           : Text(resource.pluralName()),
     );
@@ -234,4 +234,8 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
       ),
     );
   }
+
+  /// Whether the resource can be searched
+  /// Override this method to return true if the resource can be searched
+  bool get canSearch => false;
 }

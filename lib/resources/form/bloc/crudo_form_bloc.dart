@@ -91,6 +91,6 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   }
 
   void _onReloadForm(ReloadFormEvent event, Emitter<CrudoFormState> emit) {
-    emit(FormReadyState(formData: event.formData));
+    emit(FormReadyState(formData: event.formData, operationType: event.operationType));
   }
 }

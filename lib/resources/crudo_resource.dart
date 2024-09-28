@@ -3,6 +3,7 @@ import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_factory.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
@@ -51,7 +52,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             context,
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(id: data?['id']),
+                      create: (context) => ResourceContext(id: data?['id'], operationType: ResourceOperationType.edit),
                       child: formPage!,
                     )),
           );
@@ -59,7 +60,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   }
 
   CrudoAction? viewAction() {
-    if (viewPage == null) return null;
+    if (formPage == null) return null;
     return CrudoAction(
         label: 'Visualizza',
         icon: Icons.remove_red_eye,
@@ -68,8 +69,8 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             context,
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(id: data?['id']),
-                      child: viewPage!,
+                      create: (context) => ResourceContext(id: data?['id'], operationType: ResourceOperationType.view),
+                      child: formPage!,
                     )),
           );
         });
@@ -112,10 +113,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// Form to edit/create the resource
   Widget? formPage;
 
-  /// View to show the resource
-  Widget? viewPage;
-
-  // Table to show the resource
+  /// Table to show the resource
   CrudoTablePage? tablePage;
 
   /// Override this method to define if the resource can be created
@@ -123,9 +121,6 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   /// Override this method to define if the resource can be deleted
   bool get canDelete => true;
-
-  /// Override this method to define if the resource can be searched in the table
-  bool get canSearch => false;
 
   /// **************************************************************************************************
   /// SHORTCUTS

@@ -1,3 +1,4 @@
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class CrudoFormEvent extends Equatable {
@@ -15,11 +16,11 @@ class LoadFormModelEvent extends CrudoFormEvent {
 
 class ReloadFormEvent<T> extends CrudoFormEvent {
   final Map<String, dynamic> formData;
-
-  ReloadFormEvent({required this.formData});
+  final ResourceOperationType operationType;
+  ReloadFormEvent({required this.formData, required this.operationType});
 
   @override
-  List<Object?> get props => [formData];
+  List<Object?> get props => [formData, operationType];
 }
 
 class InitFormModelEvent extends CrudoFormEvent {

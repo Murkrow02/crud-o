@@ -1,7 +1,10 @@
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
+import 'package:crud_o/resources/form/data/form_context_container.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
+import 'package:crud_o/resources/resource_context.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -29,11 +32,19 @@ abstract class CrudoFormPage<TResource extends CrudoResource<TModel>,
                   actions: [
                     if (state is FormSavingState)
                       const CircularProgressIndicator.adaptive()
-                    else if (state is FormNotValidState || state is FormReadyState)
-                      IconButton(
-                        icon: const Icon(Icons.save),
-                        onPressed: () => onSave(context),
-                      ),
+                    else if (state is FormNotValidState ||
+                        state is FormReadyState)
+                      if (context.read<ResourceContext>().operationType ==
+                          ResourceOperationType.view)
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () => enterEditMode(context),
+                        )
+                      else
+                        IconButton(
+                          icon: const Icon(Icons.save),
+                          onPressed: () => onSave(context),
+                        ),
                   ],
                 ),
                 body: super.buildFormWrapper(context, form)));

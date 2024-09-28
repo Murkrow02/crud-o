@@ -15,11 +15,11 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:provider/provider.dart';
 
 abstract class CrudoForm<TResource extends CrudoResource<TModel>,
-TModel extends Object> extends StatelessWidget {
+    TModel extends Object> extends StatelessWidget {
   late TResource resource;
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
   String? id;
-  bool editMode = true;
+  ResourceOperationType operationType = ResourceOperationType.create;
   bool updatedApi = false;
 
   CrudoForm({super.key});
@@ -33,18 +33,15 @@ TModel extends Object> extends StatelessWidget {
 
     // Try to get editing resource id
     try {
-      id = context
-          .read<ResourceContext>()
-          .id;
+      id = context.read<ResourceContext>().id;
+      operationType = context.read<ResourceContext>().operationType;
     } catch (e) {
-      // If the id is not present, it means we are creating a new resource
-      editMode = false;
+      operationType = ResourceOperationType.create;
     }
 
     return BlocProvider(
       create: (context) => CrudoFormBloc<TResource, TModel>(resource: resource),
       child: Builder(builder: (context) {
-
         // Execute futures
         _executeFutures(context);
 
@@ -97,9 +94,10 @@ TModel extends Object> extends StatelessWidget {
                 Toaster.success("Salvato!");
               }
               if (state is FormModelLoadedState<TModel>) {
-                context
-                    .read<CrudoFormBloc<TResource, TModel>>()
-                    .add(ReloadFormEvent(formData: toFormData(state.model)));
+                context.read<CrudoFormBloc<TResource, TModel>>().add(
+                    ReloadFormEvent(
+                        formData: toFormData(state.model),
+                        operationType: operationType));
               }
             },
           ),
@@ -108,23 +106,23 @@ TModel extends Object> extends StatelessWidget {
     );
   }
 
-// New method for building FormBuilder
   Widget buildFormBuilder(BuildContext context, Map<String, dynamic> formData) {
-    return Provider(
-      create: (context) =>
-          FormContextContainer(
-            formData: formData,
-            formBloc: context.read<CrudoFormBloc<TResource, TModel>>(),
-            operationType: editMode
-                ? ResourceOperationType.edit
-                : ResourceOperationType.create,
-          ),
-      child: FormBuilder(
-        key: formKey,
-        initialValue: formData,
-        child: buildForm(context, formData),
-      ),
-    );
+    return Builder(builder: (context) {
+      return Provider(
+        create: (context) => FormContextContainer(
+          formData: formData,
+          formBloc: context.read<CrudoFormBloc<TResource, TModel>>(),
+          operationType: operationType,
+        ),
+        child: Builder(builder: (context) {
+          return FormBuilder(
+            key: formKey,
+            initialValue: formData,
+            child: buildForm(context, formData),
+          );
+        }),
+      );
+    });
   }
 
   /// Override to create your form
@@ -134,12 +132,8 @@ TModel extends Object> extends StatelessWidget {
   Widget buildNonFormErrors(BuildContext context, List<String> errors) {
     return Column(
         children: errors
-            .map((e) =>
-            Text(e,
-                style: TextStyle(color: Theme
-                    .of(context)
-                    .colorScheme
-                    .error)))
+            .map((e) => Text(e,
+                style: TextStyle(color: Theme.of(context).colorScheme.error)))
             .toList());
   }
 
@@ -170,14 +164,14 @@ TModel extends Object> extends StatelessWidget {
 
     // Update or create
     var formData = beforeSave(Map.from(formKey.currentState!.value));
-    if (editMode) {
+    if (operationType == ResourceOperationType.edit) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
-        UpdateFormModelEvent(formData: formData, id: id!),
-      );
-    } else {
+            UpdateFormModelEvent(formData: formData, id: id!),
+          );
+    } else if (operationType == ResourceOperationType.create) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
-        CreateFormModelEvent(formData: formData),
-      );
+            CreateFormModelEvent(formData: formData),
+          );
     }
   }
 
@@ -185,9 +179,7 @@ TModel extends Object> extends StatelessWidget {
   /// Goes in reverse order to focus the first error first
   void _invalidateFormFields(Map<String, List> formErrors) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      for (var key in formErrors.keys
-          .toList()
-          .reversed) {
+      for (var key in formErrors.keys.toList().reversed) {
         formKey.currentState!.fields[key]!
             .invalidate(formErrors[key]!.join("\n"));
       }
@@ -209,8 +201,16 @@ TModel extends Object> extends StatelessWidget {
     var formState = formBloc.state;
     if (formState is FormReadyState) {
       formKey.currentState!.save();
-      formBloc.add(ReloadFormEvent(formData: formKey.currentState!.value));
+      formBloc.add(ReloadFormEvent(
+          formData: formKey.currentState!.value, operationType: operationType));
     }
+  }
+
+  void enterEditMode(BuildContext context) {
+    var editAction = context.read<TResource>().editAction();
+    if (editAction == null) return;
+    Navigator.of(context).pop();
+    editAction.execute(context, data: {'id': id});
   }
 
   /// Register a list of futures to be executed when the form is loaded
@@ -238,8 +238,9 @@ TModel extends Object> extends StatelessWidget {
     }
 
     // Actually load the form data
-    context
-        .read<CrudoFormBloc<TResource, TModel>>()
-        .add(editMode ? LoadFormModelEvent(id: id!) : InitFormModelEvent());
-    }
+    context.read<CrudoFormBloc<TResource, TModel>>().add(
+        operationType == ResourceOperationType.create
+            ? InitFormModelEvent()
+            : LoadFormModelEvent(id: id!));
+  }
 }

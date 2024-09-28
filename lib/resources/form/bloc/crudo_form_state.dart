@@ -1,4 +1,5 @@
 import 'package:crud_o/core/models/traced_error.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 
@@ -22,10 +23,11 @@ class FormModelLoadedState<T extends Object> extends CrudoFormState {
 }
 class FormReadyState extends CrudoFormState {
   final Map<String, dynamic> formData;
-  FormReadyState({required this.formData});
+  final ResourceOperationType operationType;
+  FormReadyState({required this.formData, required this.operationType});
 
   @override
-  List<Object> get props => [formData];
+  List<Object> get props => [formData, operationType];
 }
 class FormSavingState extends CrudoFormState {
   final Map<String, dynamic> formData;
