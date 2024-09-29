@@ -9,15 +9,17 @@ class CrudoFieldConfiguration {
   final String? label;
   final bool required;
   final bool visible;
+  final bool enabled;
   final List<ResourceOperationType>? visibleOn;
   final List<ResourceOperationType>? enabledOn;
-  final CrudoViewField Function(BuildContext context, String label, String value)?
-      buildViewField;
+  final CrudoViewField Function(
+      BuildContext context, String label, String value)? buildViewField;
 
   CrudoFieldConfiguration({
     required this.name,
     this.label,
     this.required = false,
+    this.enabled = true,
     this.visible = true,
     this.visibleOn,
     this.enabledOn,
@@ -27,13 +29,16 @@ class CrudoFieldConfiguration {
   bool shouldRenderField(BuildContext context) {
     var formContext = context.readFormContext();
     return visible &&
-        (visibleOn == null || visibleOn!.contains(formContext.resourceContext.operationType));
+        (visibleOn == null ||
+            visibleOn!.contains(formContext.resourceContext.operationType));
   }
 
   bool shouldRenderViewField(BuildContext context) {
     var formContext = context.readFormContext();
-    return context.readFormContext().resourceContext.operationType == ResourceOperationType.view &&
-        (visibleOn == null || visibleOn!.contains(formContext.resourceContext.operationType));
+    return context.readFormContext().resourceContext.operationType ==
+            ResourceOperationType.view &&
+        (visibleOn == null ||
+            visibleOn!.contains(formContext.resourceContext.operationType));
   }
 
   Widget renderViewField(BuildContext context) {
@@ -42,6 +47,13 @@ class CrudoFieldConfiguration {
       return CrudoViewField(name: label ?? name, child: Text(value));
     }
     return buildViewField!(context, label ?? name, value);
+  }
+
+  bool shouldEnableField(BuildContext context) {
+    var formContext = context.readFormContext();
+    return enabled &&
+        (enabledOn == null ||
+            enabledOn!.contains(formContext.resourceContext.operationType));
   }
 }
 
@@ -58,3 +70,25 @@ InputDecoration defaultDecoration = InputDecoration(
   focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide.none),
 );
+
+class CrudoLabelize extends StatelessWidget {
+  final String label;
+  final Widget child;
+  final double offset;
+  const CrudoLabelize({Key? key, required this.label, required this.child, this.offset = 10})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(clipBehavior: Clip.none, children: [
+      child,
+      Positioned(
+          top: -offset,
+          left: 10,
+          child: Text(
+            label,
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+          )),
+    ]);
+  }
+}

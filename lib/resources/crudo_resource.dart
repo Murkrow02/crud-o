@@ -7,7 +7,7 @@ import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
-import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
+import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'table/bloc/crudo_table_bloc.dart';
@@ -54,6 +54,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                 builder: (context) => RepositoryProvider(
                       create: (context) => ResourceContext(
                           id: "",
+                          data: data ?? {},
                           operationType: ResourceOperationType.create),
                       child: formPage,
                     )),
@@ -73,6 +74,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                 builder: (context) => RepositoryProvider(
                       create: (context) => ResourceContext(
                           id: data?['id'],
+                          data: data ?? {},
                           operationType: ResourceOperationType.edit),
                       child: formPage,
                     )),
@@ -92,6 +94,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                 builder: (context) => RepositoryProvider(
                       create: (context) => ResourceContext(
                           id: data?['id'],
+                          data: data ?? {},
                           operationType: ResourceOperationType.view),
                       child: formPage,
                     )),
@@ -137,7 +140,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   Widget? formPage;
 
   /// Table to show the resource
-  CrudoTablePage? tablePage;
+  Widget? tablePage;
 
   /// Override this method to define if the resource can be deleted
   bool get canDelete => true;

@@ -1,5 +1,6 @@
 import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:crud_o/actions/crudo_action.dart';
+import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
 import 'package:crud_o/resources/resource_provider.dart';
@@ -14,52 +15,104 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 
-abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
+class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     extends StatelessWidget {
+  final List<CrudoTableColumn<TModel>> columns;
+  final List<CrudoAction>? customActions;
+  final bool canSearch;
+  final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)?
+      customFuture;
+
+  // Map of data to pass to the actions,
+  final Map<String, dynamic>? data;
+  final bool fullPage;
+  final bool paginated;
+
+  // Called whenever the data in the table changes, bool indicates first load
+  final Function(bool)? onDataChanged;
+
+  CrudoTable({
+    required this.columns,
+    this.customActions,
+    this.canSearch = false,
+    this.customFuture,
+    this.fullPage = false,
+    this.paginated = false,
+    this.onDataChanged,
+    this.data,
+    Key? key,
+  }) : super(key: key);
+
   late PlutoGridStateManager tableManager;
   late TResource resource;
-
-  CrudoTablePage({super.key});
+  bool _firstLoad = true;
 
   @override
   Widget build(BuildContext context) {
-    // Get resource
     resource = context.read();
 
     return BlocProvider<CrudoTableBloc>(
-        create: (context) =>
-            CrudoTableBloc<TResource, TModel>(resource: resource),
-        child: Builder(builder: (context) {
+      create: (context) => CrudoTableBloc<TResource, TModel>(
+          resource: resource, customFuture: customFuture),
+      child: Builder(
+        builder: (context) {
+          if (!fullPage) {
+            return SizedBox(
+                height: 500,
+                child: BlocListener<CrudoTableBloc, CrudoTableState>(
+                    listener: _tableStateEventListener,
+                    child: Container(
+                      margin: const EdgeInsets.all(10),
+                      child: _buildTable(context),
+                    )));
+          }
+
           return Scaffold(
             appBar: _buildAppBar(context),
             body: BlocListener<CrudoTableBloc, CrudoTableState>(
-                listener: tableStateEventListener, child: _buildTable(context)),
+                listener: _tableStateEventListener,
+                child: Container(
+                  margin: const EdgeInsets.all(10),
+                  child: _buildTable(context),
+                )),
           );
-        }));
+        },
+      ),
+    );
   }
 
-  // The actual table widget
   Widget _buildTable(BuildContext context) {
-    var columns = getColumns();
-    if (tableActions().isNotEmpty) {
-      columns.add(_buildActionsColumn());
+    var plutoColumns = columns.map((col) => col.column).toList();
+    if (_getActions().isNotEmpty) {
+      plutoColumns.add(_buildActionsColumn());
     }
     return PlutoGrid(
       configuration: PlutoGridConfiguration(
         style: PlutoGridStyleConfig(
+          enableGridBorderShadow: false,
+          enableColumnBorderVertical: false,
+          enableColumnBorderHorizontal: true,
+          enableCellBorderVertical: false,
+          enableCellBorderHorizontal: true,
+          borderColor: Color(0xFFE1E1E1),
+          cellUnselectedColor: Colors.transparent,
+          evenRowColor: Colors.transparent,
+          rowColor: Colors.transparent,
+          gridBorderColor: Colors.transparent,
           columnTextStyle: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 14,
           ),
-          gridBackgroundColor: Theme.of(context).colorScheme.surface,
+          gridBackgroundColor: Colors.transparent,
+          //Theme.of(context).colorScheme.surface,
           cellTextStyle: TextStyle(
             color: Theme.of(context).colorScheme.onSurface,
             fontSize: 14,
           ),
-          rowColor: Theme.of(context).colorScheme.surface,
+          //rowColor: Theme.of(context).colorScheme.surface,
         ),
         columnSize: const PlutoGridColumnSizeConfig(
-          autoSizeMode: PlutoAutoSizeMode.none,
+          autoSizeMode: PlutoAutoSizeMode.scale,
           resizeMode: PlutoResizeMode.none,
         ),
       ),
@@ -69,11 +122,11 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
         tableManager.setSelectingMode(PlutoGridSelectingMode.row);
         context.read<CrudoTableBloc>().add(LoadTableEvent());
       },
-      columns: columns,
+      columns: plutoColumns,
       rows: [],
-      // DO NOT PUT CONST HERE
-      createFooter: (tableManager) =>
-          CrudoTableFooter(tableManager: tableManager),
+      createFooter: (tableManager) => paginated
+          ? CrudoTableFooter(tableManager: tableManager)
+          : const SizedBox(),
     );
   }
 
@@ -84,13 +137,17 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
           ? [
               IconButton(
                 icon: const Icon(Icons.add),
-                onPressed: () => createAction.execute(context),
+                onPressed: () => createAction
+                    .execute(context, data: data)
+                    .then((needToRefresh) {
+                  if (needToRefresh == true) {
+                    context.read<CrudoTableBloc>().add(LoadTableEvent());
+                  }
+                }),
               )
             ]
           : [],
-      title: canSearch
-          ? _buildSearchBar(context)
-          : Text(resource.pluralName()),
+      title: canSearch ? _buildSearchBar(context) : Text(resource.pluralName()),
     );
   }
 
@@ -130,17 +187,36 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
     );
   }
 
-  /// Called when got new data from the bloc
-  void onDataLoaded(
-      BuildContext context, PaginatedResourceResponse<TModel> response) {
+  void _tableStateEventListener(BuildContext context, CrudoTableState state) {
+    tableManager.setShowLoading(false);
+
+    if (state is TableLoadingState) {
+      tableManager.setShowLoading(true);
+    }
+    if (state is TableLoadedState<TModel>) {
+      _onDataLoaded(context, state.response);
+      onDataChanged?.call(_firstLoad);
+      if (_firstLoad) {
+        _firstLoad = false;
+      }
+    }
+    if (state is TableErrorState && state.tracedError.error.toString() != '') {
+      Toaster.error(state.tracedError.error.toString());
+    }
+  }
+
+  void _onDataLoaded(BuildContext context, PaginatedResponse<TModel> response) {
+    // Clear all rows
     tableManager.removeAllRows();
+
+    // Create rows
     for (var item in response.data) {
+      // Row cells for data info
+      var dataRow = PlutoRow(cells: _getCells(item));
 
-      // Create data row from the item
-      var dataRow = PlutoRow(cells: getCells(item));
-
-      // Create actions cell
-      if (tableActions().isNotEmpty) {
+      // Row cells for actions
+      var actions = _getActions();
+      if (actions.isNotEmpty) {
         dataRow.cells['actions'] = PlutoCell(value: resource.getId(item));
       }
 
@@ -148,28 +224,12 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
     }
   }
 
-  // Dispatch events based on the state
-  void tableStateEventListener(BuildContext context, CrudoTableState state) {
-    tableManager.setShowLoading(false);
-
-    if (state is TableLoadingState) {
-      tableManager.setShowLoading(true);
-    }
-    if (state is TableLoadedState<TModel>) {
-      onDataLoaded(context, state.response);
-    }
-    if (state is TableErrorState && state.tracedError.error.toString() != '') {
-      Toaster.error(state.tracedError.error.toString());
-    }
-  }
-
-  // Build actions cell
   PlutoColumn _buildActionsColumn() {
     return PlutoColumn(
       title: '',
       field: 'actions',
       frozen: PlutoColumnFrozen.end,
-      width: 40,
+      width: 10,
       enableDropToResize: false,
       enableColumnDrag: false,
       enableRowDrag: false,
@@ -183,12 +243,15 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
           padding: const EdgeInsets.only(right: 10),
           icon: Icon(Icons.more_vert,
               color: Theme.of(context).colorScheme.onSurface),
-          itemBuilder: (context) => tableActions().map((action) {
+          itemBuilder: (context) => _getActions().map((action) {
             return PopupMenuItem(
               onTap: () async {
-                action.execute(context, data: {
-                  'id': columnContext.cell.value
-                }).then((needToRefresh) {
+                action
+                    .execute(context,
+                        data: {
+                          'id': columnContext.cell.value,
+                        }..addAll(data ?? {}))
+                    .then((needToRefresh) {
                   if (needToRefresh == true) {
                     context.read<CrudoTableBloc>().add(LoadTableEvent());
                   }
@@ -206,8 +269,15 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
     );
   }
 
-  /// Override this method to define the actions that can be performed on the resource in the table
-  List<CrudoAction> tableActions() {
+  Map<String, PlutoCell> _getCells(TModel model) {
+    return Map.fromEntries(
+      columns.map(
+        (mapping) => MapEntry(mapping.column.field, mapping.cellBuilder(model)),
+      ),
+    );
+  }
+
+  List<CrudoAction> _defaultTableActions() {
     var actions = <CrudoAction>[];
     if (resource.editAction() != null) actions.add(resource.editAction()!);
     if (resource.viewAction() != null) actions.add(resource.viewAction()!);
@@ -215,23 +285,7 @@ abstract class CrudoTablePage<TResource extends CrudoResource<TModel>, TModel>
     return actions;
   }
 
-  /// Override this method to create the table columns and cells
-  List<CrudoTableColumn<TModel>> buildColumns();
-
-  /// Get only the columns from the buildColumns method
-  List<PlutoColumn> getColumns() {
-    return buildColumns().map((mapping) => mapping.column).toList();
+  List<CrudoAction> _getActions() {
+    return customActions ?? _defaultTableActions();
   }
-
-  Map<String, PlutoCell> getCells(TModel model) {
-    return Map.fromEntries(
-      buildColumns().map(
-        (mapping) => MapEntry(mapping.column.field, mapping.cellBuilder(model)),
-      ),
-    );
-  }
-
-  /// Whether the resource can be searched
-  /// Override this method to return true if the resource can be searched
-  bool get canSearch => false;
 }

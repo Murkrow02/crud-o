@@ -8,5 +8,6 @@ import 'package:crud_o/resources/resource_operation_type.dart';
 class ResourceContext {
   final String id;
   final ResourceOperationType operationType;
-  ResourceContext({required this.id, required this.operationType});
+  final Map<String, dynamic> data;
+  ResourceContext({required this.id, required this.operationType, this.data = const {}});
 }

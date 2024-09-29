@@ -1,5 +1,5 @@
 import 'package:crud_o/auth/widgets/crudo_auth_wrapper.dart';
-import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
+import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -7,9 +7,9 @@ import 'crudo_resource.dart';
 
 class RegisteredResources {
   final List<CrudoResource> _resources = [];
-  final List<CrudoTablePage> _tables = [];
+  final List<Widget> _tables = [];
   final List<Type> _registeredResourceTypes = [];
-  List<CrudoTablePage> get tables => _tables;
+  List<Widget> get tables => _tables;
   List<CrudoResource> get resources => _resources;
 
   void registerResource<TResource extends CrudoResource<TModel>, TModel>(

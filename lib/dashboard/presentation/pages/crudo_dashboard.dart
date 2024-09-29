@@ -4,7 +4,7 @@ import 'package:crud_o/dashboard/presentation/widgets/crudo_dashboard_drawer.dar
 import 'package:crud_o/dashboard/presentation/widgets/crudo_dashboard_widget.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/resource_provider.dart';
-import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
+import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

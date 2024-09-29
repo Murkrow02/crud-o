@@ -42,6 +42,7 @@ class CrudoTextField extends StatelessWidget {
         // Edit or create
         return FormBuilderTextField(
           name: config.name,
+          enabled: config.shouldEnableField(context),
           initialValue:
               context.readFormContext().formData[config.name]?.toString() ?? '',
           validator: FormBuilderValidators.compose([

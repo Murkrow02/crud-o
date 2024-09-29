@@ -31,14 +31,14 @@ abstract class ResourceRepository<T> {
     return factory.createFromJson(decodedBody["data"]);
   }
 
-  Future<PaginatedResourceResponse<T>> getPaginated(
+  Future<PaginatedResponse<T>> getPaginated(
       {PaginatedRequest? request}) async {
     // Normal get operation
     var decodedBody = await _client.get(endpoint, request: request);
 
     // Create paginated response object
-    PaginatedResourceResponse<T> restResponse =
-        PaginatedResourceResponse<T>.fromJson(decodedBody);
+    PaginatedResponse<T> restResponse =
+        PaginatedResponse<T>.fromJson(decodedBody);
 
     // Deserialize data as a list
     restResponse.data = (decodedBody["data"] as List)

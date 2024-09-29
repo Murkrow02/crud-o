@@ -24,7 +24,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   Map<String, dynamic> _futureResults = {};
   final Function(BuildContext, Map<String, dynamic>, T Function<T>(String),
       CrudoFormController<TResource, TModel>) formBuilder;
-  final Map<String, dynamic> Function(TModel) toFormData;
+  final Map<String, dynamic> Function(TModel, Map<String,dynamic>) toFormData;
   final Map<String, dynamic> Function(Map<String, dynamic>)? beforeSave;
   final Map<String, Future> Function()? registerFutures;
   final bool fullPage;
@@ -58,12 +58,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           context,
           BlocConsumer<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
             builder: (context, state) {
-              // Loading, saved or initial state
-              if (state is FormLoadingState ||
-                  state is FormSavedState ||
-                  state is FormInitialState) {
-                return _buildLoading();
-              }
 
               if (state is FormReadyState) {
                 return _buildFormBuilder(context, state.formData);
@@ -92,19 +86,24 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                 return ErrorAlert(state.tracedError);
               }
 
-              // Unexpected state
-              return ErrorAlert(TracedError(
-                  UnexpectedStateException(state), StackTrace.current));
+              // For other states, just show a loading spinner
+              return _buildLoading();
+
             },
             listener: (BuildContext context, CrudoFormState state) {
               if (state is FormSavedState) {
                 updatedApi = true;
                 Toaster.success("Salvato!");
+
+                // // If we were in create mode, we need to switch to edit mode
+                // if (operationType == ResourceOperationType.create) {
+                //   operationType = ResourceOperationType.edit;
+                // }
               }
               if (state is FormModelLoadedState<TModel>) {
                 context.read<CrudoFormBloc<TResource, TModel>>().add(
-                    ReloadFormEvent(
-                        formData: toFormData(state.model),
+                    RebuildFormEvent(
+                        formData: toFormData(state.model, resourceContext.data),
                         operationType: operationType));
               }
             },
@@ -141,8 +140,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             .toList());
   }
 
-  T _getFutureResult<T>(String key)
-  {
+  T _getFutureResult<T>(String key) {
     return _futureResults[key] as T;
   }
 
@@ -166,7 +164,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Execute the futures registered with registerFutures before loading the form
   void _executeFutures(BuildContext context) async {
-
     // Allow child to register futures
     var futures = registerFutures?.call() ?? {};
 
@@ -272,23 +269,34 @@ class CrudoFormController<TResource extends CrudoResource<TModel>,
     TModel extends Object> {
   CrudoFormController();
 
-  void reloadForm(BuildContext context) {
+  /// Builds the form with the given data to re-paint UI with new data
+  void rebuildForm(BuildContext context) {
     var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
     var formContextContainer = context.readFormContext();
     var formState = formBloc.state;
     if (formState is FormReadyState) {
       formContextContainer.formKey.currentState!.save();
-      formBloc.add(ReloadFormEvent(
+      formBloc.add(RebuildFormEvent(
           formData: formContextContainer.formKey.currentState!.value,
           operationType: formContextContainer.resourceContext.operationType));
     }
   }
 
+  /// Completely reloads the form by getting the data from the API
+  void reloadForm(BuildContext context) {
+    var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
+    var formContextContainer = context.readFormContext();
+    formBloc
+        .add(LoadFormModelEvent(id: formContextContainer.resourceContext.id));
+  }
+
   void enterEditMode(BuildContext context) {
+    // just an idea to implement: get bloc and add event to trigger on listener in the main widget
     throw UnimplementedError("Enter edit mode not implemented from controller");
   }
 
   void save(BuildContext context) {
+    // just an idea to implement: get bloc and add event to trigger on listener in the main widget
     throw UnimplementedError("Save not implemented from controller");
   }
 }

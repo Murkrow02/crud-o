@@ -87,7 +87,7 @@ String resourceStub(String name, List<String> components) {
   if (components.contains('Table')) {
     imports.add("import 'pages/${toSnakeCase(name)}_table_page.dart';");
     imports.add(
-        "import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';");
+        "import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';");
   }
 
   // Conditional formPage and tablePage overrides
@@ -209,27 +209,31 @@ String tablePageStub(String name) {
   var titleCaseResource = name;
   return '''
 import 'package:crud_o/resources/table/data/models/crudo_table_column.dart';
-import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
+import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
+import 'package:flutter/material.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 import '../${toSnakeCase(name)}_resource.dart';
 
-class ${titleCaseResource}TablePage extends CrudoTablePage<${titleCaseResource}Resource, $titleCaseResource> {
-  ${titleCaseResource}TablePage({super.key});
+class ${titleCaseResource}TablePage extends StatelessWidget {
+  const ${titleCaseResource}TablePage({super.key});
 
   @override
-  List<CrudoTableColumn<$titleCaseResource>> buildColumns() {
-    return [
-      CrudoTableColumn<$titleCaseResource>(
-        column: PlutoColumn(
-          title: 'Nome', field: 'name', type: PlutoColumnType.text(),
+  Widget build(BuildContext context) {
+    return CrudoTable<${titleCaseResource}Resource, $titleCaseResource>(
+      fullPage: true,
+      columns: [
+        CrudoTableColumn(
+          column: PlutoColumn(
+            title: 'Name', field: 'name', type: PlutoColumnType.text(),
+          ),
+          cellBuilder: (${titleCaseResource} model) {
+            return PlutoCell(value: model.name);
+          },
         ),
-        cellBuilder: (model) => PlutoCell(value: model.name),
-      ),
-    ];
+      ],
+    );
   }
-
-  @override
-  bool get canSearch => false;
 }
   ''';
 }
+

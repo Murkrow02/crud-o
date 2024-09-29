@@ -11,7 +11,6 @@ import 'package:futuristic/futuristic.dart';
 import 'package:provider/provider.dart';
 
 class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
-
   final CrudoFieldConfiguration config;
   final String errorText;
   final Widget Function(TModel item) itemBuilder;
@@ -32,28 +31,22 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Builder(
-        builder: (context) {
-
-          // Detect if edit or create
-          if (config.shouldRenderViewField(context)) {
-
-            // Cant render with standard field, we need to resolve future first
-            if(config.buildViewField == null) {
-              return _buildPreviewField(context);
-            }
-
-            // User provided custom view field
-            return config.renderViewField(context);
+      child: Builder(builder: (context) {
+        // Detect if edit or create
+        if (config.shouldRenderViewField(context)) {
+          // Cant render with standard field, we need to resolve future first
+          if (config.buildViewField == null) {
+            return _buildPreviewField(context);
           }
 
-         return _buildEditField(context);
+          // User provided custom view field
+          return config.renderViewField(context);
         }
-      ),
+
+        return _buildEditField(context);
+      }),
     );
   }
 
@@ -61,51 +54,40 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     return Futuristic<List<TModel>>(
       autoStart: true,
       futureBuilder: () => future,
-      errorBuilder: (context, error, retry) => _buildError(context, error, retry),
+      errorBuilder: (context, error, retry) =>
+          _buildError(context, error, retry),
       dataBuilder: (context, data) {
         var initialItem = getInitialItem(context, data ?? []);
         return CrudoViewField(
           name: config.label ?? config.name,
-          child: initialItem != null ? itemBuilder(initialItem) : const Text(''),
+          child:
+              initialItem != null ? itemBuilder(initialItem) : const Text(''),
         );
       },
     );
   }
 
-  Widget _buildEditField(BuildContext context)
-  {
-    return Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            child: FormBuilderField<dynamic>(
-              name: config.name,
-              builder: (FormFieldState<dynamic> field) {
-                return Futuristic<List<TModel>>(
-                  autoStart: true,
-                  futureBuilder: () => future,
-                  busyBuilder: (context) =>
-                      _buildDropdown([], context, field, enabled: false),
-                  errorBuilder: (context, error, retry) =>
-                      _buildError(context, error, retry),
-                  dataBuilder: (context, data) =>
-                      _buildDropdown(data ?? [], context, field),
-                );
-              },
-            ),
-          ),
-          Positioned(
-              top: -12,
-              left: 10,
-              child: Text(
-                config.label ?? config.name,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              )),
-        ]);
+  Widget _buildEditField(BuildContext context) {
+    return CrudoLabelize(
+        label: config.label ?? config.name,
+        child: FormBuilderField(
+          name: config.name,
+          builder: (FormFieldState<dynamic> field) {
+            return Futuristic<List<TModel>>(
+              autoStart: true,
+              futureBuilder: () => future,
+              busyBuilder: (context) =>
+                  _buildDropdown([], context, field, enabled: false),
+              errorBuilder: (context, error, retry) =>
+                  _buildError(context, error, retry),
+              dataBuilder: (context, data) =>
+                  _buildDropdown(data ?? [], context, field),
+            );
+          },
+        ));
   }
 
-  Widget _buildError(BuildContext context, dynamic error, VoidCallback retry)
-  {
+  Widget _buildError(BuildContext context, dynamic error, VoidCallback retry) {
     print(error);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -124,20 +106,19 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     );
   }
 
-
   TModel? getInitialItem(BuildContext context, List<TModel> items) {
     var value = context.read<FormContextContainer>().formData[config.name];
     if (value == null || items.isEmpty) {
       return null;
     }
-    return items.firstWhereOrNull((el) => valueBuilder(el).toString() == value.toString());
+    return items.firstWhereOrNull(
+        (el) => valueBuilder(el).toString() == value.toString());
   }
 
   Widget _buildDropdown(
       List<TModel> items, BuildContext context, FormFieldState<dynamic> field,
       {bool enabled = true}) {
-
-    if(multiple)
+    if (multiple)
       throw UnimplementedError('Multiple selection not implemented yet');
 
     return CustomDropdown<TModel>(
@@ -188,7 +169,5 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       //   },
       // );
     }
-
-
   }
 }
