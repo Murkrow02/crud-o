@@ -1,6 +1,12 @@
 import 'dart:io';
-
 import 'package:interact_cli/interact_cli.dart';
+
+// Converts PascalCase to snake_case
+String toSnakeCase(String input) {
+  return input.replaceAllMapped(RegExp(r'[A-Z]'), (Match match) {
+    return '_${match.group(0)!.toLowerCase()}';
+  }).replaceFirst('_', '');
+}
 
 void main(List<String> arguments) {
   // Resource name
@@ -12,7 +18,10 @@ void main(List<String> arguments) {
       }
       return true;
     },
-  ).interact().toLowerCase();
+  ).interact();
+
+  // Convert resource name to snake_case for filenames
+  final snakeCaseName = toSnakeCase(name);
 
   // Components
   var options = ['Form', 'Table'];
@@ -21,15 +30,15 @@ void main(List<String> arguments) {
     options: options,
   ).interact();
   var selectedComponents =
-      selectedComponentsIndexes.map((e) => options[e]).toList();
+  selectedComponentsIndexes.map((e) => options[e]).toList();
 
   // Create files inside lib/resources/{name}
-  final path = 'lib/resources/$name';
-  final resourcePath = '$path/${name}_resource.dart';
-  final factoryPath = '$path/${name}_factory.dart';
-  final repositoryPath = '$path/${name}_repository.dart';
-  final formPath = '$path/pages/${name}_form_page.dart';
-  final tablePath = '$path/pages/${name}_table_page.dart';
+  final path = 'lib/resources/$snakeCaseName';
+  final resourcePath = '$path/${snakeCaseName}_resource.dart';
+  final factoryPath = '$path/${snakeCaseName}_factory.dart';
+  final repositoryPath = '$path/${snakeCaseName}_repository.dart';
+  final formPath = '$path/pages/${snakeCaseName}_form_page.dart';
+  final tablePath = '$path/pages/${snakeCaseName}_table_page.dart';
 
   // Create resource file
   final resourceFile = File(resourcePath);
@@ -61,22 +70,22 @@ void main(List<String> arguments) {
 }
 
 String resourceStub(String name, List<String> components) {
-  var titleCaseResource = name[0].toUpperCase() + name.substring(1);
+  var titleCaseResource = name;
   var titleCaseResourcePlural = '${titleCaseResource}s';
 
   // Conditional imports for form and table pages
   var imports = [
     "import 'package:crud_o/resources/crudo_resource.dart';",
     "import 'package:flutter/material.dart';",
-    "import '${name}_repository.dart';",
+    "import '${toSnakeCase(name)}_repository.dart';",
   ];
 
   if (components.contains('Form')) {
-    imports.add("import 'pages/${name}_form_page.dart';");
+    imports.add("import 'pages/${toSnakeCase(name)}_form_page.dart';");
   }
 
   if (components.contains('Table')) {
-    imports.add("import 'pages/${name}_table_page.dart';");
+    imports.add("import 'pages/${toSnakeCase(name)}_table_page.dart';");
     imports.add(
         "import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';");
   }
@@ -122,7 +131,7 @@ class ${titleCaseResource}Resource extends CrudoResource<$titleCaseResource> {
 }
 
 String factoryStub(String name) {
-  var titleCaseResource = name[0].toUpperCase() + name.substring(1);
+  var titleCaseResource = name;
   return '''
 import 'package:crud_o/resources/resource_factory.dart';
 import 'package:flutter/material.dart';
@@ -148,25 +157,25 @@ class ${titleCaseResource}Factory extends ResourceFactory<$titleCaseResource> {
 }
 
 String repositoryStub(String name) {
-  var titleCaseResource = name[0].toUpperCase() + name.substring(1);
+  var titleCaseResource = name;
   var titleCaseResourcePlural = '${titleCaseResource}s';
   return '''
 import 'package:crud_o/resources/resource_repository.dart';
-import '${name}_factory.dart';
+import '${toSnakeCase(name)}_factory.dart';
 
 class ${titleCaseResource}Repository extends ResourceRepository<$titleCaseResource> {
 
-  ${titleCaseResource}Repository() : super(endpoint: "${name}s", factory: ${titleCaseResource}Factory());
+  ${titleCaseResource}Repository() : super(endpoint: "${toSnakeCase(name)}s", factory: ${titleCaseResource}Factory());
 }
   ''';
 }
 
 String formPageStub(String name) {
-  var titleCaseResource = name[0].toUpperCase() + name.substring(1);
+  var titleCaseResource = name;
   return '''
 import 'package:flutter/material.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
-import '../${name}_resource.dart';
+import '../${toSnakeCase(name)}_resource.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_text_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 
@@ -197,12 +206,12 @@ class ${titleCaseResource}FormPage extends StatelessWidget {
 }
 
 String tablePageStub(String name) {
-  var titleCaseResource = name[0].toUpperCase() + name.substring(1);
+  var titleCaseResource = name;
   return '''
 import 'package:crud_o/resources/table/data/models/crudo_table_column.dart';
 import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
-import '../${name}_resource.dart';
+import '../${toSnakeCase(name)}_resource.dart';
 
 class ${titleCaseResource}TablePage extends CrudoTablePage<${titleCaseResource}Resource, $titleCaseResource> {
   ${titleCaseResource}TablePage({super.key});

@@ -22,11 +22,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   ResourceOperationType operationType = ResourceOperationType.create;
   bool updatedApi = false;
   Map<String, dynamic> _futureResults = {};
-  final Function(BuildContext, Map<String, dynamic>, Map<String, dynamic>,
+  final Function(BuildContext, Map<String, dynamic>, T Function<T>(String),
       CrudoFormController<TResource, TModel>) formBuilder;
   final Map<String, dynamic> Function(TModel) toFormData;
   final Map<String, dynamic> Function(Map<String, dynamic>)? beforeSave;
-  final Map<String, Future> Function(BuildContext)? registerFutures;
+  final Map<String, Future> Function()? registerFutures;
   final bool fullPage;
 
   CrudoForm(
@@ -127,7 +127,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           return FormBuilder(
               key: formKey,
               initialValue: formData,
-              child: formBuilder(context, formData, _futureResults,
+              child: formBuilder(context, formData, _getFutureResult,
                   CrudoFormController<TResource, TModel>()));
         }));
   }
@@ -139,6 +139,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             .map((e) => Text(e,
                 style: TextStyle(color: Theme.of(context).colorScheme.error)))
             .toList());
+  }
+
+  T _getFutureResult<T>(String key)
+  {
+    return _futureResults[key] as T;
   }
 
   /// Widget rendered when the form is loading
@@ -163,7 +168,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   void _executeFutures(BuildContext context) async {
 
     // Allow child to register futures
-    var futures = registerFutures?.call(context) ?? {};
+    var futures = registerFutures?.call() ?? {};
 
     // Execute futures
     for (var key in futures.keys) {
