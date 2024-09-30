@@ -3,7 +3,6 @@ import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
 import 'package:crud_o/resources/resource_factory.dart';
-import 'package:crud_o/resources/resource_serializer.dart';
 
 abstract class ResourceRepository<T> {
 
@@ -16,13 +15,10 @@ abstract class ResourceRepository<T> {
   // How to deserialize/create a new resource
   final ResourceFactory<T> factory;
 
-  // How to serialize/convert model to json/map/cells...
-  final ResourceSerializer<T> serializer;
 
   ResourceRepository(
       {required this.endpoint,
       required this.factory,
-      required this.serializer,
       this.memoryCacheDuration});
 
 
@@ -35,14 +31,14 @@ abstract class ResourceRepository<T> {
     return factory.createFromJson(decodedBody["data"]);
   }
 
-  Future<PaginatedResourceResponse<T>> getPaginated(
+  Future<PaginatedResponse<T>> getPaginated(
       {PaginatedRequest? request}) async {
     // Normal get operation
     var decodedBody = await _client.get(endpoint, request: request);
 
     // Create paginated response object
-    PaginatedResourceResponse<T> restResponse =
-        PaginatedResourceResponse<T>.fromJson(decodedBody);
+    PaginatedResponse<T> restResponse =
+        PaginatedResponse<T>.fromJson(decodedBody);
 
     // Deserialize data as a list
     restResponse.data = (decodedBody["data"] as List)
@@ -68,7 +64,7 @@ abstract class ResourceRepository<T> {
     // Call the API
     var decodedBody = await _client.get(endpoint, request: parameters);
     var response = (decodedBody["data"] as List)
-        .map((e) => factory.createFromJson(e))
+        .map((e) => factory.createFromJsonList(e))
         .toList();
 
     // Update the memory cache
@@ -80,15 +76,15 @@ abstract class ResourceRepository<T> {
     return response;
   }
 
-  Future<T> add(T model) async {
+  Future<T> add(Map<String, dynamic> data) async {
     var decodedBody =
-        await _client.post(endpoint, serializer.serializeToJson(model));
+        await _client.post(endpoint, data);
     return factory.createFromJson(decodedBody["data"]);
   }
 
-  Future<T> update(T model, String id) async {
+  Future<T> update(String id, Map<String, dynamic> data) async {
     var decodedBody =
-        await _client.put("$endpoint/$id", serializer.serializeToJson(model));
+        await _client.put("$endpoint/$id", data);
     return factory.createFromJson(decodedBody["data"]);
   }
 

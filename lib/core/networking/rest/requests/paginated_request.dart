@@ -10,6 +10,7 @@ class PaginatedRequest extends RestRequest
     required this.page,
     this.search,
     this.orderBy,
+    super.queryParameters = const {},
   });
 
 
@@ -19,7 +20,7 @@ class PaginatedRequest extends RestRequest
       'page': page.toString(),
       if (search != null) 'search': search.toString(),
       if (orderBy != null) 'orderBy': orderBy.toString(),
-    };
+    }..addAll(super.queryParameters);
     return Uri(queryParameters: queryParameters).query;
   }
 

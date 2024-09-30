@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 import 'package:crud_o/core/models/traced_error.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
@@ -11,19 +13,19 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   final TResource resource;
 
   CrudoFormBloc({required this.resource}) : super(FormInitialState()) {
-    on<LoadFormModelEvent<TModel>>(_onLoadFormModel);
+    on<LoadFormModelEvent>(_onLoadFormModel);
     on<InitFormModelEvent>(_onInitModel);
     on<UpdateFormModelEvent>(_onUpdateItem);
     on<CreateFormModelEvent>(_onCreateItem);
+    on<RebuildFormEvent>(_onReloadForm);
   }
 
   Future<void> _onLoadFormModel(
-      LoadFormModelEvent<TModel> event, Emitter<CrudoFormState> emit) async {
+      LoadFormModelEvent event, Emitter<CrudoFormState> emit) async {
     emit(FormLoadingState());
     try {
       final model = await resource.repository.getById(event.id);
-      emit(FormReadyState(
-          formData: resource.repository.serializer.serializeToFormData(model)));
+      emit(FormModelLoadedState(model: model));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
@@ -31,21 +33,18 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
 
   Future<void> _onInitModel(
       InitFormModelEvent event, Emitter<CrudoFormState> emit) async {
-    emit(FormReadyState(
-        formData: resource.repository.serializer
-            .serializeToFormData(resource.repository.factory.create())));
+    emit(FormModelLoadedState(model: resource.factory.create()));
   }
 
   Future<void> _onUpdateItem(
       UpdateFormModelEvent event, Emitter<CrudoFormState> emit) async {
     try {
-      emit(FormLoadingState());
-      var apiModel = await resource.repository
-          .update(resource.repository.factory.createFromFormData(event.formData), event.id);
+      emit(FormSavingState(formData: event.formData));
+      var apiModel = await resource.repository.update(event.id, event.formData);
       emit(FormSavedState());
-      emit(FormReadyState(formData: resource.repository.serializer.serializeToFormData(apiModel)));
+      emit(FormModelLoadedState(model: apiModel));
     } on ApiValidationException catch (e) {
-      emit(FormReadyState(formData: event.formData, validationException: e));
+      _handleApiValidationException(emit, event.formData, e);
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
@@ -54,15 +53,44 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   Future<void> _onCreateItem(
       CreateFormModelEvent event, Emitter<CrudoFormState> emit) async {
     try {
-      emit(FormLoadingState());
+      emit(FormSavingState(formData: event.formData));
       var apiModel = await resource.repository
-          .add(resource.repository.factory.createFromFormData(event.formData));
+          .add(event.formData);
       emit(FormSavedState());
-      emit(FormReadyState(formData: resource.repository.serializer.serializeToFormData(apiModel)));
+      emit(FormModelLoadedState(model: apiModel));
     } on ApiValidationException catch (e) {
-      emit(FormReadyState(formData: event.formData, validationException: e));
+      _handleApiValidationException(emit, event.formData, e);
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
+  }
+
+  // Called when the api returns a validation error
+  void _handleApiValidationException(
+    Emitter<CrudoFormState> emit,
+    Map<String, dynamic> formData,
+    ApiValidationException e,
+  ) {
+    final formErrors = <String, List<String>>{};
+    final globalErrors = <String>[];
+
+    e.errors.forEach((key, value) {
+
+      // The form contains the error key
+      if (formData.containsKey(key)) {
+        formErrors[key] = value;
+      } else {
+        globalErrors.addAll(value);
+      }
+    });
+
+    emit(FormNotValidState(
+        oldFormData: formData,
+        formErrors: formErrors,
+        nonFormErrors: globalErrors));
+  }
+
+  void _onReloadForm(RebuildFormEvent event, Emitter<CrudoFormState> emit) {
+    emit(FormReadyState(formData: event.formData, operationType: event.operationType));
   }
 }

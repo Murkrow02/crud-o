@@ -1,7 +1,7 @@
 import 'package:crud_o/auth/crudo_auth.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/resource_provider.dart';
-import 'package:crud_o/resources/table/presentation/pages/crudo_table_page.dart';
+import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -36,19 +36,20 @@ class CrudoDashboardDrawer extends StatelessWidget {
 
     // Get table and resources
     var tables = context.read<RegisteredResources>().tables;
-    var resources = context.read<RegisteredResources>().resources;
+    var resourcesWithTables = context.read<RegisteredResources>().resources.where((e) => e.tablePage != null).toList();
 
     // Group resources by group
-    var groupedResources = <String, List<MapEntry<CrudoResource, CrudoTablePage>>>{};
-    for (int i = 0; i < resources.length; i++) {
-      var resource = resources[i];
+    var groupedResources = <String, List<MapEntry<CrudoResource, Widget>>>{};
+    for (int i = 0; i < resourcesWithTables.length; i++) {
+      var resource = resourcesWithTables[i];
       var table = tables[i];
       var group = resource.group();
       if (!groupedResources.containsKey(group)) {
         groupedResources[group] = [];
       }
-      if(resource.showInDrawer)
-      groupedResources[group]!.add(MapEntry(resource, table));
+      if(resource.showInDrawer) {
+        groupedResources[group]!.add(MapEntry(resource, table));
+      }
     }
 
     return Expanded(
@@ -85,7 +86,7 @@ class CrudoDashboardDrawer extends StatelessWidget {
   }
 
 
-  Widget _buildResourceTile(BuildContext context, CrudoResource resource, CrudoTablePage table) {
+  Widget _buildResourceTile(BuildContext context, CrudoResource resource, Widget table) {
     return SizedBox(
       width: double.infinity,
       height: 50,

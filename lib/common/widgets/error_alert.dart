@@ -4,35 +4,45 @@ import 'package:logger/logger.dart';
 import 'package:crud_o/core/models/traced_error.dart';
 
 class ErrorAlert extends StatelessWidget {
-
   final TracedError tracedError;
   final Logger logger = Logger(
     printer: PrettyPrinter(),
   );
+
   ErrorAlert(this.tracedError, {super.key});
 
   @override
   Widget build(BuildContext context) {
-
-    // Display error
-    var displayMessage = kDebugMode ? tracedError.error.toString() : 'Si é verificato un errore';
     return SingleChildScrollView(
-      child: Expanded(
-        child: Center(
-          child: Padding(
+      child: Center(
+        child: Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.error.withOpacity(0.8),
+              borderRadius: BorderRadius.circular(10),
+            ),
             padding: const EdgeInsets.all(18.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(displayMessage, style:  TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text('Si è verificato un errore',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onError,
+                        fontSize: 24)),
+                SizedBox(height: 10),
                 Visibility(
                   visible: kDebugMode,
-                  child: Text(tracedError.stackTrace.toString(), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                    child: Text(tracedError.error.toString(),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onError))),
+                Visibility(
+                  visible: kDebugMode,
+                  child: Text(tracedError.stackTrace.toString(),
+                      style: TextStyle(
+                          color: Theme.of(context).colorScheme.onError)),
                 )
               ],
-            )
-          ),
-        ),
+            )),
       ),
     );
   }

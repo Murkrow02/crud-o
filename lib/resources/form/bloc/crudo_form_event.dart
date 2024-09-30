@@ -1,3 +1,4 @@
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
 
 abstract class CrudoFormEvent extends Equatable {
@@ -5,13 +6,22 @@ abstract class CrudoFormEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadFormModelEvent<T> extends CrudoFormEvent {
+class LoadFormModelEvent extends CrudoFormEvent {
   final String id;
-
   LoadFormModelEvent({required this.id});
 
   @override
   List<Object?> get props => [id];
+}
+
+/// Builds the form with the given data to re-paint UI with new data
+class RebuildFormEvent<T> extends CrudoFormEvent {
+  final Map<String, dynamic> formData;
+  final ResourceOperationType operationType;
+  RebuildFormEvent({required this.formData, required this.operationType});
+
+  @override
+  List<Object?> get props => [formData, operationType];
 }
 
 class InitFormModelEvent extends CrudoFormEvent {
@@ -21,7 +31,6 @@ class InitFormModelEvent extends CrudoFormEvent {
 
 class CreateFormModelEvent extends CrudoFormEvent {
   final Map<String, dynamic> formData;
-
   CreateFormModelEvent({required this.formData});
 
   @override
@@ -31,6 +40,7 @@ class CreateFormModelEvent extends CrudoFormEvent {
 class UpdateFormModelEvent extends CrudoFormEvent {
   final String id;
   final Map<String, dynamic> formData;
+
   UpdateFormModelEvent({required this.id, required this.formData});
 
   @override

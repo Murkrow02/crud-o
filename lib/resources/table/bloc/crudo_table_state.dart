@@ -15,7 +15,7 @@ class TableLoadingState extends CrudoTableState {}
 
 
 class TableLoadedState<TModel> extends CrudoTableState {
-  final PaginatedResourceResponse<TModel> response;
+  final PaginatedResponse<TModel> response;
   final PaginatedRequest request;
 
   TableLoadedState({

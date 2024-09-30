@@ -1,22 +1,20 @@
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
-import 'package:crud_o/resources/form/presentation/pages/crudo_form_page.dart';
 import 'package:crud_o/resources/resource_context.dart';
-import 'package:crud_o/resources/resource_serializer.dart';
+import 'package:crud_o/resources/resource_factory.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
-import 'package:crud_o/resources/view/presentation/pages/crudo_view_page.dart';
+import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:pluto_grid_plus/pluto_grid_plus.dart';
-
 import 'table/bloc/crudo_table_bloc.dart';
 
 abstract class CrudoResource<TModel extends dynamic> extends Object {
-
   final ResourceRepository<TModel> repository;
+
   CrudoResource({required this.repository});
 
   /// **************************************************************************************************
@@ -39,28 +37,31 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   bool get showInDrawer => true;
 
-  /// **************************************************************************************************
-  /// TABLE
-  /// **************************************************************************************************
-
-  /// Override this method to define the columns of the table
-  List<PlutoColumn> getColumns() {
-    return [];
-  }
-
-  /// Override this method to define the actions that can be performed on the resource in the table
-  List<CrudoAction> tableActions() {
-    var actions = <CrudoAction>[];
-    if(editAction() != null) actions.add(editAction()!);
-    if(viewAction() != null) actions.add(viewAction()!);
-    if(canDelete) actions.add(deleteAction());
-    return actions;
-  }
-
+  Map<String, dynamic> toMap(TModel model) => throw UnimplementedError();
 
   /// **************************************************************************************************
   /// ACTIONS
   /// **************************************************************************************************
+  CrudoAction? createAction() {
+    if (formPage == null) return null;
+    return CrudoAction(
+        label: 'Crea',
+        icon: Icons.add,
+        action: (context, data) async {
+          return await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => RepositoryProvider(
+                      create: (context) => ResourceContext(
+                          id: "",
+                          data: data ?? {},
+                          operationType: ResourceOperationType.create),
+                      child: formPage,
+                    )),
+          );
+        });
+  }
+
   CrudoAction? editAction() {
     if (formPage == null) return null;
     return CrudoAction(
@@ -71,25 +72,31 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             context,
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(id: data?['id']),
-                      child: formPage!,
+                      create: (context) => ResourceContext(
+                          id: data?['id'],
+                          data: data ?? {},
+                          operationType: ResourceOperationType.edit),
+                      child: formPage,
                     )),
           );
         });
   }
 
   CrudoAction? viewAction() {
-    if (viewPage == null) return null;
+    if (formPage == null) return null;
     return CrudoAction(
         label: 'Visualizza',
         icon: Icons.remove_red_eye,
-        action: (context, data) {
-          Navigator.push(
+        action: (context, data) async {
+         return await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(id: data?['id']),
-                      child: viewPage!,
+                      create: (context) => ResourceContext(
+                          id: data?['id'],
+                          data: data ?? {},
+                          operationType: ResourceOperationType.view),
+                      child: formPage,
                     )),
           );
         });
@@ -101,23 +108,20 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         icon: Icons.delete,
         color: Colors.red,
         action: (context, data) async {
-
           // Ask for confirmation
           var confirmed = await ConfirmationDialog.ask(
               context: context,
               title: 'Elimina ${singularName()}',
-              message: 'Sei sicuro di voler procedere?'
-          );
+              message: 'Sei sicuro di voler procedere?');
 
           if (!confirmed) {
             return;
           }
 
           // Actually delete the resource
-          try{
+          try {
             await repository.delete(data?['id']);
-          }
-          catch(e){
+          } catch (e) {
             Toaster.error('Errore durante l\'eliminazione');
             return;
           }
@@ -132,19 +136,17 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  /// Form to edit/create the resource
-  CrudoFormPage? formPage;
+  /// Form to edit/create/view the resource
+  Widget? formPage;
 
-  /// View to show the resource
-  CrudoViewPage? viewPage;
-
-  /// Override this method to define if the resource can be created
-  bool get canCreate => formPage != null;
+  /// Table to show the resource
+  Widget? tablePage;
 
   /// Override this method to define if the resource can be deleted
   bool get canDelete => true;
 
-  /// Override this method to define if the resource can be searched in the table
-  bool get canSearch => false;
-
+  /// **************************************************************************************************
+  /// SHORTCUTS
+  /// **************************************************************************************************
+  ResourceFactory<TModel> get factory => repository.factory;
 }

@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 
-class ViewField extends StatelessWidget {
+class CrudoViewField extends StatelessWidget {
   final String name;
-  final String value;
+  final Widget child;
 
-  const ViewField({
+  const CrudoViewField({
     super.key,
     required this.name,
-    required this.value,
+    required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
       width: double.infinity,
       child: Card(
         elevation: 2.0,
@@ -29,20 +28,14 @@ class ViewField extends StatelessWidget {
               Text(
                 name,
                 textAlign: TextAlign.start,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                  // color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 20.0,
                 ),
               ),
-              Text(
-                value,
-                style:  TextStyle(
-                  fontSize: 16.0,
-                 // color: Theme.of(context).colorScheme.onSurface,
-                ),
-                textAlign: TextAlign.start,
-              ),
+              const SizedBox(height: 5),
+              child,
             ],
           ),
         ),
