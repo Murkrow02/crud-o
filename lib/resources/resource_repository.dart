@@ -64,7 +64,7 @@ abstract class ResourceRepository<T> {
     // Call the API
     var decodedBody = await _client.get(endpoint, request: parameters);
     var response = (decodedBody["data"] as List)
-        .map((e) => factory.createFromJson(e))
+        .map((e) => factory.createFromJsonList(e))
         .toList();
 
     // Update the memory cache

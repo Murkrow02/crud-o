@@ -22,7 +22,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   ResourceOperationType operationType = ResourceOperationType.create;
   bool updatedApi = false;
   Map<String, dynamic> _futureResults = {};
-  final Function(BuildContext, Map<String, dynamic>, T Function<T>(String),
+  final Function(BuildContext, Map<String, dynamic>, T? Function<T>(String),
       CrudoFormController<TResource, TModel>) formBuilder;
   final Map<String, dynamic> Function(TModel, Map<String,dynamic>) toFormData;
   final Map<String, dynamic> Function(Map<String, dynamic>)? beforeSave;
@@ -140,8 +140,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             .toList());
   }
 
-  T _getFutureResult<T>(String key) {
-    return _futureResults[key] as T;
+  T? _getFutureResult<T>(String key) {
+    return _futureResults[key] as T?;
   }
 
   /// Widget rendered when the form is loading

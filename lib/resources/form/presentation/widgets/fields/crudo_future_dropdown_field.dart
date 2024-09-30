@@ -17,6 +17,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final TValue Function(TModel item) valueBuilder;
   final bool multiple;
   final Future<List<TModel>> future;
+  final bool retry;
   final Function(TModel? item)? onSelected;
 
   const CrudoFutureDropdownField(
@@ -26,6 +27,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       required this.valueBuilder,
       required this.future,
       this.multiple = false,
+        this.retry = true,
       this.errorText = 'Errore nel caricamento dei dati',
       this.onSelected});
 
@@ -97,6 +99,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
         children: [
           Text(errorText),
           const SizedBox(height: 8),
+          if (this.retry)
           ElevatedButton(
             onPressed: retry,
             child: const Text('Riprova'),
@@ -118,6 +121,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   Widget _buildDropdown(
       List<TModel> items, BuildContext context, FormFieldState<dynamic> field,
       {bool enabled = true}) {
+
     if (multiple)
       throw UnimplementedError('Multiple selection not implemented yet');
 

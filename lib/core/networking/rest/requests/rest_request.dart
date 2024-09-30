@@ -1,6 +1,12 @@
 class RestRequest
 {
+  final Map<String, String> queryParameters;
+
+  RestRequest({
+    this.queryParameters = const {},
+  });
+
   String toQueryString() {
-    return '';
+    return Uri(queryParameters: queryParameters).query;
   }
 }
