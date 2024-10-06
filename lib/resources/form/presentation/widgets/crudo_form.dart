@@ -24,8 +24,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   Map<String, dynamic> _futureResults = {};
   final Function(BuildContext, Map<String, dynamic>, T? Function<T>(String),
       CrudoFormController<TResource, TModel>) formBuilder;
-  final Map<String, dynamic> Function(TModel, Map<String,dynamic>) toFormData;
-  final Map<String, dynamic> Function(Map<String, dynamic>, Map<String,dynamic>)? beforeSave;
+  final Map<String, dynamic> Function(TModel, Map<String, dynamic>) toFormData;
+  final Map<String, dynamic> Function(
+      Map<String, dynamic>, Map<String, dynamic>)? beforeSave;
   final Map<String, Future> Function()? registerFutures;
   final bool fullPage;
 
@@ -58,7 +59,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           context,
           BlocConsumer<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
             builder: (context, state) {
-
               if (state is FormReadyState) {
                 return _buildFormBuilder(context, state.formData);
               }
@@ -88,12 +88,14 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
               // For other states, just show a loading spinner
               return _buildLoading();
-
             },
             listener: (BuildContext context, CrudoFormState state) {
               if (state is FormSavedState) {
                 updatedApi = true;
                 Toaster.success("Salvato!");
+                if (fullPage) {
+                  Navigator.pop(context, updatedApi);
+                }
 
                 // // If we were in create mode, we need to switch to edit mode
                 // if (operationType == ResourceOperationType.create) {
@@ -238,7 +240,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     }
 
     // Update or create
-    var formData = beforeSave?.call(Map.from(formKey.currentState!.value), context.read<ResourceContext>().data) ??
+    var formData = beforeSave?.call(Map.from(formKey.currentState!.value),
+            context.read<ResourceContext>().data) ??
         formKey.currentState!.value;
     if (operationType == ResourceOperationType.edit) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
