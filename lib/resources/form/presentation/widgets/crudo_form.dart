@@ -25,7 +25,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Function(BuildContext, Map<String, dynamic>, T? Function<T>(String),
       CrudoFormController<TResource, TModel>) formBuilder;
   final Map<String, dynamic> Function(TModel, Map<String,dynamic>) toFormData;
-  final Map<String, dynamic> Function(Map<String, dynamic>)? beforeSave;
+  final Map<String, dynamic> Function(Map<String, dynamic>, Map<String,dynamic>)? beforeSave;
   final Map<String, Future> Function()? registerFutures;
   final bool fullPage;
 
@@ -238,7 +238,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     }
 
     // Update or create
-    var formData = beforeSave?.call(Map.from(formKey.currentState!.value)) ??
+    var formData = beforeSave?.call(Map.from(formKey.currentState!.value), context.read<ResourceContext>().data) ??
         formKey.currentState!.value;
     if (operationType == ResourceOperationType.edit) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(

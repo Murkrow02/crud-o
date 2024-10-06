@@ -19,7 +19,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     extends StatelessWidget {
   final List<CrudoTableColumn<TModel>> columns;
   final List<CrudoAction>? customActions;
-  final bool canSearch;
+  final bool searchable;
   final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)?
       customFuture;
 
@@ -34,7 +34,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   CrudoTable({
     required this.columns,
     this.customActions,
-    this.canSearch = false,
+    this.searchable = false,
     this.customFuture,
     this.fullPage = false,
     this.paginated = false,
@@ -147,7 +147,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
               )
             ]
           : [],
-      title: canSearch ? _buildSearchBar(context) : Text(resource.pluralName()),
+      title: searchable ? _buildSearchBar(context) : Text(resource.pluralName()),
     );
   }
 
