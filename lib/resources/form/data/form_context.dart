@@ -12,7 +12,8 @@ class FormContext
   final CrudoFormBloc formBloc;
   final Map<String, dynamic> formData;
   final GlobalKey<FormBuilderState> formKey;
-  FormContext({required this.formBloc, required this.formData, required this.formKey});
+  final Map<String, List<dynamic>> validationErrors;
+  FormContext({required this.formBloc, required this.formData, required this.formKey, required this.validationErrors});
 }
 
 extension FormContextExtension on BuildContext

@@ -36,8 +36,7 @@ class CrudoFieldConfiguration {
 
   bool shouldRenderViewField(BuildContext context) {
     var resourceContext = context.readResourceContext();
-    return resourceContext.operationType ==
-            ResourceOperationType.view &&
+    return resourceContext.operationType == ResourceOperationType.view &&
         (visibleOn == null ||
             visibleOn!.contains(resourceContext.operationType));
   }
@@ -55,6 +54,10 @@ class CrudoFieldConfiguration {
     return enabled &&
         (enabledOn == null ||
             enabledOn!.contains(resourceContext.operationType));
+  }
+
+  String getValidationError(BuildContext context) {
+    return context.readFormContext().validationErrors[name]?.first ?? '';
   }
 }
 
@@ -76,8 +79,9 @@ class CrudoLabelize extends StatelessWidget {
   final String label;
   final Widget child;
   final double offset;
-  const CrudoLabelize({Key? key, required this.label, required this.child, this.offset = 10})
-      : super(key: key);
+
+  const CrudoLabelize(
+      {super.key, required this.label, required this.child, this.offset = 10});
 
   @override
   Widget build(BuildContext context) {
@@ -91,5 +95,33 @@ class CrudoLabelize extends StatelessWidget {
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           )),
     ]);
+  }
+}
+
+class CrudoErrorize extends StatelessWidget {
+  final String? error;
+  final Widget child;
+
+  const CrudoErrorize({super.key, required this.error, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (error == null || error!.isEmpty) {
+      return child;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        child,
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+          child: Text(
+            error!,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
 
@@ -30,10 +31,11 @@ class InitFormModelEvent extends CrudoFormEvent {
 
 class CreateFormModelEvent extends CrudoFormEvent {
   final Map<String, dynamic> formData;
-  CreateFormModelEvent({required this.formData});
+  final ResourceContext resourceContext;
+  CreateFormModelEvent({required this.formData, required this.resourceContext});
 
   @override
-  List<Object?> get props => [formData];
+  List<Object?> get props => [formData, resourceContext];
 }
 
 class UpdateFormModelEvent extends CrudoFormEvent {

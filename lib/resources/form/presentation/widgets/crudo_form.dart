@@ -28,7 +28,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Map<String, dynamic> Function(
       Map<String, dynamic>, Map<String, dynamic>)? beforeSave;
   final Map<String, Future> Function()? registerFutures;
-  final bool fullPage;
+  final CrudoFormDisplayType displayType;
 
   CrudoForm(
       {super.key,
@@ -36,10 +36,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       required this.toFormData,
       this.beforeSave,
       this.registerFutures,
-      this.fullPage = false});
+      this.displayType = CrudoFormDisplayType.none
+      });
 
   @override
   Widget build(BuildContext context) {
+
     // Get resource from context
     resource = context.read();
 
@@ -51,6 +53,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     return BlocProvider(
       create: (context) => CrudoFormBloc<TResource, TModel>(resource: resource),
       child: Builder(builder: (context) {
+
         // Execute futures
         _executeFutures(context);
 
@@ -76,7 +79,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                 return Column(
                   children: [
                     _buildNonFormErrors(context, state.nonFormErrors),
-                    _buildFormBuilder(context, formData),
+                    _buildFormBuilder(context, formData, validationErrors: state.formErrors),
                   ],
                 );
               }
@@ -93,14 +96,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
               if (state is FormSavedState) {
                 updatedApi = true;
                 Toaster.success("Salvato!");
-                // if (fullPage) {
-                //   Navigator.pop(context, updatedApi);
-                // }
-
-                // // If we were in create mode, we need to switch to edit mode
-                // if (operationType == ResourceOperationType.create) {
-                //   operationType = ResourceOperationType.edit;
-                // }
               }
               if (state is FormModelLoadedState<TModel>) {
                 context.read<CrudoFormBloc<TResource, TModel>>().add(
@@ -114,14 +109,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     );
   }
 
-  bool a = false;
-
   Widget _buildFormBuilder(
-      BuildContext context, Map<String, dynamic> formData) {
+      BuildContext context, Map<String, dynamic> formData, {Map<String, List> validationErrors = const {}}) {
     return Provider(
         create: (context) => FormContext(
             formKey: formKey,
             formData: formData,
+            validationErrors: validationErrors,
             formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
         child: Builder(builder: (context) {
           return FormBuilder(
@@ -187,51 +181,61 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Create a full page form instead of a widget
   Widget _buildFormWrapper(BuildContext context, Widget form) {
-    if (!fullPage) {
-      return form;
+
+    switch (displayType) {
+      case CrudoFormDisplayType.fullPage:
+        return _buildFullPageFormWrapper(context, form);
+      case CrudoFormDisplayType.dialog:
+        return _buildDialogFormWrapper(context, form);
+      case CrudoFormDisplayType.none:
+        return form;
     }
+  }
+
+  Widget _buildDialogFormWrapper(BuildContext context, Widget form) {
     return BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
       builder: (context, state) {
         return PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, __) {
-              if (didPop) {
-                return;
-              }
-              Navigator.pop(context, updatedApi);
-            },
-            child: Scaffold(
-                appBar: AppBar(
-                  title: Text(context.read<TResource>().singularName()),
-                  actions: [
-                    if (state is FormSavingState)
-                      const CircularProgressIndicator.adaptive()
-                    else if (state is FormNotValidState ||
-                        state is FormReadyState)
-                      if (context.read<ResourceContext>().operationType ==
-                          ResourceOperationType.view)
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () => _enterEditMode(context),
-                        )
-                      else
-                        IconButton(
-                            icon: const Icon(Icons.save),
-                            onPressed: () => _onSave(context)),
-                  ],
-                ),
-                body: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: form,
-                  ),
-                )));
+          canPop: false,
+          onPopInvokedWithResult: (didPop, __) {
+            if (didPop) {
+              return;
+            }
+            Navigator.pop(context, updatedApi);
+          },
+          child: SimpleDialog(
+            title: Text(context.read<TResource>().singularName()),
+            children: [
+              form,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (state is FormSavingState)
+                    const CircularProgressIndicator.adaptive()
+                  else if (state is FormNotValidState ||
+                      state is FormReadyState)
+                    if (context.read<ResourceContext>().operationType ==
+                        ResourceOperationType.view)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _enterEditMode(context),
+                      )
+                    else
+                      IconButton(
+                          icon: const Icon(Icons.save),
+                          onPressed: () => _onSave(context)),
+                ],
+              ),
+            ],
+          ),
+        );
       },
     );
   }
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
+
     // Validate and save the form
     var validationSuccess = formKey.currentState!.saveAndValidate();
     if (!validationSuccess) {
@@ -248,7 +252,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           );
     } else if (operationType == ResourceOperationType.create) {
       context.read<CrudoFormBloc<TResource, TModel>>().add(
-            CreateFormModelEvent(formData: formData),
+            CreateFormModelEvent(formData: formData, resourceContext: context.read()),
           );
     }
   }
@@ -264,6 +268,48 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             .add(LoadFormModelEvent(id: id!));
       }
     });
+  }
+
+  Widget _buildFullPageFormWrapper(BuildContext context, Widget form) {
+    return BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
+      builder: (context, state) {
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, __) {
+            if (didPop) {
+              return;
+            }
+            Navigator.pop(context, updatedApi);
+          },
+          child: Scaffold(
+              appBar: AppBar(
+                title: Text(context.read<TResource>().singularName()),
+                actions: [
+                  if (state is FormSavingState)
+                    const CircularProgressIndicator.adaptive()
+                  else if (state is FormNotValidState ||
+                      state is FormReadyState)
+                    if (context.read<ResourceContext>().operationType ==
+                        ResourceOperationType.view)
+                      IconButton(
+                        icon: const Icon(Icons.edit),
+                        onPressed: () => _enterEditMode(context),
+                      )
+                    else
+                      IconButton(
+                          icon: const Icon(Icons.save),
+                          onPressed: () => _onSave(context)),
+                ],
+              ),
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: form,
+                ),
+              )),
+        );
+      },
+    );
   }
 }
 
@@ -301,3 +347,5 @@ class CrudoFormController<TResource extends CrudoResource<TModel>,
     throw UnimplementedError("Save not implemented from controller");
   }
 }
+
+enum CrudoFormDisplayType { fullPage, dialog, none }

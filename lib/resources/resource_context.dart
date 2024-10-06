@@ -8,12 +8,16 @@ import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 
 class ResourceContext {
-  final String id;
-  final ResourceOperationType operationType;
-  final Map<String, dynamic> data;
-  ResourceContext({required this.id, required this.operationType, this.data = const {}});
+  String id;
+  ResourceOperationType operationType;
+  Map<String, dynamic> data;
+  ResourceContext(
+      {required this.id, required this.operationType, this.data = const {}});
 
-  ResourceContext copyWith({String? id, ResourceOperationType? operationType, Map<String, dynamic>? data}) {
+  ResourceContext copyWith(
+      {String? id,
+      ResourceOperationType? operationType,
+      Map<String, dynamic>? data}) {
     return ResourceContext(
       id: id ?? this.id,
       operationType: operationType ?? this.operationType,
@@ -22,7 +26,6 @@ class ResourceContext {
   }
 }
 
-extension ResourceContextExtension on BuildContext
-{
+extension ResourceContextExtension on BuildContext {
   ResourceContext readResourceContext() => read<ResourceContext>();
 }

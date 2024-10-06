@@ -33,9 +33,11 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Builder(builder: (context) {
+
         // Detect if edit or create
         if (config.shouldRenderViewField(context)) {
           // Cant render with standard field, we need to resolve future first
@@ -70,23 +72,27 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   Widget _buildEditField(BuildContext context) {
-    return CrudoLabelize(
-        label: config.label ?? config.name,
-        child: FormBuilderField(
-          name: config.name,
-          builder: (FormFieldState<dynamic> field) {
-            return Futuristic<List<TModel>>(
-              autoStart: true,
-              futureBuilder: () => future,
-              busyBuilder: (context) =>
-                  _buildDropdown([], context, field, enabled: false),
-              errorBuilder: (context, error, retry) =>
-                  _buildError(context, error, retry),
-              dataBuilder: (context, data) =>
-                  _buildDropdown(data ?? [], context, field),
-            );
-          },
-        ));
+        return CrudoErrorize(
+          error: config.getValidationError(context),
+          child: CrudoLabelize(
+              label: config.label ?? config.name,
+              child: FormBuilderField(
+                name: config.name,
+                builder: (FormFieldState<dynamic> field) {
+                  return Futuristic<List<TModel>>(
+                    autoStart: true,
+                    futureBuilder: () => future,
+                    busyBuilder: (context) =>
+                        _buildDropdown([], context, field, enabled: false),
+                    errorBuilder: (context, error, retry) =>
+                        _buildError(context, error, retry),
+                    dataBuilder: (context, data) =>
+                        _buildDropdown(data ?? [], context, field),
+                  );
+                },
+              )
+              ),
+        );
   }
 
   Widget _buildError(BuildContext context, dynamic error, VoidCallback retry) {

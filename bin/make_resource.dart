@@ -8,6 +8,12 @@ String toSnakeCase(String input) {
   }).replaceFirst('_', '');
 }
 
+String toDashCase(String input) {
+  return input.replaceAllMapped(RegExp(r'[A-Z]'), (Match match) {
+    return '-${match.group(0)!.toLowerCase()}';
+  }).replaceFirst('-', '');
+}
+
 void main(List<String> arguments) {
   // Resource name
   final name = Input(
@@ -103,7 +109,7 @@ String resourceStub(String name, List<String> components) {
   if (components.contains('Table')) {
     tablePageOverride = '''
   @override
-  CrudoTablePage? get tablePage => ${titleCaseResource}TablePage();
+  Widget? get tablePage => ${titleCaseResource}TablePage();
     ''';
   }
 
@@ -165,7 +171,7 @@ import '${toSnakeCase(name)}_factory.dart';
 
 class ${titleCaseResource}Repository extends ResourceRepository<$titleCaseResource> {
 
-  ${titleCaseResource}Repository() : super(endpoint: "${toSnakeCase(name)}s", factory: ${titleCaseResource}Factory());
+  ${titleCaseResource}Repository() : super(endpoint: "${toDashCase(name)}s", factory: ${titleCaseResource}Factory());
 }
   ''';
 }
@@ -180,12 +186,13 @@ import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_text_fie
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 
 class ${titleCaseResource}FormPage extends StatelessWidget {
-  ${titleCaseResource}FormPage({super.key});
+  const ${titleCaseResource}FormPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return CrudoForm<${titleCaseResource}Resource, $titleCaseResource> (
-      formBuilder: (context, formData, futureResults, formController) => Column(children: [
+      displayType: CrudoFormDisplayType.fullPage,
+      formBuilder: (context, formData, futureResult, formController) => Column(children: [
          CrudoTextField(
             config: CrudoFieldConfiguration(
               name: 'name',
@@ -195,7 +202,7 @@ class ${titleCaseResource}FormPage extends StatelessWidget {
           ),
           // Add more fields here
       ]),
-      toFormData: (model) => {
+      toFormData: (model, extraData) => {
         'id': model.id,
         'name': model.name,
       },
