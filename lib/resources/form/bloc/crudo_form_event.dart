@@ -17,11 +17,10 @@ class LoadFormModelEvent extends CrudoFormEvent {
 /// Builds the form with the given data to re-paint UI with new data
 class RebuildFormEvent<T> extends CrudoFormEvent {
   final Map<String, dynamic> formData;
-  final ResourceOperationType operationType;
-  RebuildFormEvent({required this.formData, required this.operationType});
+  RebuildFormEvent({required this.formData});
 
   @override
-  List<Object?> get props => [formData, operationType];
+  List<Object?> get props => [formData];
 }
 
 class InitFormModelEvent extends CrudoFormEvent {

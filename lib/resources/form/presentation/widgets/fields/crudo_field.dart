@@ -1,6 +1,7 @@
 import 'package:crud_o/auth/bloc/crudo_auth_wrapper_bloc.dart';
-import 'package:crud_o/resources/form/data/form_context_container.dart';
+import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
+import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
@@ -27,18 +28,18 @@ class CrudoFieldConfiguration {
   });
 
   bool shouldRenderField(BuildContext context) {
-    var formContext = context.readFormContext();
+    var resourceContext = context.readResourceContext();
     return visible &&
         (visibleOn == null ||
-            visibleOn!.contains(formContext.resourceContext.operationType));
+            visibleOn!.contains(resourceContext.operationType));
   }
 
   bool shouldRenderViewField(BuildContext context) {
-    var formContext = context.readFormContext();
-    return context.readFormContext().resourceContext.operationType ==
+    var resourceContext = context.readResourceContext();
+    return resourceContext.operationType ==
             ResourceOperationType.view &&
         (visibleOn == null ||
-            visibleOn!.contains(formContext.resourceContext.operationType));
+            visibleOn!.contains(resourceContext.operationType));
   }
 
   Widget renderViewField(BuildContext context) {
@@ -50,10 +51,10 @@ class CrudoFieldConfiguration {
   }
 
   bool shouldEnableField(BuildContext context) {
-    var formContext = context.readFormContext();
+    var resourceContext = context.readResourceContext();
     return enabled &&
         (enabledOn == null ||
-            enabledOn!.contains(formContext.resourceContext.operationType));
+            enabledOn!.contains(resourceContext.operationType));
   }
 }
 

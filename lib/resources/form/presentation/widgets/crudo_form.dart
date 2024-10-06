@@ -6,7 +6,7 @@ import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/form/data/form_context_container.dart';
+import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:flutter/material.dart';
@@ -93,9 +93,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
               if (state is FormSavedState) {
                 updatedApi = true;
                 Toaster.success("Salvato!");
-                if (fullPage) {
-                  Navigator.pop(context, updatedApi);
-                }
+                // if (fullPage) {
+                //   Navigator.pop(context, updatedApi);
+                // }
 
                 // // If we were in create mode, we need to switch to edit mode
                 // if (operationType == ResourceOperationType.create) {
@@ -105,8 +105,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
               if (state is FormModelLoadedState<TModel>) {
                 context.read<CrudoFormBloc<TResource, TModel>>().add(
                     RebuildFormEvent(
-                        formData: toFormData(state.model, resourceContext.data),
-                        operationType: operationType));
+                        formData: toFormData(state.model, resourceContext.data)));
               }
             },
           ),
@@ -115,15 +114,15 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     );
   }
 
+  bool a = false;
+
   Widget _buildFormBuilder(
       BuildContext context, Map<String, dynamic> formData) {
     return Provider(
-        create: (context) => FormContextContainer(
-              formKey: formKey,
-              formData: formData,
-              formBloc: context.read<CrudoFormBloc<TResource, TModel>>(),
-              resourceContext: context.read<ResourceContext>(),
-            ),
+        create: (context) => FormContext(
+            formKey: formKey,
+            formData: formData,
+            formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
         child: Builder(builder: (context) {
           return FormBuilder(
               key: formKey,
@@ -275,22 +274,21 @@ class CrudoFormController<TResource extends CrudoResource<TModel>,
   /// Builds the form with the given data to re-paint UI with new data
   void rebuildForm(BuildContext context) {
     var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
-    var formContextContainer = context.readFormContext();
+    var formContext = context.readFormContext();
     var formState = formBloc.state;
     if (formState is FormReadyState) {
-      formContextContainer.formKey.currentState!.save();
+      formContext.formKey.currentState!.save();
       formBloc.add(RebuildFormEvent(
-          formData: formContextContainer.formKey.currentState!.value,
-          operationType: formContextContainer.resourceContext.operationType));
+          formData: formContext.formKey.currentState!.value));
     }
   }
 
   /// Completely reloads the form by getting the data from the API
   void reloadForm(BuildContext context) {
     var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
-    var formContextContainer = context.readFormContext();
+    var resourceContext = context.readResourceContext();
     formBloc
-        .add(LoadFormModelEvent(id: formContextContainer.resourceContext.id));
+        .add(LoadFormModelEvent(id: resourceContext.id));
   }
 
   void enterEditMode(BuildContext context) {

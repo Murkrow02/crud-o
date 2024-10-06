@@ -7,16 +7,15 @@ import 'package:provider/provider.dart';
 
 /// This class is needed to pass the form context to the fields
 /// Fields are not aware of the resource or model type so we pass a generic bloc + other info
-class FormContextContainer
+class FormContext
 {
   final CrudoFormBloc formBloc;
-  final ResourceContext resourceContext;
   final Map<String, dynamic> formData;
   final GlobalKey<FormBuilderState> formKey;
-  FormContextContainer({required this.formBloc, required this.resourceContext, required this.formData, required this.formKey});
+  FormContext({required this.formBloc, required this.formData, required this.formKey});
 }
 
-extension FormContextContainerExtension on BuildContext
+extension FormContextExtension on BuildContext
 {
-  FormContextContainer readFormContext() => read<FormContextContainer>();
+  FormContext readFormContext() => read<FormContext>();
 }

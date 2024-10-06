@@ -1,7 +1,7 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:collection/collection.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/form/data/form_context_container.dart';
+import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:flutter/material.dart';
@@ -110,7 +110,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   TModel? getInitialItem(BuildContext context, List<TModel> items) {
-    var value = context.read<FormContextContainer>().formData[config.name];
+    var value = context.read<FormContext>().formData[config.name];
     if (value == null || items.isEmpty) {
       return null;
     }

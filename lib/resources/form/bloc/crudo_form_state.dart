@@ -23,11 +23,10 @@ class FormModelLoadedState<T extends Object> extends CrudoFormState {
 }
 class FormReadyState extends CrudoFormState {
   final Map<String, dynamic> formData;
-  final ResourceOperationType operationType;
-  FormReadyState({required this.formData, required this.operationType});
+  FormReadyState({required this.formData});
 
   @override
-  List<Object> get props => [formData, operationType];
+  List<Object> get props => [formData];
 }
 class FormSavingState extends CrudoFormState {
   final Map<String, dynamic> formData;
