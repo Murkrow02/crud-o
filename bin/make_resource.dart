@@ -101,7 +101,7 @@ String resourceStub(String name, List<String> components) {
   if (components.contains('Form')) {
     formPageOverride = '''
   @override
-  Widget? get formPage => ${titleCaseResource}FormPage();
+  Widget? get formPage => const ${titleCaseResource}FormPage();
     ''';
   }
 

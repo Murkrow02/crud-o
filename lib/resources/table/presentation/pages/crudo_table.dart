@@ -22,9 +22,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   final bool searchable;
   final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)?
       customFuture;
+  final List<TModel>? customData;
 
   // Map of data to pass to the actions,
-  final Map<String, dynamic>? data;
+  final Map<String, dynamic>? actionData;
   final bool fullPage;
   final bool paginated;
 
@@ -39,9 +40,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     this.fullPage = false,
     this.paginated = false,
     this.onDataChanged,
-    this.data,
-    Key? key,
-  }) : super(key: key);
+    this.actionData,
+    this.customData,
+    super.key,
+  });
 
   late PlutoGridStateManager tableManager;
   late TResource resource;
@@ -49,11 +51,18 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   @override
   Widget build(BuildContext context) {
+    assert(customData == null || customFuture == null,
+        'Cannot provide both customData and customFuture');
+
     resource = context.read();
 
     return BlocProvider<CrudoTableBloc>(
       create: (context) => CrudoTableBloc<TResource, TModel>(
-          resource: resource, customFuture: customFuture),
+          resource: resource,
+          customFuture: customData != null
+              ? (PaginatedRequest request) => Future.value(
+                  SinglePageResponse<TModel>(data: customData ?? []))
+              : customFuture),
       child: Builder(
         builder: (context) {
           if (!fullPage) {
@@ -138,7 +147,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
               IconButton(
                 icon: const Icon(Icons.add),
                 onPressed: () => createAction
-                    .execute(context, data: data)
+                    .execute(context, data: actionData)
                     .then((needToRefresh) {
                   if (needToRefresh == true) {
                     context.read<CrudoTableBloc>().add(LoadTableEvent());
@@ -147,7 +156,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
               )
             ]
           : [],
-      title: searchable ? _buildSearchBar(context) : Text(resource.pluralName()),
+      title:
+          searchable ? _buildSearchBar(context) : Text(resource.pluralName()),
     );
   }
 
@@ -250,7 +260,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                     .execute(context,
                         data: {
                           'id': columnContext.cell.value,
-                        }..addAll(data ?? {}))
+                        }..addAll(actionData ?? {}))
                     .then((needToRefresh) {
                   if (needToRefresh == true) {
                     context.read<CrudoTableBloc>().add(LoadTableEvent());
