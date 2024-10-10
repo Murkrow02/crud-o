@@ -18,7 +18,7 @@ class PaginatedRequest extends RestRequest
   String toQueryString() {
     final queryParameters = {
       'page': page.toString(),
-      if (search != null) 'search': search.toString(),
+      if (search != null) 'filter[search]': search.toString(),
       if (orderBy != null) 'orderBy': orderBy.toString(),
     }..addAll(super.queryParameters);
     return Uri(queryParameters: queryParameters).query;

@@ -1,7 +1,7 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:collection/collection.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/form/data/form_context_container.dart';
+import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:flutter/material.dart';
@@ -33,9 +33,11 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Builder(builder: (context) {
+
         // Detect if edit or create
         if (config.shouldRenderViewField(context)) {
           // Cant render with standard field, we need to resolve future first
@@ -70,23 +72,27 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   Widget _buildEditField(BuildContext context) {
-    return CrudoLabelize(
-        label: config.label ?? config.name,
-        child: FormBuilderField(
-          name: config.name,
-          builder: (FormFieldState<dynamic> field) {
-            return Futuristic<List<TModel>>(
-              autoStart: true,
-              futureBuilder: () => future,
-              busyBuilder: (context) =>
-                  _buildDropdown([], context, field, enabled: false),
-              errorBuilder: (context, error, retry) =>
-                  _buildError(context, error, retry),
-              dataBuilder: (context, data) =>
-                  _buildDropdown(data ?? [], context, field),
-            );
-          },
-        ));
+        return CrudoErrorize(
+          error: config.getValidationError(context),
+          child: CrudoLabelize(
+              label: config.label ?? config.name,
+              child: FormBuilderField(
+                name: config.name,
+                builder: (FormFieldState<dynamic> field) {
+                  return Futuristic<List<TModel>>(
+                    autoStart: true,
+                    futureBuilder: () => future,
+                    busyBuilder: (context) =>
+                        _buildDropdown([], context, field, enabled: false),
+                    errorBuilder: (context, error, retry) =>
+                        _buildError(context, error, retry),
+                    dataBuilder: (context, data) =>
+                        _buildDropdown(data ?? [], context, field),
+                  );
+                },
+              )
+              ),
+        );
   }
 
   Widget _buildError(BuildContext context, dynamic error, VoidCallback retry) {
@@ -110,7 +116,11 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   TModel? getInitialItem(BuildContext context, List<TModel> items) {
-    var value = context.read<FormContextContainer>().formData[config.name];
+    var value = context
+        .readFormContext()
+        .formKey
+        .currentState
+        ?.initialValue[config.name];
     if (value == null || items.isEmpty) {
       return null;
     }

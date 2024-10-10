@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 import 'package:crud_o/core/models/traced_error.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'crudo_form_event.dart';
@@ -57,6 +58,8 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       var apiModel = await resource.repository
           .add(event.formData);
       emit(FormSavedState());
+      event.resourceContext.operationType = ResourceOperationType.edit;
+      event.resourceContext.id = resource.getId(apiModel);
       emit(FormModelLoadedState(model: apiModel));
     } on ApiValidationException catch (e) {
       _handleApiValidationException(emit, event.formData, e);
@@ -91,6 +94,6 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   }
 
   void _onReloadForm(RebuildFormEvent event, Emitter<CrudoFormState> emit) {
-    emit(FormReadyState(formData: event.formData, operationType: event.operationType));
+    emit(FormReadyState(formData: event.formData));
   }
 }

@@ -1,6 +1,7 @@
 import 'package:crud_o/auth/bloc/crudo_auth_wrapper_bloc.dart';
-import 'package:crud_o/resources/form/data/form_context_container.dart';
+import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
+import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
@@ -27,22 +28,21 @@ class CrudoFieldConfiguration {
   });
 
   bool shouldRenderField(BuildContext context) {
-    var formContext = context.readFormContext();
+    var resourceContext = context.readResourceContext();
     return visible &&
         (visibleOn == null ||
-            visibleOn!.contains(formContext.resourceContext.operationType));
+            visibleOn!.contains(resourceContext.operationType));
   }
 
   bool shouldRenderViewField(BuildContext context) {
-    var formContext = context.readFormContext();
-    return context.readFormContext().resourceContext.operationType ==
-            ResourceOperationType.view &&
+    var resourceContext = context.readResourceContext();
+    return resourceContext.operationType == ResourceOperationType.view &&
         (visibleOn == null ||
-            visibleOn!.contains(formContext.resourceContext.operationType));
+            visibleOn!.contains(resourceContext.operationType));
   }
 
   Widget renderViewField(BuildContext context) {
-    var value = context.readFormContext().formData[name]?.toString() ?? '';
+    var value = context.readFormContext().get(name)?.toString() ?? '';
     if (buildViewField == null) {
       return CrudoViewField(name: label ?? name, child: Text(value));
     }
@@ -50,10 +50,14 @@ class CrudoFieldConfiguration {
   }
 
   bool shouldEnableField(BuildContext context) {
-    var formContext = context.readFormContext();
+    var resourceContext = context.readResourceContext();
     return enabled &&
         (enabledOn == null ||
-            enabledOn!.contains(formContext.resourceContext.operationType));
+            enabledOn!.contains(resourceContext.operationType));
+  }
+
+  String getValidationError(BuildContext context) {
+    return context.readFormContext().validationErrors[name]?.first ?? '';
   }
 }
 
@@ -75,8 +79,9 @@ class CrudoLabelize extends StatelessWidget {
   final String label;
   final Widget child;
   final double offset;
-  const CrudoLabelize({Key? key, required this.label, required this.child, this.offset = 10})
-      : super(key: key);
+
+  const CrudoLabelize(
+      {super.key, required this.label, required this.child, this.offset = 10});
 
   @override
   Widget build(BuildContext context) {
@@ -90,5 +95,33 @@ class CrudoLabelize extends StatelessWidget {
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           )),
     ]);
+  }
+}
+
+class CrudoErrorize extends StatelessWidget {
+  final String? error;
+  final Widget child;
+
+  const CrudoErrorize({super.key, required this.error, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (error == null || error!.isEmpty) {
+      return child;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        child,
+        Padding(
+          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
+          child: Text(
+            error!,
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        ),
+      ],
+    );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
 
@@ -17,11 +18,10 @@ class LoadFormModelEvent extends CrudoFormEvent {
 /// Builds the form with the given data to re-paint UI with new data
 class RebuildFormEvent<T> extends CrudoFormEvent {
   final Map<String, dynamic> formData;
-  final ResourceOperationType operationType;
-  RebuildFormEvent({required this.formData, required this.operationType});
+  RebuildFormEvent({required this.formData});
 
   @override
-  List<Object?> get props => [formData, operationType];
+  List<Object?> get props => [formData];
 }
 
 class InitFormModelEvent extends CrudoFormEvent {
@@ -31,10 +31,11 @@ class InitFormModelEvent extends CrudoFormEvent {
 
 class CreateFormModelEvent extends CrudoFormEvent {
   final Map<String, dynamic> formData;
-  CreateFormModelEvent({required this.formData});
+  final ResourceContext resourceContext;
+  CreateFormModelEvent({required this.formData, required this.resourceContext});
 
   @override
-  List<Object?> get props => [formData];
+  List<Object?> get props => [formData, resourceContext];
 }
 
 class UpdateFormModelEvent extends CrudoFormEvent {
