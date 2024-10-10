@@ -42,7 +42,7 @@ class CrudoFieldConfiguration {
   }
 
   Widget renderViewField(BuildContext context) {
-    var value = context.readFormContext().formData[name]?.toString() ?? '';
+    var value = context.readFormContext().get(name)?.toString() ?? '';
     if (buildViewField == null) {
       return CrudoViewField(name: label ?? name, child: Text(value));
     }

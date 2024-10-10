@@ -33,9 +33,8 @@ class CrudoTextField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Builder(builder: (context) {
-
         // Detect if preview
-        if(config.shouldRenderViewField(context)) {
+        if (config.shouldRenderViewField(context)) {
           return config.renderViewField(context);
         }
 
@@ -43,8 +42,14 @@ class CrudoTextField extends StatelessWidget {
         return FormBuilderTextField(
           name: config.name,
           enabled: config.shouldEnableField(context),
-          initialValue:
-              context.readFormContext().formData[config.name]?.toString() ?? '',
+
+          // This is needed since form builder does not like ints as initial values
+          initialValue: context
+              .readFormContext()
+              .formKey
+              .currentState
+              ?.initialValue[config.name]
+              ?.toString(),
           validator: FormBuilderValidators.compose([
             if (config.required) FormBuilderValidators.required(),
             if (numeric) FormBuilderValidators.numeric(),

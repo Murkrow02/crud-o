@@ -116,7 +116,11 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   TModel? getInitialItem(BuildContext context, List<TModel> items) {
-    var value = context.read<FormContext>().formData[config.name];
+    var value = context
+        .readFormContext()
+        .formKey
+        .currentState
+        ?.initialValue[config.name];
     if (value == null || items.isEmpty) {
       return null;
     }

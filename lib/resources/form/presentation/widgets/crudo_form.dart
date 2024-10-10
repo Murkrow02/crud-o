@@ -1,6 +1,4 @@
 import 'package:crud_o/common/widgets/error_alert.dart';
-import 'package:crud_o/core/exceptions/unexpected_state_exception.dart';
-import 'package:crud_o/core/models/traced_error.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
@@ -16,18 +14,16 @@ import 'package:provider/provider.dart';
 
 class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     extends StatelessWidget {
-  late TResource resource;
+
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
   String? id;
   ResourceOperationType operationType = ResourceOperationType.create;
   bool updatedApi = false;
   final CrudoFormDisplayType displayType;
-  Map<String, dynamic> _futureResults = {};
 
   // Configurations
-  final Function(BuildContext, Map<String, dynamic>, T? Function<T>(String),
-      CrudoFormController<TResource, TModel>) formBuilder;
-  final Map<String, dynamic> Function(TModel, Map<String, dynamic>) toFormData;
+  final Function(BuildContext context) formBuilder;
+  final Map<String, dynamic> Function(TModel) toFormData;
   final Map<String, Future> Function()? registerFutures;
 
   /// Callbacks
@@ -57,8 +53,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   @override
   Widget build(BuildContext context) {
-    // Get resource from context
-    resource = context.read();
 
     // Try to get editing resource id
     var resourceContext = context.read<ResourceContext>();
@@ -67,12 +61,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     return BlocProvider(
         create: (context) =>
-            CrudoFormBloc<TResource, TModel>(resource: resource),
+            CrudoFormBloc<TResource, TModel>(resource: context.read()),
         child: Provider(
             create: (context) => FormContext(
+              context: context,
                 formKey: formKey,
-                formData: {},
-                validationErrors: {},
                 formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
             child: Builder(builder: (context) {
               // Execute futures
@@ -121,9 +114,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     }
                     if (state is FormModelLoadedState<TModel>) {
                       context.read<CrudoFormBloc<TResource, TModel>>().add(
-                          RebuildFormEvent(
-                              formData: toFormData(
-                                  state.model, resourceContext.data)));
+                          RebuildFormEvent(formData: toFormData(state.model)));
                     }
                   },
                 ),
@@ -135,14 +126,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       {Map<String, List> validationErrors = const {}}) {
 
     // Update form context
-    context.readFormContext().formData = Map.from(formData);
-    context.readFormContext().validationErrors = Map.from(validationErrors);
+    context.readFormContext().validationErrors = validationErrors;
+    context.readFormContext().formData = formData;
 
     return FormBuilder(
         key: formKey,
         initialValue: formData,
-        child: formBuilder(context, formData, _getFutureResult,
-            CrudoFormController<TResource, TModel>()));
+        child: formBuilder(context));
   }
 
   /// These are errors that are not related to a specific field
@@ -152,10 +142,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             .map((e) => Text(e,
                 style: TextStyle(color: Theme.of(context).colorScheme.error)))
             .toList());
-  }
-
-  T? _getFutureResult<T>(String key) {
-    return _futureResults[key] as T?;
   }
 
   /// Widget rendered when the form is loading
@@ -178,6 +164,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Execute the futures registered with registerFutures before loading the form
   void _executeFutures(BuildContext context) async {
+
     // Allow child to register futures
     var futures = registerFutures?.call() ?? {};
 
@@ -185,9 +172,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     for (var key in futures.keys) {
       try {
         var result = await futures[key];
-        _futureResults[key] = result;
+        context.readFormContext().futureResults[key] = result;
       } catch (e) {
-        _futureResults[key] = null;
+        context.readFormContext().futureResults[key] = null;
       }
     }
 
@@ -257,12 +244,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     // Get form data from the fields
     formKey.currentState!.save();
     var formData = formKey.currentState!.value;
-    context.readFormContext().formData = formData;
 
     // Call before validate callback
     if (beforeValidate != null) {
       formData = beforeValidate!(context);
-      context.readFormContext().formData = formData;
     }
 
     // Validate form fields
@@ -273,7 +258,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     // Call before save callback
     if (beforeSave != null) {
       formData = beforeSave!.call(context);
-      context.readFormContext().formData = formData;
     }
 
     // Edit
@@ -364,6 +348,7 @@ class CrudoFormController<TResource extends CrudoResource<TModel>,
 
   /// Builds the form with the given data to re-paint UI with new data
   void rebuildForm(BuildContext context) {
+    throw UnimplementedError("Rebuild form not implemented from controller");
     var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
     var formContext = context.readFormContext();
     var formState = formBloc.state;
@@ -376,6 +361,7 @@ class CrudoFormController<TResource extends CrudoResource<TModel>,
 
   /// Completely reloads the form by getting the data from the API
   void reloadForm(BuildContext context) {
+    throw UnimplementedError("Reload form not implemented from controller");
     var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
     var resourceContext = context.readResourceContext();
     formBloc.add(LoadFormModelEvent(id: resourceContext.id));

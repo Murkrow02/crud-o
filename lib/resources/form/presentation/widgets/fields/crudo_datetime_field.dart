@@ -33,7 +33,7 @@ class CrudoDatetimeField extends StatelessWidget {
 
         return FormBuilderDateTimePicker(name: config.name,
           enabled: config.shouldEnableField(context),
-          initialValue: context.readFormContext().formData[config.name] as DateTime? ?? DateTime.now(),
+          initialValue: context.readFormContext().get(config.name) as DateTime? ?? DateTime.now(),
           validator: FormBuilderValidators.compose([
             if (config.required) FormBuilderValidators.required(),
           ]),
