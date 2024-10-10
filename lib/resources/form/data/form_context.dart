@@ -9,10 +9,19 @@ import 'package:provider/provider.dart';
 /// Fields are not aware of the resource or model type so we pass a generic bloc + other info
 class FormContext
 {
+
+  // The internal state of the form, use this to trigger events
   final CrudoFormBloc formBloc;
-  final Map<String, dynamic> formData;
+
+  // The actual form key needed to validate or get data from the fields
   final GlobalKey<FormBuilderState> formKey;
-  final Map<String, List<dynamic>> validationErrors;
+
+  // The form data, this can be modified by callbacks and does not necessarily reflect the state of the form
+  Map<String, dynamic> formData;
+
+  // Errors returned by the API validation
+  Map<String, List<dynamic>> validationErrors;
+
   FormContext({required this.formBloc, required this.formData, required this.formKey, required this.validationErrors});
 }
 
