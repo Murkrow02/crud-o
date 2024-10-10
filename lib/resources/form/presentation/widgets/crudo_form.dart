@@ -21,23 +21,33 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   bool updatedApi = false;
   final CrudoFormDisplayType displayType;
 
-  // Configurations
+  /*
+  * Configurations
+  */
+
+  /// Build the form fields
   final Function(BuildContext context) formBuilder;
-  final Map<String, dynamic> Function(TModel) toFormData;
+
+  /// Convert the model to form data
+  final Map<String, dynamic> Function(BuildContext context, TModel model) toFormData;
+
+  /// Register futures to be executed
   final Map<String, Future> Function()? registerFutures;
 
-  /// Callbacks
+  /*
+  * Callbacks
+  */
 
-  // Called before validating the form, should return the final form data to validate
+  /// Called before validating the form, should return the final form data to validate
   final Function(BuildContext context)? beforeValidate;
 
-  // Called before saving the form, should return the final form data to save
+  /// Called before saving the form, should return the final form data to save
   final Function(BuildContext context)? beforeSave;
 
-  // Called instead of default create
+  /// Called instead of default create
   final void Function(BuildContext context)? onCreate;
 
-  // Called instead of default update
+  /// Called instead of default update
   final void Function(BuildContext context)? onUpdate;
 
   CrudoForm(
@@ -114,7 +124,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     }
                     if (state is FormModelLoadedState<TModel>) {
                       context.read<CrudoFormBloc<TResource, TModel>>().add(
-                          RebuildFormEvent(formData: toFormData(state.model)));
+                          RebuildFormEvent(formData: toFormData(context, state.model)));
                     }
                   },
                 ),
@@ -247,7 +257,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Call before validate callback
     if (beforeValidate != null) {
-      formData = beforeValidate!(context);
+      beforeValidate!(context);
     }
 
     // Validate form fields
@@ -257,7 +267,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Call before save callback
     if (beforeSave != null) {
-      formData = beforeSave!.call(context);
+      beforeSave!.call(context);
     }
 
     // Edit
