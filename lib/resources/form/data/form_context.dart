@@ -38,7 +38,7 @@ class FormContext {
       this.validationErrors = const {}});
 
   /// Get a specific value from the form
-  dynamic get<T>(String key) => formData[key] as T;
+  T get<T>(String key) => formData[key] as T;
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {
@@ -73,6 +73,9 @@ class FormContext {
       formData[key] = formKey.currentState!.fields[key]!.value;
     }
   }
+
+  /// Returns true if all the future operations have been loaded
+  bool futuresLoaded() => futureResults.isNotEmpty;
 }
 
 extension FormContextExtension on BuildContext {

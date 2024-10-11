@@ -228,6 +228,7 @@ class ${titleCaseResource}TablePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return CrudoTable<${titleCaseResource}Resource, $titleCaseResource>(
       fullPage: true,
+      paginated: true,
       columns: [
         CrudoTableColumn(
           column: PlutoColumn(

@@ -149,4 +149,5 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// SHORTCUTS
   /// **************************************************************************************************
   ResourceFactory<TModel> get factory => repository.factory;
+  TRepository getRepository<TRepository extends ResourceRepository<TModel>>() => repository as TRepository;
 }

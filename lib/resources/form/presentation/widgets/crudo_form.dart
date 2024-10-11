@@ -32,7 +32,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Map<String, dynamic> Function(BuildContext context, TModel model) toFormData;
 
   /// Register futures to be executed
-  final Map<String, Future> Function()? registerFutures;
+  final Map<String, Future> Function(BuildContext context)? registerFutures;
 
   /*
   * Callbacks
@@ -78,8 +78,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                 formKey: formKey,
                 formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
             child: Builder(builder: (context) {
-              // Execute futures
-              _executeFutures(context);
+
+              // Actually load the form data
+              context.read<CrudoFormBloc<TResource, TModel>>().add(
+                  operationType == ResourceOperationType.create
+                      ? InitFormModelEvent()
+                      : LoadFormModelEvent(id: id!));
 
               // Build form
               return _buildFormWrapper(
@@ -123,6 +127,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                       Toaster.success("Salvato!");
                     }
                     if (state is FormModelLoadedState<TModel>) {
+
                       context.read<CrudoFormBloc<TResource, TModel>>().add(
                           RebuildFormEvent(formData: toFormData(context, state.model)));
                     }
@@ -139,10 +144,16 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     context.readFormContext().validationErrors = validationErrors;
     context.readFormContext().formData = formData;
 
-    return FormBuilder(
-        key: formKey,
-        initialValue: formData,
-        child: formBuilder(context));
+    // Execute futures and when ready build the form
+    return FutureBuilder(future: _executeFutures(context), builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return _buildLoading();
+      }
+      return FormBuilder(
+          key: formKey,
+          initialValue: formData,
+          child: formBuilder(context));
+    });
   }
 
   /// These are errors that are not related to a specific field
@@ -173,10 +184,15 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   }
 
   /// Execute the futures registered with registerFutures before loading the form
-  void _executeFutures(BuildContext context) async {
+  Future _executeFutures(BuildContext context) async {
+
+    // Check if already loaded futures
+    if (context.readFormContext().futuresLoaded()) {
+      return;
+    }
 
     // Allow child to register futures
-    var futures = registerFutures?.call() ?? {};
+    var futures = registerFutures?.call(context) ?? {};
 
     // Execute futures
     for (var key in futures.keys) {
@@ -187,12 +203,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         context.readFormContext().futureResults[key] = null;
       }
     }
-
-    // Actually load the form data
-    context.read<CrudoFormBloc<TResource, TModel>>().add(
-        operationType == ResourceOperationType.create
-            ? InitFormModelEvent()
-            : LoadFormModelEvent(id: id!));
   }
 
   /// Create a full page form instead of a widget
