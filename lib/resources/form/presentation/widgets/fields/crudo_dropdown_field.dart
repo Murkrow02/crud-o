@@ -29,12 +29,14 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
       return const SizedBox();
     }
 
-    return CrudoFutureDropdownField(
+    return CrudoFutureDropdownField<TModel, TValue>(
       config: config,
       retry: false,
       itemBuilder: itemBuilder,
       valueBuilder: valueBuilder,
-      future: items != null ? Future.value(items!) : _errorFuture(),
+      futureProvider: items != null
+          ? () => Future.value(items)
+          : () => _errorFuture().then((value) => value),
       onSelected: onSelected,
     );
   }

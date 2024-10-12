@@ -93,7 +93,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
         nonFormErrors: globalErrors));
   }
 
-  void _onReloadForm(RebuildFormEvent event, Emitter<CrudoFormState> emit) {
+  Future<void> _onReloadForm(RebuildFormEvent event, Emitter<CrudoFormState> emit) async {
     emit(FormReadyState(formData: event.formData));
   }
 }

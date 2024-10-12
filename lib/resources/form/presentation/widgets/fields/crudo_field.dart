@@ -5,14 +5,29 @@ import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
+/// The common configuration used for all CrudoFields
+///
+/// [name] is the name of the field, unique in the form
+/// [label] is the label shown on top of the field, if not provided it will default to the name
+/// [required] is a flag that indicates if the field is required, will show a validation error if not filled
+/// [visible] is a flag that indicates if the field should be rendered
+/// [enabled] is a flag that indicates if the field should be enabled to be filled
+/// [reactive] is a flag that indicates if the field should trigger a rebuild of the form when the value changes
+/// This is used when a field is dependent on another field, for example a dropdown that changes the values of another dropdown
+/// [visibleOn] is a list of operations that the field should be visible on
+/// [enabledOn] is a list of operations that the field should be enabled on
+/// [dependsOn] is a list of fields that this field depends on
+/// This means that whenever one of the values of the fields in the list changes, this field should be rebuilt
 class CrudoFieldConfiguration {
   final String name;
   final String? label;
   final bool required;
   final bool visible;
   final bool enabled;
+  final bool reactive;
   final List<ResourceOperationType>? visibleOn;
   final List<ResourceOperationType>? enabledOn;
+  final List<String>? dependsOn;
   final CrudoViewField Function(
       BuildContext context, String label, String value)? buildViewField;
 
@@ -22,6 +37,8 @@ class CrudoFieldConfiguration {
     this.required = false,
     this.enabled = true,
     this.visible = true,
+    this.reactive = false,
+    this.dependsOn,
     this.visibleOn,
     this.enabledOn,
     this.buildViewField,
@@ -59,6 +76,15 @@ class CrudoFieldConfiguration {
   String getValidationError(BuildContext context) {
     return context.readFormContext().validationErrors[name]?.first ?? '';
   }
+
+  ValueKey? getFieldKey(BuildContext context) {
+    if (dependsOn == null) {
+      return null;
+    }
+    return ValueKey(
+        dependsOn!.map((e) => context.readFormContext().get(e)).join());
+  }
+
 }
 
 InputDecoration defaultDecoration = InputDecoration(

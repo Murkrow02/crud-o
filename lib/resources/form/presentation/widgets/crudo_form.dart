@@ -128,8 +128,14 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     }
                     if (state is FormModelLoadedState<TModel>) {
 
-                      context.read<CrudoFormBloc<TResource, TModel>>().add(
-                          RebuildFormEvent(formData: toFormData(context, state.model)));
+                      // Convert model to form data with callback provided
+                      var formData = toFormData(context, state.model);
+
+                      // Execute futures and rebuild form
+                      _executeFutures(context).then((_) {
+                        context.read<CrudoFormBloc<TResource, TModel>>().add(
+                            RebuildFormEvent(formData: formData));
+                      });
                     }
                   },
                 ),
@@ -142,18 +148,14 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Update form context
     context.readFormContext().validationErrors = validationErrors;
-    context.readFormContext().formData = formData;
+    context.readFormContext().formData.clear();
+    context.readFormContext().formData.addAll(formData);
 
-    // Execute futures and when ready build the form
-    return FutureBuilder(future: _executeFutures(context), builder: (context, snapshot) {
-      if (snapshot.connectionState == ConnectionState.waiting) {
-        return _buildLoading();
-      }
-      return FormBuilder(
-          key: formKey,
-          initialValue: formData,
-          child: formBuilder(context));
-    });
+    // Build form
+    return FormBuilder(
+        key: formKey,
+        initialValue: formData,
+        child: formBuilder(context));
   }
 
   /// These are errors that are not related to a specific field
@@ -261,10 +263,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
 
-    // Get form data from the fields
-    formKey.currentState!.save();
-    var formData = formKey.currentState!.value;
-
     // Call before validate callback
     if (beforeValidate != null) {
       beforeValidate!(context);
@@ -287,7 +285,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         onUpdate!(context);
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
-              UpdateFormModelEvent(formData: formData, id: id!),
+              UpdateFormModelEvent(formData: context.readFormContext().formData, id: id!),
             );
       }
     }
@@ -300,7 +298,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
               CreateFormModelEvent(
-                  formData: formData, resourceContext: context.read()),
+                  formData: context.readFormContext().formData, resourceContext: context.read()),
             );
       }
     }

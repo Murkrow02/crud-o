@@ -16,7 +16,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
   final bool multiple;
-  final Future<List<TModel>> future;
+  final Future<List<TModel>> Function() futureProvider;
   final bool retry;
   final Function(TModel? item)? onSelected;
 
@@ -25,7 +25,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       required this.config,
       required this.itemBuilder,
       required this.valueBuilder,
-      required this.future,
+      required this.futureProvider,
       this.multiple = false,
         this.retry = true,
       this.errorText = 'Errore nel caricamento dei dati',
@@ -35,8 +35,13 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Padding(
+      key: config.getFieldKey(context),
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Builder(builder: (context) {
+
+        if(!config.shouldRenderField(context)) {
+          return const SizedBox();
+        }
 
         // Detect if edit or create
         if (config.shouldRenderViewField(context)) {
@@ -57,7 +62,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   Widget _buildPreviewField(BuildContext context) {
     return Futuristic<List<TModel>>(
       autoStart: true,
-      futureBuilder: () => future,
+      futureBuilder: () => futureProvider(),
       errorBuilder: (context, error, retry) =>
           _buildError(context, error, retry),
       dataBuilder: (context, data) {
@@ -81,7 +86,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                 builder: (FormFieldState<dynamic> field) {
                   return Futuristic<List<TModel>>(
                     autoStart: true,
-                    futureBuilder: () => future,
+                    futureBuilder: () => futureProvider(),
                     busyBuilder: (context) =>
                         _buildDropdown([], context, field, enabled: false),
                     errorBuilder: (context, error, retry) =>
@@ -150,6 +155,11 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       onChanged: (value) {
         if (value != null) {
           field.didChange(valueBuilder(value));
+        }
+
+        // Rebuild the form to update based on the new value
+        if(config.reactive) {
+          context.readFormContext().rebuild();
         }
         onSelected?.call(value);
       },

@@ -17,6 +17,9 @@ class CrudoDatetimeField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
+    if(config.reactive)
+      throw Exception('CrudoDatetimeField does not yet support reactive fields');
+
     if (!config.shouldRenderField(context)) {
       return const SizedBox();
     }

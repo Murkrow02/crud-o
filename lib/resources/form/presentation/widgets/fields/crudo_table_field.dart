@@ -26,6 +26,10 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
 
   @override
   Widget build(BuildContext context) {
+
+    if(config.reactive)
+      throw Exception('CrudoTableField does not yet support reactive fields');
+
     if (!config.shouldRenderField(context)) {
       return const SizedBox();
     }

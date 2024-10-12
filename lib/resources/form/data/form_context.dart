@@ -17,7 +17,9 @@ class FormContext {
   /// The data of the form
   /// This is needed in addition to the form key values because it allows us to save arbitrary keys
   /// in addition to the keys that are used by fields in the form
-  Map<String, dynamic> formData = {};
+  ///
+  /// KEEP THIS FINAL AS OTHERWISE EQUATABLE BREAKS
+  final Map<String, dynamic> formData = {};
 
   /// The internal state of the form, use this to trigger events
   final CrudoFormBloc formBloc;
@@ -56,10 +58,11 @@ class FormContext {
     // Update internal data with the new values
     _syncFormAndInternalValues();
 
-    // Rebuild the form
+
+    // Rebuild the form by passing a new map
     formBloc.state is FormReadyState
-      ? formBloc.add(RebuildFormEvent(formData: formData))
-      : null;
+        ? formBloc.add(RebuildFormEvent(formData: Map.from(formData)))
+        : null;
   }
 
   /// Returns the result of a registered future operation

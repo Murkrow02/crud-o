@@ -26,6 +26,10 @@ class CrudoTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    if(config.reactive)
+      throw Exception('CrudoTextField does not yet support reactive fields');
+
     if (!config.shouldRenderField(context)) {
       return const SizedBox();
     }
