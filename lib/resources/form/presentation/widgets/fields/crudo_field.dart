@@ -28,8 +28,6 @@ class CrudoFieldConfiguration {
   final List<ResourceOperationType>? visibleOn;
   final List<ResourceOperationType>? enabledOn;
   final List<String>? dependsOn;
-  final CrudoViewField Function(
-      BuildContext context, String label, String value)? buildViewField;
 
   CrudoFieldConfiguration({
     required this.name,
@@ -41,7 +39,6 @@ class CrudoFieldConfiguration {
     this.dependsOn,
     this.visibleOn,
     this.enabledOn,
-    this.buildViewField,
   });
 
   bool shouldRenderField(BuildContext context) {
@@ -56,14 +53,6 @@ class CrudoFieldConfiguration {
     return resourceContext.operationType == ResourceOperationType.view &&
         (visibleOn == null ||
             visibleOn!.contains(resourceContext.operationType));
-  }
-
-  Widget renderViewField(BuildContext context) {
-    var value = context.readFormContext().get(name)?.toString() ?? '';
-    if (buildViewField == null) {
-      return CrudoViewField(name: label ?? name, child: Text(value));
-    }
-    return buildViewField!(context, label ?? name, value);
   }
 
   bool shouldEnableField(BuildContext context) {
@@ -84,7 +73,6 @@ class CrudoFieldConfiguration {
     return ValueKey(
         dependsOn!.map((e) => context.readFormContext().get(e)).join());
   }
-
 }
 
 InputDecoration defaultDecoration = InputDecoration(
@@ -100,6 +88,36 @@ InputDecoration defaultDecoration = InputDecoration(
   focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide.none),
 );
+
+class CrudoFieldWrapper extends StatelessWidget {
+  final CrudoFieldConfiguration config;
+  final Widget child;
+  final bool errorize;
+
+  const CrudoFieldWrapper(
+      {super.key,
+      required this.config,
+      required this.child,
+      this.errorize = true});
+
+  @override
+  Widget build(BuildContext context) {
+    // Do not render
+    if (!config.shouldRenderField(context)) {
+      return const SizedBox();
+    }
+
+    // Render form component
+    return Padding(
+      key: config.getFieldKey(context),
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: CrudoErrorize(
+          error: errorize ? config.getValidationError(context) : null,
+          child:
+              CrudoLabelize(label: config.label ?? config.name, child: child)),
+    );
+  }
+}
 
 class CrudoLabelize extends StatelessWidget {
   final String label;
@@ -144,7 +162,7 @@ class CrudoErrorize extends StatelessWidget {
           padding: const EdgeInsets.only(top: 8.0, left: 8.0),
           child: Text(
             error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
           ),
         ),
       ],

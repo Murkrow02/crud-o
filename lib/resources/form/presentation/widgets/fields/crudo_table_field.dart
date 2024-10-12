@@ -48,35 +48,30 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
           child: CrudoLabelize(
             offset: 8,
             label: config.label ?? config.name,
-            child: FormBuilderField(
-              name: config.name,
-              builder: (FormFieldState<dynamic> field) {
-                return Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.white,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (context.read<TResource>().createAction() != null)
-                          IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(
-                                    Theme
-                                        .of(context)
-                                        .colorScheme
-                                        .primary),
-                              ),
-                              onPressed: () => onCreateClicked(context),
-                              icon: const Icon(Icons.add, color: Colors.white)),
-                        table,
-                      ],
-                    ));
-              },
-            ),
+            child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (context.read<TResource>().createAction() != null)
+                      IconButton(
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.all(
+                                Theme
+                                    .of(context)
+                                    .colorScheme
+                                    .primary),
+                          ),
+                          onPressed: () => onCreateClicked(context),
+                          icon: const Icon(Icons.add, color: Colors.white)),
+                    table,
+                  ],
+                )),
           ),
         );
       }),

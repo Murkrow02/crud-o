@@ -14,11 +14,10 @@ import 'package:provider/provider.dart';
 
 class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     extends StatelessWidget {
-
+  /// The key used to access the form data
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
-  String? id;
-  ResourceOperationType operationType = ResourceOperationType.create;
-  bool updatedApi = false;
+
+  /// The type of display for the form
   final CrudoFormDisplayType displayType;
 
   /*
@@ -29,7 +28,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Function(BuildContext context) formBuilder;
 
   /// Convert the model to form data
-  final Map<String, dynamic> Function(BuildContext context, TModel model) toFormData;
+  final Map<String, dynamic> Function(BuildContext context, TModel model)
+      toFormData;
 
   /// Register futures to be executed
   final Map<String, Future> Function(BuildContext context)? registerFutures;
@@ -39,16 +39,20 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   */
 
   /// Called before validating the form, should return the final form data to validate
-  final Function(BuildContext context)? beforeValidate;
+  final Map<String, dynamic> Function(
+      BuildContext context, Map<String, dynamic> data)? beforeValidate;
 
   /// Called before saving the form, should return the final form data to save
-  final Function(BuildContext context)? beforeSave;
+  final Map<String, dynamic> Function(
+      BuildContext context, Map<String, dynamic> data)? beforeSave;
 
   /// Called instead of default create
-  final void Function(BuildContext context)? onCreate;
+  final Future<TModel> Function(
+      BuildContext context, Map<String, dynamic> data)? onCreate;
 
   /// Called instead of default update
-  final void Function(BuildContext context)? onUpdate;
+  final Future<TModel> Function(
+      BuildContext context, Map<String, dynamic> data)? onUpdate;
 
   CrudoForm(
       {super.key,
@@ -63,52 +67,50 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   @override
   Widget build(BuildContext context) {
-
-    // Try to get editing resource id
-    var resourceContext = context.read<ResourceContext>();
-    id = resourceContext.id;
-    operationType = resourceContext.operationType;
-
     return BlocProvider(
         create: (context) =>
             CrudoFormBloc<TResource, TModel>(resource: context.read()),
         child: Provider(
             create: (context) => FormContext(
-              context: context,
+                context: context,
                 formKey: formKey,
                 formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
             child: Builder(builder: (context) {
-
               // Actually load the form data
-              context.read<CrudoFormBloc<TResource, TModel>>().add(
-                  operationType == ResourceOperationType.create
-                      ? InitFormModelEvent()
-                      : LoadFormModelEvent(id: id!));
+              context.read<CrudoFormBloc<TResource, TModel>>().add(context
+                          .readResourceContext()
+                          .operationType ==
+                      ResourceOperationType.create
+                  ? InitFormModelEvent()
+                  : LoadFormModelEvent(id: context.readResourceContext().id));
 
               // Build form
               return _buildFormWrapper(
                 context,
                 BlocConsumer<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
                   builder: (context, state) {
+                    // Form is ready, display the form
                     if (state is FormReadyState) {
-                      return _buildFormBuilder(context, state.formData);
+                      context.readFormContext().formData.clear();
+                      context.readFormContext().formData.addAll(state.formData);
+                      return _buildFormBuilder(context);
                     }
 
                     if (state is FormSavingState) {
-                      return _buildFormBuilder(context, state.formData);
+                      return _buildFormBuilder(context);
                     }
 
                     // Form not valid, display the form with errors
                     if (state is FormNotValidState) {
-                      var formData = state.oldFormData;
+                      context.readFormContext().validationErrors =
+                          state.formErrors;
                       if (state.formErrors.isNotEmpty) {
                         _invalidateFormFields(state.formErrors);
                       }
                       return Column(
                         children: [
                           _buildNonFormErrors(context, state.nonFormErrors),
-                          _buildFormBuilder(context, formData,
-                              validationErrors: state.formErrors),
+                          _buildFormBuilder(context),
                         ],
                       );
                     }
@@ -123,18 +125,18 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                   },
                   listener: (BuildContext context, CrudoFormState state) {
                     if (state is FormSavedState) {
-                      updatedApi = true;
+                      context.readFormContext().updatedApi = true;
                       Toaster.success("Salvato!");
                     }
                     if (state is FormModelLoadedState<TModel>) {
-
                       // Convert model to form data with callback provided
                       var formData = toFormData(context, state.model);
 
                       // Execute futures and rebuild form
                       _executeFutures(context).then((_) {
-                        context.read<CrudoFormBloc<TResource, TModel>>().add(
-                            RebuildFormEvent(formData: formData));
+                        context
+                            .read<CrudoFormBloc<TResource, TModel>>()
+                            .add(RebuildFormEvent(formData: formData));
                       });
                     }
                   },
@@ -143,18 +145,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             })));
   }
 
-  Widget _buildFormBuilder(BuildContext context, Map<String, dynamic> formData,
-      {Map<String, List> validationErrors = const {}}) {
-
-    // Update form context
-    context.readFormContext().validationErrors = validationErrors;
-    context.readFormContext().formData.clear();
-    context.readFormContext().formData.addAll(formData);
-
+  Widget _buildFormBuilder(BuildContext context) {
     // Build form
     return FormBuilder(
         key: formKey,
-        initialValue: formData,
+        initialValue: context.readFormContext().formData,
         child: formBuilder(context));
   }
 
@@ -187,7 +182,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Execute the futures registered with registerFutures before loading the form
   Future _executeFutures(BuildContext context) async {
-
     // Check if already loaded futures
     if (context.readFormContext().futuresLoaded()) {
       return;
@@ -228,7 +222,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             if (didPop) {
               return;
             }
-            Navigator.pop(context, updatedApi);
+            Navigator.pop(context, context.readFormContext().updatedApi);
           },
           child: SimpleDialog(
             title: Text(context.read<TResource>().singularName()),
@@ -263,29 +257,41 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
 
+    // Get data from fields
+    context.readFormContext().syncFormDataFromFields();
+    var saveData = context.readFormContext().exportFormData();
+    context.readFormContext().validationErrors = {};
+
     // Call before validate callback
     if (beforeValidate != null) {
-      beforeValidate!(context);
+      saveData = beforeValidate!(context, saveData);
     }
 
     // Validate form fields
     if (!formKey.currentState!.validate()) {
+      context.readFormContext().validationErrors = formKey.currentState!.errors
+          .map((key, value) =>
+              MapEntry(key, [value]));
+      context.readFormContext().rebuild();
       return;
     }
 
     // Call before save callback
     if (beforeSave != null) {
-      beforeSave!.call(context);
+      saveData = beforeSave!.call(context, saveData);
     }
 
     // Edit
     if (context.readResourceContext().operationType ==
         ResourceOperationType.edit) {
       if (onUpdate != null) {
-        onUpdate!(context);
+        onUpdate!(context, saveData);
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
-              UpdateFormModelEvent(formData: context.readFormContext().formData, id: id!),
+              UpdateFormModelEvent(
+                  updateData: saveData,
+                  formData: context.readFormContext().formData,
+                  id: context.readResourceContext().id),
             );
       }
     }
@@ -294,11 +300,15 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     if (context.readResourceContext().operationType ==
         ResourceOperationType.create) {
       if (onCreate != null) {
-        onCreate!(context);
+        onCreate!(context, saveData).then((_) {
+          context.readFormContext().updatedApi = true;
+        });
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
               CreateFormModelEvent(
-                  formData: context.readFormContext().formData, resourceContext: context.read()),
+                  formData: context.readFormContext().formData,
+                  createData: saveData,
+                  resourceContext: context.read()),
             );
       }
     }
@@ -307,12 +317,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   void _enterEditMode(BuildContext context) {
     var editAction = context.read<TResource>().editAction();
     if (editAction == null) return;
-    editAction.execute(context, data: {'id': id}).then((needToRefresh) {
+    editAction.execute(context,
+        data: {'id': context.readResourceContext().id}).then((needToRefresh) {
       if (needToRefresh == true) {
-        updatedApi = true;
+        context.readFormContext().updatedApi = true;
         context
             .read<CrudoFormBloc<TResource, TModel>>()
-            .add(LoadFormModelEvent(id: id!));
+            .add(LoadFormModelEvent(id: context.readResourceContext().id));
       }
     });
   }
@@ -326,7 +337,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             if (didPop) {
               return;
             }
-            Navigator.pop(context, updatedApi);
+            Navigator.pop(context, context.readFormContext().updatedApi);
           },
           child: Scaffold(
               appBar: AppBar(
@@ -357,42 +368,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         );
       },
     );
-  }
-}
-
-class CrudoFormController<TResource extends CrudoResource<TModel>,
-    TModel extends Object> {
-  CrudoFormController();
-
-  /// Builds the form with the given data to re-paint UI with new data
-  void rebuildForm(BuildContext context) {
-    throw UnimplementedError("Rebuild form not implemented from controller");
-    var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
-    var formContext = context.readFormContext();
-    var formState = formBloc.state;
-    if (formState is FormReadyState) {
-      formContext.formKey.currentState!.save();
-      formBloc.add(
-          RebuildFormEvent(formData: formContext.formKey.currentState!.value));
-    }
-  }
-
-  /// Completely reloads the form by getting the data from the API
-  void reloadForm(BuildContext context) {
-    throw UnimplementedError("Reload form not implemented from controller");
-    var formBloc = context.read<CrudoFormBloc<TResource, TModel>>();
-    var resourceContext = context.readResourceContext();
-    formBloc.add(LoadFormModelEvent(id: resourceContext.id));
-  }
-
-  void enterEditMode(BuildContext context) {
-    // just an idea to implement: get bloc and add event to trigger on listener in the main widget
-    throw UnimplementedError("Enter edit mode not implemented from controller");
-  }
-
-  void save(BuildContext context) {
-    // just an idea to implement: get bloc and add event to trigger on listener in the main widget
-    throw UnimplementedError("Save not implemented from controller");
   }
 }
 

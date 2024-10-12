@@ -25,10 +25,6 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!config.shouldRenderField(context)) {
-      return const SizedBox();
-    }
-
     return CrudoFutureDropdownField<TModel, TValue>(
       config: config,
       retry: false,

@@ -31,8 +31,9 @@ class InitFormModelEvent extends CrudoFormEvent {
 
 class CreateFormModelEvent extends CrudoFormEvent {
   final Map<String, dynamic> formData;
+  final Map<String, dynamic> createData;
   final ResourceContext resourceContext;
-  CreateFormModelEvent({required this.formData, required this.resourceContext});
+  CreateFormModelEvent({required this.formData, required this.createData, required this.resourceContext});
 
   @override
   List<Object?> get props => [formData, resourceContext];
@@ -41,9 +42,9 @@ class CreateFormModelEvent extends CrudoFormEvent {
 class UpdateFormModelEvent extends CrudoFormEvent {
   final String id;
   final Map<String, dynamic> formData;
-
-  UpdateFormModelEvent({required this.id, required this.formData});
+  final Map<String, dynamic> updateData;
+  UpdateFormModelEvent({required this.id, required this.formData, required this.updateData});
 
   @override
-  List<Object?> get props => [id, formData];
+  List<Object?> get props => [id, formData, updateData];
 }

@@ -41,7 +41,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       UpdateFormModelEvent event, Emitter<CrudoFormState> emit) async {
     try {
       emit(FormSavingState(formData: event.formData));
-      var apiModel = await resource.repository.update(event.id, event.formData);
+      var apiModel = await resource.repository.update(event.id, event.updateData);
       emit(FormSavedState());
       emit(FormModelLoadedState(model: apiModel));
     } on ApiValidationException catch (e) {
@@ -56,7 +56,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     try {
       emit(FormSavingState(formData: event.formData));
       var apiModel = await resource.repository
-          .add(event.formData);
+          .add(event.createData);
       emit(FormSavedState());
       event.resourceContext.operationType = ResourceOperationType.edit;
       event.resourceContext.id = resource.getId(apiModel);
