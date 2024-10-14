@@ -19,6 +19,8 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     on<UpdateFormModelEvent>(_onUpdateItem);
     on<CreateFormModelEvent>(_onCreateItem);
     on<RebuildFormEvent>(_onReloadForm);
+    on<CustomCreateEvent<TModel>>(_onCustomCreate);
+    on<CustomUpdateEvent<TModel>>(_onCustomUpdate);
   }
 
   Future<void> _onLoadFormModel(
@@ -68,6 +70,24 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     }
   }
 
+  Future<void> _onReloadForm(RebuildFormEvent event, Emitter<CrudoFormState> emit) async {
+    emit(FormReadyState(formData: event.formData));
+  }
+
+  FutureOr<void> _onCustomCreate(
+      CustomCreateEvent<TModel> event, Emitter<CrudoFormState> emit) {
+    emit(FormSavedState());
+    event.resourceContext.operationType = ResourceOperationType.edit;
+    event.resourceContext.id = resource.getId(event.model);
+    emit(FormModelLoadedState(model: event.model));
+  }
+
+  FutureOr<void> _onCustomUpdate(
+      CustomUpdateEvent<TModel> event, Emitter<CrudoFormState> emit) {
+    emit(FormSavedState());
+    emit(FormModelLoadedState(model: event.model));
+  }
+
   // Called when the api returns a validation error
   void _handleApiValidationException(
     Emitter<CrudoFormState> emit,
@@ -93,7 +113,8 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
         nonFormErrors: globalErrors));
   }
 
-  Future<void> _onReloadForm(RebuildFormEvent event, Emitter<CrudoFormState> emit) async {
-    emit(FormReadyState(formData: event.formData));
-  }
+
+
+
+
 }

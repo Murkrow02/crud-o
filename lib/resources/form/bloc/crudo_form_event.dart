@@ -48,3 +48,23 @@ class UpdateFormModelEvent extends CrudoFormEvent {
   @override
   List<Object?> get props => [id, formData, updateData];
 }
+
+class CustomCreateEvent<T> extends CrudoFormEvent {
+  final T model;
+  final ResourceContext resourceContext;
+
+  CustomCreateEvent({required this.model, required this.resourceContext});
+
+  @override
+  List<Object?> get props => [model, resourceContext];
+}
+
+class CustomUpdateEvent<T> extends CrudoFormEvent {
+  final T model;
+  final ResourceContext resourceContext;
+
+  CustomUpdateEvent({required this.model, required this.resourceContext});
+
+  @override
+  List<Object?> get props => [model, resourceContext];
+}

@@ -125,6 +125,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       throw UnimplementedError('Multiple selection not implemented yet');
 
     return CustomDropdown<TModel>(
+      enabled: config.enabled,
       hintText: config.label,
       items: items,
       listItemBuilder: (context, item, isSelected, onItemSelect) {

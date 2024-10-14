@@ -285,7 +285,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     if (context.readResourceContext().operationType ==
         ResourceOperationType.edit) {
       if (onUpdate != null) {
-        onUpdate!(context, saveData);
+        onUpdate!(context, saveData).then((apiModel) {
+          context.readFormContext().updatedApi = true;
+          context.readFormContext().formBloc.add(
+              CustomUpdateEvent<TModel>(
+                  model: apiModel, resourceContext: context.read()));
+        });
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
               UpdateFormModelEvent(
@@ -300,8 +305,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     if (context.readResourceContext().operationType ==
         ResourceOperationType.create) {
       if (onCreate != null) {
-        onCreate!(context, saveData).then((_) {
+        onCreate!(context, saveData).then((apiModel) {
           context.readFormContext().updatedApi = true;
+          context.readFormContext().formBloc.add(
+              CustomCreateEvent<TModel>(
+                  model: apiModel, resourceContext: context.read()));
         });
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(

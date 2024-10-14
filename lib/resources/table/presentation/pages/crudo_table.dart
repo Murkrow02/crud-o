@@ -30,7 +30,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   final bool paginated;
 
   // Called whenever the data in the table changes, bool indicates first load
-  final Function(bool)? onDataChanged;
+  final Function(bool firstLoad)? onDataChanged;
 
   CrudoTable({
     required this.columns,
@@ -45,7 +45,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     super.key,
   });
 
-  late PlutoGridStateManager tableManager;
+  PlutoGridStateManager? tableManager;
   late TResource resource;
   bool _firstLoad = true;
 
@@ -128,7 +128,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       columnMenuDelegate: CrudoTableColumnMenu(),
       onLoaded: (PlutoGridOnLoadedEvent event) {
         tableManager = event.stateManager;
-        tableManager.setSelectingMode(PlutoGridSelectingMode.row);
+        tableManager!.setSelectingMode(PlutoGridSelectingMode.row);
         context.read<CrudoTableBloc>().add(LoadTableEvent());
       },
       columns: plutoColumns,
@@ -198,10 +198,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   void _tableStateEventListener(BuildContext context, CrudoTableState state) {
-    tableManager.setShowLoading(false);
+    tableManager?.setShowLoading(false);
 
     if (state is TableLoadingState) {
-      tableManager.setShowLoading(true);
+      tableManager?.setShowLoading(true);
     }
     if (state is TableLoadedState<TModel>) {
       _onDataLoaded(context, state.response);
@@ -216,8 +216,9 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   void _onDataLoaded(BuildContext context, PaginatedResponse<TModel> response) {
+
     // Clear all rows
-    tableManager.removeAllRows();
+    tableManager?.removeAllRows();
 
     // Create rows
     for (var item in response.data) {
@@ -230,7 +231,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         dataRow.cells['actions'] = PlutoCell(value: resource.getId(item));
       }
 
-      tableManager.refRows.add(dataRow);
+      tableManager?.refRows.add(dataRow);
     }
   }
 

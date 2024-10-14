@@ -47,55 +47,61 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
     // Edit or create mode
     return CrudoFieldWrapper(
-      config: widget.config,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.grey.withOpacity(0.5),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Render the list of items using itemBuilder
-              ..._items.map(
-                  (index) => Row(
-                    children: [
-                      Container(
-                          color: Theme.of(context).colorScheme.surface,
-                          padding: const EdgeInsets.all(8),
-                          child: widget.itemBuilder(context, index)),
-                      IconButton(
+        config: widget.config,
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+            child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.5),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Column(
+                  children: [
+                    ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _items.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: widget.itemBuilder(context, index),
+                            trailing: SizedBox(
+                              width: 25,
+                              height: 25,
+                              child: IconButton(
+                                style: ButtonStyle(
+                                  backgroundColor: WidgetStateProperty.all(
+                                      Theme.of(context).colorScheme.error),
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _items.removeAt(index);
+                                  });
+                                },
+                                icon: Icon(Icons.remove,
+                                    size: 10,
+                                    color: Theme.of(context).colorScheme.onError),
+                              ),
+                            ),
+                          );
+                        }),
+                    const SizedBox(height: 8),
+                    IconButton(
+                        style: ButtonStyle(
+                          backgroundColor: WidgetStateProperty.all(
+                              Theme.of(context).colorScheme.primary),
+                        ),
                         onPressed: () {
                           setState(() {
-                            _items.removeLast();
+                            _items.add(_items.length);
                           });
                         },
-                        icon: Icon(Icons.remove, color: Theme.of(context).colorScheme.error),
-                      ),
-                    ],
-                  )),
-              const SizedBox(height: 8),
-              IconButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary),
-                ),
-                onPressed: () {
-                  setState(() {
-                    _items.add(_items.length);
-                  });
-                },
-                icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary)
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+                        icon: Icon(Icons.add,
+                            color: Theme.of(context).colorScheme.onPrimary)),
+                  ],
+                ))));
   }
 }
