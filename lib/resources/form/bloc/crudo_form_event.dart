@@ -50,21 +50,23 @@ class UpdateFormModelEvent extends CrudoFormEvent {
 }
 
 class CustomCreateEvent<T> extends CrudoFormEvent {
-  final T model;
+  final Future<T> createFunction;
   final ResourceContext resourceContext;
+  final Map<String, dynamic> formData;
 
-  CustomCreateEvent({required this.model, required this.resourceContext});
+  CustomCreateEvent({required this.createFunction, required this.resourceContext, required this.formData});
 
   @override
-  List<Object?> get props => [model, resourceContext];
+  List<Object?> get props => [createFunction, resourceContext, formData];
 }
 
 class CustomUpdateEvent<T> extends CrudoFormEvent {
-  final T model;
+  final Future<T> updateFunction;
+  final Map<String, dynamic> formData;
   final ResourceContext resourceContext;
 
-  CustomUpdateEvent({required this.model, required this.resourceContext});
+  CustomUpdateEvent({required this.updateFunction, required this.resourceContext, required this.formData});
 
   @override
-  List<Object?> get props => [model, resourceContext];
+  List<Object?> get props => [updateFunction, resourceContext, formData];
 }

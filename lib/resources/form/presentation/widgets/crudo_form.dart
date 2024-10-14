@@ -63,7 +63,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       this.onCreate,
       this.onUpdate,
       this.registerFutures,
-      this.displayType = CrudoFormDisplayType.none});
+      this.displayType = CrudoFormDisplayType.widget});
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +208,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         return _buildFullPageFormWrapper(context, form);
       case CrudoFormDisplayType.dialog:
         return _buildDialogFormWrapper(context, form);
-      case CrudoFormDisplayType.none:
+      case CrudoFormDisplayType.widget:
         return form;
     }
   }
@@ -256,7 +256,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
-
     // Get data from fields
     context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
@@ -270,8 +269,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     // Validate form fields
     if (!formKey.currentState!.validate()) {
       context.readFormContext().validationErrors = formKey.currentState!.errors
-          .map((key, value) =>
-              MapEntry(key, [value]));
+          .map((key, value) => MapEntry(key, [value]));
       context.readFormContext().rebuild();
       return;
     }
@@ -285,12 +283,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     if (context.readResourceContext().operationType ==
         ResourceOperationType.edit) {
       if (onUpdate != null) {
-        onUpdate!(context, saveData).then((apiModel) {
-          context.readFormContext().updatedApi = true;
-          context.readFormContext().formBloc.add(
-              CustomUpdateEvent<TModel>(
-                  model: apiModel, resourceContext: context.read()));
-        });
+        context.readFormContext().formBloc.add(CustomUpdateEvent<TModel>(
+            formData: context.readFormContext().formData,
+            updateFunction: onUpdate!(context, saveData),
+            resourceContext: context.read()));
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
               UpdateFormModelEvent(
@@ -305,12 +301,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     if (context.readResourceContext().operationType ==
         ResourceOperationType.create) {
       if (onCreate != null) {
-        onCreate!(context, saveData).then((apiModel) {
-          context.readFormContext().updatedApi = true;
-          context.readFormContext().formBloc.add(
-              CustomCreateEvent<TModel>(
-                  model: apiModel, resourceContext: context.read()));
-        });
+        context.readFormContext().formBloc.add(CustomCreateEvent<TModel>(
+          formData: context.readFormContext().formData,
+            createFunction: onCreate!(context, saveData),
+            resourceContext: context.read()));
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
               CreateFormModelEvent(
@@ -379,4 +373,4 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   }
 }
 
-enum CrudoFormDisplayType { fullPage, dialog, none }
+enum CrudoFormDisplayType { fullPage, dialog, widget }

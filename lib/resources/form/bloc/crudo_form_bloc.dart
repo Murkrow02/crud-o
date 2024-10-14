@@ -75,18 +75,37 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   }
 
   FutureOr<void> _onCustomCreate(
-      CustomCreateEvent<TModel> event, Emitter<CrudoFormState> emit) {
-    emit(FormSavedState());
-    event.resourceContext.operationType = ResourceOperationType.edit;
-    event.resourceContext.id = resource.getId(event.model);
-    emit(FormModelLoadedState(model: event.model));
+      CustomCreateEvent<TModel> event, Emitter<CrudoFormState> emit) async {
+    try {
+      emit(FormSavingState(formData: event.formData));
+      var apiModel = await event.createFunction;
+      emit(FormSavedState());
+      event.resourceContext.operationType = ResourceOperationType.edit;
+      event.resourceContext.id = resource.getId(apiModel);
+      emit(FormModelLoadedState(model: apiModel));
+    } on ApiValidationException catch (e) {
+      _handleApiValidationException(emit, event.formData, e);
+    } catch (e, s) {
+      emit(FormErrorState(tracedError: TracedError(e, s)));
+    }
+
   }
 
   FutureOr<void> _onCustomUpdate(
-      CustomUpdateEvent<TModel> event, Emitter<CrudoFormState> emit) {
-    emit(FormSavedState());
-    emit(FormModelLoadedState(model: event.model));
+      CustomUpdateEvent<TModel> event, Emitter<CrudoFormState> emit) async {
+    try {
+      emit(FormSavingState(formData: event.formData));
+      var apiModel = await event.updateFunction;
+      emit(FormSavedState());
+      emit(FormModelLoadedState(model: apiModel));
+    } on ApiValidationException catch (e) {
+      _handleApiValidationException(emit, event.formData, e);
+    } catch (e, s) {
+      emit(FormErrorState(tracedError: TracedError(e, s)));
+    }
   }
+
+
 
   // Called when the api returns a validation error
   void _handleApiValidationException(
