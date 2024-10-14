@@ -6,6 +6,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 
 import 'crudo_field.dart';
+
 class CrudoRepeaterField extends StatefulWidget {
   final CrudoFieldConfiguration config;
   final Widget Function(BuildContext context, int index) itemBuilder;
@@ -38,38 +39,62 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     if (widget.config.shouldRenderViewField(context)) {
       return CrudoViewField(
         name: widget.config.name,
-        child: Text(context.readFormContext().get(widget.config.name)?.toString() ?? ''),
+        child: Text(
+            context.readFormContext().get(widget.config.name)?.toString() ??
+                ''),
       );
     }
 
     // Edit or create mode
     return CrudoFieldWrapper(
       config: widget.config,
-      child: Column(
-        children: [
-          // Render the list of items using itemBuilder
-          ..._items.map((index) => widget.itemBuilder(context, index)).toList(),
-          const SizedBox(height: 8),
-          // Button to add a new field
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _items.add(_items.length);
-              });
-            },
-            child: const Text('Add Item'),
-          ),
-          // Button to remove the last field
-          if (_items.isNotEmpty)
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                  _items.removeLast();
-                });
-              },
-              child: const Text('Remove Last Item'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Colors.grey.withOpacity(0.5),
+              width: 1,
             ),
-        ],
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Render the list of items using itemBuilder
+              ..._items.map(
+                  (index) => Row(
+                    children: [
+                      Container(
+                          color: Theme.of(context).colorScheme.surface,
+                          padding: const EdgeInsets.all(8),
+                          child: widget.itemBuilder(context, index)),
+                      IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _items.removeLast();
+                          });
+                        },
+                        icon: Icon(Icons.remove, color: Theme.of(context).colorScheme.error),
+                      ),
+                    ],
+                  )),
+              const SizedBox(height: 8),
+              IconButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary),
+                ),
+                onPressed: () {
+                  setState(() {
+                    _items.add(_items.length);
+                  });
+                },
+                icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary)
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
