@@ -6,3 +6,4 @@ export 'crudo_field.dart';
 export 'crudo_future_dropdown_field.dart';
 export 'crudo_table_field.dart';
 export 'crudo_text_field.dart';
+export 'crudo_repeater_field.dart';

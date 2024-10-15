@@ -16,12 +16,14 @@ class CrudoRepeaterField extends StatefulWidget {
   final CrudoFieldConfiguration config;
   final Widget Function(BuildContext context, int index) itemBuilder;
   final int initialItemCount;
+  final bool autoFlattenData;
 
-  CrudoRepeaterField({
+  const CrudoRepeaterField({
     super.key,
     required this.config,
     required this.itemBuilder,
     this.initialItemCount = 1,
+    this.autoFlattenData = true,
   });
 
   @override
@@ -41,8 +43,9 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   /// This updates the value of the repeater field in order to help validation
   /// When the field is required but empty, the form will show an error
   void updateFieldValue() {
-    context.readFormContext().formKey.currentState!.patchValue(
-        {widget.config.name: _items.isNotEmpty ? _items.length : null});
+    context.readFormContext().formKey.currentState!.patchValue({
+      '${widget.config.name}_count': _items.isNotEmpty ? _items.length : null
+    });
   }
 
   @override
@@ -50,26 +53,32 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     // Check if we should render a preview
     if (widget.config.shouldRenderViewField(context)) {
       return CrudoViewField(
-        name: widget.config.name,
+        name: widget.config.label ?? widget.config.name,
         child: Text(
             context.readFormContext().get(widget.config.name)?.toString() ??
                 ''),
       );
     }
 
+    if (widget.autoFlattenData) {
+      _autoFlattenData();
+    }
     // Update value of the field with items count
     WidgetsBinding.instance.addPostFrameCallback((_) {
       updateFieldValue();
     });
 
+
     // Edit or create mode
     return FormBuilderField(
       validator:
           widget.config.required ? FormBuilderValidators.required() : null,
-      name: widget.config.name,
+      name: '${widget.config.name}_count',
       builder: (FormFieldState<dynamic> field) {
         return CrudoFieldWrapper(
-          config: widget.config,
+          config: widget.config.copyWith(
+            name: '${widget.config.name}_count',
+          ),
           child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
               child: Container(
@@ -132,5 +141,54 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
         );
       },
     );
+  }
+
+  /// This methods automatically converts data from <Key, <Key, Value>> -> key[index].key: value
+  void _autoFlattenData() {
+    var formData = context.readFormContext().formData;
+    var key = widget.config.name;
+    var items = formData[key];
+    if (items == null || items is! List || items.isEmpty) {
+      return;
+    }
+
+    var flattenedData = <String, dynamic>{};
+    void flatten(dynamic value, String currentKey) {
+      if (value is List) {
+        for (var i = 0; i < value.length; i++) {
+          var listItem = value[i];
+          var newKey = '$currentKey[$i]';
+
+          if (listItem is Map<String, dynamic>) {
+            // If the list item is a map, further flatten it
+            flatten(listItem, newKey);
+          } else {
+            // Otherwise, assign the value directly (list of single values)
+            flattenedData[newKey] = listItem;
+          }
+        }
+      } else if (value is Map<String, dynamic>) {
+        value.forEach((key, mapValue) {
+          var newKey = '$currentKey.$key';
+          flatten(mapValue, newKey);
+        });
+      } else {
+        // If it's a primitive value, assign it directly
+        flattenedData[currentKey] = value;
+      }
+    }
+
+    // Start flattening from the root
+    flatten(items, key);
+
+    // Update the form data with the flattened data
+    formData.addAll(flattenedData);
+
+    // Update repeater items count
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        _items = List.generate(items.length, (index) => index);
+      });
+    });
   }
 }

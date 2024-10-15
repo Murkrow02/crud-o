@@ -73,6 +73,30 @@ class CrudoFieldConfiguration {
     return ValueKey(
         dependsOn!.map((e) => context.readFormContext().get(e)).join());
   }
+
+  CrudoFieldConfiguration copyWith({
+    String? name,
+    String? label,
+    bool? required,
+    bool? visible,
+    bool? enabled,
+    bool? reactive,
+    List<ResourceOperationType>? visibleOn,
+    List<ResourceOperationType>? enabledOn,
+    List<String>? dependsOn,
+  }) {
+    return CrudoFieldConfiguration(
+      name: name ?? this.name,
+      label: label ?? this.label,
+      required: required ?? this.required,
+      visible: visible ?? this.visible,
+      enabled: enabled ?? this.enabled,
+      reactive: reactive ?? this.reactive,
+      visibleOn: visibleOn ?? this.visibleOn,
+      enabledOn: enabledOn ?? this.enabledOn,
+      dependsOn: dependsOn ?? this.dependsOn,
+    );
+  }
 }
 
 InputDecoration defaultDecoration = InputDecoration(
