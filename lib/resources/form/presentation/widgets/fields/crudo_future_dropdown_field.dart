@@ -87,6 +87,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
 
   Widget _buildError(BuildContext context, dynamic error, VoidCallback retry) {
     print(error);
+
     return Container(
       padding: const EdgeInsets.all(16),
       width: double.infinity,

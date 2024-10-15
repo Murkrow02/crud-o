@@ -140,6 +140,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
                       // Convert model to form data with callback provided
                       var formData = toFormData(context, state.model);
+                      context.readFormContext().formData.clear();
+                      context.readFormContext().formData.addAll(formData);
 
                       // Execute futures and rebuild form
                       _executeFutures(context).then((_) {
