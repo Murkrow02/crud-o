@@ -212,7 +212,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       // Row cells for actions
       var actions = _getActions();
       if (actions.isNotEmpty) {
-        dataRow.cells['actions'] = PlutoCell(value: resource.getId(item));
+        dataRow.cells['actions'] = PlutoCell(value: item);
       }
 
       tableManager?.refRows.add(dataRow);
@@ -244,7 +244,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                 action
                     .execute(context,
                         data: {
-                          'id': columnContext.cell.value,
+                          'id': columnContext.cell.value.id.toString(),
+                          'model': columnContext.cell.value
                         }..addAll(actionData ?? {}))
                     .then((needToRefresh) {
                   if (needToRefresh == true) {

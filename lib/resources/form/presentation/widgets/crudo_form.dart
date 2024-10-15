@@ -76,6 +76,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                 formKey: formKey,
                 formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
             child: Builder(builder: (context) {
+
+              // TODO: a possible optimization here is that if the ResourceContext().model is not null and
+              // a custom flag is passed to the form it skips the loading of the model and goes directly to the form
+              // by triggering the FormReadyState event
+
               // Actually load the form data
               context.read<CrudoFormBloc<TResource, TModel>>().add(context
                           .readResourceContext()
@@ -129,6 +134,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                       Toaster.success("Salvato!");
                     }
                     if (state is FormModelLoadedState<TModel>) {
+
+                      // Set model in resource context
+                      context.readResourceContext().model = state.model;
+
                       // Convert model to form data with callback provided
                       var formData = toFormData(context, state.model);
 
