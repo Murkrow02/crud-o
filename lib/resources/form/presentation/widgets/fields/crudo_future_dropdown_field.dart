@@ -7,6 +7,7 @@ import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.da
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:futuristic/futuristic.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +17,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
   final bool multiple;
-  final Future<List<TModel>> future;
+  final Future<List<TModel>> Function() futureProvider;
   final bool retry;
   final Function(TModel? item)? onSelected;
 
@@ -25,39 +26,31 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       required this.config,
       required this.itemBuilder,
       required this.valueBuilder,
-      required this.future,
+      required this.futureProvider,
       this.multiple = false,
-        this.retry = true,
+      this.retry = true,
       this.errorText = 'Errore nel caricamento dei dati',
       this.onSelected});
 
   @override
   Widget build(BuildContext context) {
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Builder(builder: (context) {
+    // Detect if edit or create
+    if (config.shouldRenderViewField(context)) {
+        return _buildPreviewField(context);
+    }
 
-        // Detect if edit or create
-        if (config.shouldRenderViewField(context)) {
-          // Cant render with standard field, we need to resolve future first
-          if (config.buildViewField == null) {
-            return _buildPreviewField(context);
-          }
-
-          // User provided custom view field
-          return config.renderViewField(context);
-        }
-
-        return _buildEditField(context);
-      }),
-    );
+    return CrudoFieldWrapper(
+        config: config,
+        child: Builder(builder: (context) {
+          return _buildEditField(context);
+        }));
   }
 
   Widget _buildPreviewField(BuildContext context) {
     return Futuristic<List<TModel>>(
       autoStart: true,
-      futureBuilder: () => future,
+      futureBuilder: () => futureProvider(),
       errorBuilder: (context, error, retry) =>
           _buildError(context, error, retry),
       dataBuilder: (context, data) {
@@ -72,31 +65,29 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   Widget _buildEditField(BuildContext context) {
-        return CrudoErrorize(
-          error: config.getValidationError(context),
-          child: CrudoLabelize(
-              label: config.label ?? config.name,
-              child: FormBuilderField(
-                name: config.name,
-                builder: (FormFieldState<dynamic> field) {
-                  return Futuristic<List<TModel>>(
-                    autoStart: true,
-                    futureBuilder: () => future,
-                    busyBuilder: (context) =>
-                        _buildDropdown([], context, field, enabled: false),
-                    errorBuilder: (context, error, retry) =>
-                        _buildError(context, error, retry),
-                    dataBuilder: (context, data) =>
-                        _buildDropdown(data ?? [], context, field),
-                  );
-                },
-              )
-              ),
+    return FormBuilderField(
+      name: config.name,
+      validator: FormBuilderValidators.compose([
+        if (config.required) FormBuilderValidators.required(),
+      ]),
+      builder: (FormFieldState<dynamic> field) {
+        return Futuristic<List<TModel>>(
+          autoStart: true,
+          futureBuilder: () => futureProvider(),
+          busyBuilder: (context) =>
+              _buildDropdown([], context, field, enabled: false),
+          errorBuilder: (context, error, retry) =>
+              _buildError(context, error, retry),
+          dataBuilder: (context, data) =>
+              _buildDropdown(data ?? [], context, field),
         );
+      },
+    );
   }
 
   Widget _buildError(BuildContext context, dynamic error, VoidCallback retry) {
     print(error);
+
     return Container(
       padding: const EdgeInsets.all(16),
       width: double.infinity,
@@ -106,10 +97,10 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
           Text(errorText),
           const SizedBox(height: 8),
           if (this.retry)
-          ElevatedButton(
-            onPressed: retry,
-            child: const Text('Riprova'),
-          ),
+            ElevatedButton(
+              onPressed: retry,
+              child: const Text('Riprova'),
+            ),
         ],
       ),
     );
@@ -131,11 +122,11 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   Widget _buildDropdown(
       List<TModel> items, BuildContext context, FormFieldState<dynamic> field,
       {bool enabled = true}) {
-
     if (multiple)
       throw UnimplementedError('Multiple selection not implemented yet');
 
     return CustomDropdown<TModel>(
+      enabled: config.enabled,
       hintText: config.label,
       items: items,
       listItemBuilder: (context, item, isSelected, onItemSelect) {
@@ -151,37 +142,13 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
         if (value != null) {
           field.didChange(valueBuilder(value));
         }
+
+        // Rebuild the form to update based on the new value
+        if (config.reactive) {
+          context.readFormContext().rebuild();
+        }
         onSelected?.call(value);
       },
     );
-
-    listItemBuilder(context, item, isSelected, onItemSelect) {
-      return itemBuilder(item);
-    }
-
-    if (multiple) {
-      // var initialItems = field.value == null
-      //     ? []
-      //     : items.where((el) {
-      //         var value = valueBuilder(el);
-      //         return field.value.contains(value);
-      //       }).toList();
-      //
-      // return CustomDropdown<TModel>.multiSelect(
-      //   hintText: config.label,
-      //   items: items,
-      //   listItemBuilder: listItemBuilder,
-      //   //initialItems: initialItems,
-      //   headerListBuilder: (context, selectedItems, enabled) {
-      //     return Wrap(
-      //       spacing: 5,
-      //       children: selectedItems.map((el) => itemBuilder(el)).toList(),
-      //     );
-      //   },
-      //   onListChanged: (List<TModel> items) {
-      //     field.didChange(items.map(valueBuilder).toList());
-      //   },
-      // );
-    }
   }
 }

@@ -5,16 +5,29 @@ import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
+/// The common configuration used for all CrudoFields
+///
+/// [name] is the name of the field, unique in the form
+/// [label] is the label shown on top of the field, if not provided it will default to the name
+/// [required] is a flag that indicates if the field is required, will show a validation error if not filled
+/// [visible] is a flag that indicates if the field should be rendered
+/// [enabled] is a flag that indicates if the field should be enabled to be filled
+/// [reactive] is a flag that indicates if the field should trigger a rebuild of the form when the value changes
+/// This is used when a field is dependent on another field, for example a dropdown that changes the values of another dropdown
+/// [visibleOn] is a list of operations that the field should be visible on
+/// [enabledOn] is a list of operations that the field should be enabled on
+/// [dependsOn] is a list of fields that this field depends on
+/// This means that whenever one of the values of the fields in the list changes, this field should be rebuilt
 class CrudoFieldConfiguration {
   final String name;
   final String? label;
   final bool required;
   final bool visible;
   final bool enabled;
+  final bool reactive;
   final List<ResourceOperationType>? visibleOn;
   final List<ResourceOperationType>? enabledOn;
-  final CrudoViewField Function(
-      BuildContext context, String label, String value)? buildViewField;
+  final List<String>? dependsOn;
 
   CrudoFieldConfiguration({
     required this.name,
@@ -22,9 +35,10 @@ class CrudoFieldConfiguration {
     this.required = false,
     this.enabled = true,
     this.visible = true,
+    this.reactive = false,
+    this.dependsOn,
     this.visibleOn,
     this.enabledOn,
-    this.buildViewField,
   });
 
   bool shouldRenderField(BuildContext context) {
@@ -41,14 +55,6 @@ class CrudoFieldConfiguration {
             visibleOn!.contains(resourceContext.operationType));
   }
 
-  Widget renderViewField(BuildContext context) {
-    var value = context.readFormContext().get(name)?.toString() ?? '';
-    if (buildViewField == null) {
-      return CrudoViewField(name: label ?? name, child: Text(value));
-    }
-    return buildViewField!(context, label ?? name, value);
-  }
-
   bool shouldEnableField(BuildContext context) {
     var resourceContext = context.readResourceContext();
     return enabled &&
@@ -58,6 +64,38 @@ class CrudoFieldConfiguration {
 
   String getValidationError(BuildContext context) {
     return context.readFormContext().validationErrors[name]?.first ?? '';
+  }
+
+  ValueKey? getFieldKey(BuildContext context) {
+    if (dependsOn == null) {
+      return null;
+    }
+    return ValueKey(
+        dependsOn!.map((e) => context.readFormContext().get(e)).join());
+  }
+
+  CrudoFieldConfiguration copyWith({
+    String? name,
+    String? label,
+    bool? required,
+    bool? visible,
+    bool? enabled,
+    bool? reactive,
+    List<ResourceOperationType>? visibleOn,
+    List<ResourceOperationType>? enabledOn,
+    List<String>? dependsOn,
+  }) {
+    return CrudoFieldConfiguration(
+      name: name ?? this.name,
+      label: label ?? this.label,
+      required: required ?? this.required,
+      visible: visible ?? this.visible,
+      enabled: enabled ?? this.enabled,
+      reactive: reactive ?? this.reactive,
+      visibleOn: visibleOn ?? this.visibleOn,
+      enabledOn: enabledOn ?? this.enabledOn,
+      dependsOn: dependsOn ?? this.dependsOn,
+    );
   }
 }
 
@@ -74,6 +112,36 @@ InputDecoration defaultDecoration = InputDecoration(
   focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide.none),
 );
+
+class CrudoFieldWrapper extends StatelessWidget {
+  final CrudoFieldConfiguration config;
+  final Widget child;
+  final bool errorize;
+
+  const CrudoFieldWrapper(
+      {super.key,
+      required this.config,
+      required this.child,
+      this.errorize = true});
+
+  @override
+  Widget build(BuildContext context) {
+    // Do not render
+    if (!config.shouldRenderField(context)) {
+      return const SizedBox();
+    }
+
+    // Render form component
+    return Padding(
+      key: config.getFieldKey(context),
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: CrudoErrorize(
+          error: errorize ? config.getValidationError(context) : null,
+          child:
+              CrudoLabelize(label: config.label ?? config.name, child: child)),
+    );
+  }
+}
 
 class CrudoLabelize extends StatelessWidget {
   final String label;
@@ -118,7 +186,7 @@ class CrudoErrorize extends StatelessWidget {
           padding: const EdgeInsets.only(top: 8.0, left: 8.0),
           child: Text(
             error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error),
+            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
           ),
         ),
       ],

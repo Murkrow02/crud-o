@@ -17,7 +17,9 @@ class FormContext {
   /// The data of the form
   /// This is needed in addition to the form key values because it allows us to save arbitrary keys
   /// in addition to the keys that are used by fields in the form
-  Map<String, dynamic> formData = {};
+  ///
+  /// KEEP THIS FINAL AS OTHERWISE EQUATABLE BREAKS
+  final Map<String, dynamic> formData = {};
 
   /// The internal state of the form, use this to trigger events
   final CrudoFormBloc formBloc;
@@ -31,6 +33,9 @@ class FormContext {
   /// The results of the future operations
   Map<String, dynamic> futureResults = {};
 
+  /// If the API has been updated since the last time the form was loaded
+  bool updatedApi = false;
+
   FormContext(
       {required this.context,
       required this.formBloc,
@@ -38,7 +43,7 @@ class FormContext {
       this.validationErrors = const {}});
 
   /// Get a specific value from the form
-  dynamic get<T>(String key) => formData[key] as T;
+  T get<T>(String key) => formData[key] as T;
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {
@@ -54,25 +59,75 @@ class FormContext {
   void rebuild() {
 
     // Update internal data with the new values
-    _syncFormAndInternalValues();
+    syncFormDataFromFields();
 
-    // Rebuild the form
-    formBloc.state is FormReadyState
-      ? formBloc.add(RebuildFormEvent(formData: formData))
-      : null;
+
+    // Rebuild the form by passing a new map
+    formBloc.state is FormReadyState || formBloc.state is FormNotValidState
+        ? formBloc.add(RebuildFormEvent(formData: Map.from(formData)))
+        : null;
   }
 
   /// Returns the result of a registered future operation
   T? getFutureResult<T>(String key) => futureResults[key] as T?;
 
   /// Syncs the form and internal values
-  void _syncFormAndInternalValues()
-  {
-    for(var key in formKey.currentState!.fields.keys)
-    {
-      formData[key] = formKey.currentState!.fields[key]!.value;
-    }
+  void syncFormDataFromFields() {
+    formData.clear();
+    formKey.currentState?.fields.forEach((key, field) {
+      formData[key] = field.value;
+    });
   }
+
+  Map<String, dynamic> exportFormData() {
+    var exportedData = <String, dynamic>{};
+    for (var key in formKey.currentState!.fields.keys) {
+      var value = formKey.currentState!.fields[key]!.value;
+
+      // Match the key pattern for 'x[index].y' or 'x[index]'
+      var match = RegExp(r'^(\w+)\[(\d+)\](?:\.(\w+))?$').firstMatch(key);
+      if (match != null) {
+        var parentKey = match.group(1)!; // 'attributes'
+        var indexString = match.group(2)!; // '0'
+        var childKey = match.group(3); // 'name', or null if no dot
+
+        // Parse the index
+        int index = int.parse(indexString);
+
+        // Ensure parent map exists
+        if (!exportedData.containsKey(parentKey)) {
+          exportedData[parentKey] = [];
+        }
+
+        // Ensure the list has enough elements to accommodate the current index
+        var list = exportedData[parentKey] as List;
+        while (list.length <= index) {
+          list.add(childKey == null ? null : {}); // Add null for list, map otherwise
+        }
+
+        if (childKey == null) {
+          // If there's no second dot, set the list value directly
+          list[index] = value;
+        } else {
+          // If there is a second dot, ensure it's a Map<String, dynamic>
+          if (list[index] is! Map<String, dynamic>) {
+            list[index] = <String, dynamic>{};
+          }
+
+          // Set the nested value inside the map
+          (list[index] as Map<String, dynamic>)[childKey] = value;
+        }
+      } else {
+        // Fallback to simple assignment for non-nested keys
+        exportedData[key] = value;
+      }
+    }
+    return exportedData;
+  }
+
+
+  /// Returns true if all the future operations have been loaded
+  bool futuresLoaded() => futureResults.isNotEmpty;
 }
 
 extension FormContextExtension on BuildContext {

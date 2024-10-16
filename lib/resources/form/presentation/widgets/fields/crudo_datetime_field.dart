@@ -1,4 +1,5 @@
 import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -16,31 +17,28 @@ class CrudoDatetimeField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (config.reactive)
+      throw Exception(
+          'CrudoDatetimeField does not yet support reactive fields');
 
-    if (!config.shouldRenderField(context)) {
-      return const SizedBox();
+    // Detect if preview
+    if (config.shouldRenderViewField(context)) {
+      return CrudoViewField(
+          name: config.label ?? config.name,
+          child: Text(context.readFormContext().get(config.name).toString() ?? ''));
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Builder(builder: (context) {
-
-        // Detect if preview
-        if(config.shouldRenderViewField(context)) {
-          return config.renderViewField(context);
-        }
-
-
-        return FormBuilderDateTimePicker(name: config.name,
+    return CrudoFieldWrapper(
+        errorize: false,
+        config: config,
+        child: FormBuilderDateTimePicker(
+          name: config.name,
           enabled: config.shouldEnableField(context),
-          initialValue: context.readFormContext().get(config.name) as DateTime? ?? DateTime.now(),
+          initialValue: context.readFormContext().get(config.name) as DateTime?,
           validator: FormBuilderValidators.compose([
             if (config.required) FormBuilderValidators.required(),
           ]),
-          decoration: defaultDecoration.copyWith(labelText: config.label),
-        );
-
-      }),
-    );
+          decoration: defaultDecoration,
+        ));
   }
 }

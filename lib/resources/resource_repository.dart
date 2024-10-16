@@ -7,7 +7,7 @@ import 'package:crud_o/resources/resource_factory.dart';
 abstract class ResourceRepository<T> {
 
   // Used to make the requests
-  final RestClient _client = RestClient();
+  final RestClient client = RestClient();
 
   // Where to get the resource
   final String endpoint;
@@ -27,14 +27,14 @@ abstract class ResourceRepository<T> {
   /// **************************************************************************************************
 
   Future<T> getById(String id) async {
-    var decodedBody = await _client.get("$endpoint/$id");
+    var decodedBody = await client.get("$endpoint/$id");
     return factory.createFromJson(decodedBody["data"]);
   }
 
   Future<PaginatedResponse<T>> getPaginated(
       {PaginatedRequest? request}) async {
     // Normal get operation
-    var decodedBody = await _client.get(endpoint, request: request);
+    var decodedBody = await client.get(endpoint, request: request);
 
     // Create paginated response object
     PaginatedResponse<T> restResponse =
@@ -49,7 +49,7 @@ abstract class ResourceRepository<T> {
   }
 
   Future<void> delete(String id) async {
-    return await _client.delete("$endpoint/$id");
+    return await client.delete("$endpoint/$id");
   }
 
   Future<List<T>> getAll({RestRequest? parameters}) async {
@@ -62,7 +62,7 @@ abstract class ResourceRepository<T> {
     }
 
     // Call the API
-    var decodedBody = await _client.get(endpoint, request: parameters);
+    var decodedBody = await client.get(endpoint, request: parameters);
     var response = (decodedBody["data"] as List)
         .map((e) => factory.createFromJsonList(e))
         .toList();
@@ -78,13 +78,13 @@ abstract class ResourceRepository<T> {
 
   Future<T> add(Map<String, dynamic> data) async {
     var decodedBody =
-        await _client.post(endpoint, data);
+        await client.post(endpoint, data);
     return factory.createFromJson(decodedBody["data"]);
   }
 
   Future<T> update(String id, Map<String, dynamic> data) async {
     var decodedBody =
-        await _client.put("$endpoint/$id", data);
+        await client.put("$endpoint/$id", data);
     return factory.createFromJson(decodedBody["data"]);
   }
 

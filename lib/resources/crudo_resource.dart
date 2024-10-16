@@ -75,6 +75,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                       create: (context) => ResourceContext(
                           id: data?['id'],
                           data: data ?? {},
+                          model: data?['model'],
                           operationType: ResourceOperationType.edit),
                       child: formPage,
                     )),
@@ -95,6 +96,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                       create: (context) => ResourceContext(
                           id: data?['id'],
                           data: data ?? {},
+                          model: data?['model'],
                           operationType: ResourceOperationType.view),
                       child: formPage,
                     )),
@@ -149,4 +151,5 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// SHORTCUTS
   /// **************************************************************************************************
   ResourceFactory<TModel> get factory => repository.factory;
+  TRepository getRepository<TRepository extends ResourceRepository<TModel>>() => repository as TRepository;
 }

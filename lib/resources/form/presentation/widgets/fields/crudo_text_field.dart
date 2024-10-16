@@ -1,4 +1,5 @@
 import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -26,20 +27,23 @@ class CrudoTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!config.shouldRenderField(context)) {
-      return const SizedBox();
+    if (config.reactive) {
+      throw Exception('CrudoTextField does not yet support reactive fields');
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Builder(builder: (context) {
-        // Detect if preview
-        if (config.shouldRenderViewField(context)) {
-          return config.renderViewField(context);
-        }
+    // Detect if preview
+    if (config.shouldRenderViewField(context)) {
+      return CrudoViewField(
+          name: config.label ?? config.name,
+          child: Text(
+              context.readFormContext().get(config.name)?.toString() ?? ''));
+    }
 
-        // Edit or create
-        return FormBuilderTextField(
+    // Edit or create
+    return CrudoFieldWrapper(
+        config: config,
+        errorize: false,
+        child: FormBuilderTextField(
           name: config.name,
           enabled: config.shouldEnableField(context),
 
@@ -52,16 +56,15 @@ class CrudoTextField extends StatelessWidget {
               ?.toString(),
           validator: FormBuilderValidators.compose([
             if (config.required) FormBuilderValidators.required(),
-            if (numeric) FormBuilderValidators.numeric(),
+            if (numeric)
+              FormBuilderValidators.numeric(checkNullOrEmpty: config.required),
           ]),
-          decoration: defaultDecoration.copyWith(labelText: config.label),
+          decoration: defaultDecoration,
           keyboardType: numeric ? TextInputType.number : keyboardType,
           valueTransformer:
               valueTransformer ?? (numeric ? numericTransformer : null),
           maxLines: maxLines,
-        );
-      }),
-    );
+        ));
   }
 
   num? numericTransformer(String? value) {

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+/*
+*   Generic class to define an action that can be executed in the CRUDO
+*   These are typically used in the actions menu of the table
+*/
 class CrudoAction {
   Function(BuildContext context, Map<String, dynamic>? data) action;
   final String label;

@@ -26,18 +26,18 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   // Map of data to pass to the actions,
   final Map<String, dynamic>? actionData;
-  final bool fullPage;
+  final CrudoTableDisplayType displayType;
   final bool paginated;
 
   // Called whenever the data in the table changes, bool indicates first load
-  final Function(bool)? onDataChanged;
+  final Function(bool firstLoad)? onDataChanged;
 
   CrudoTable({
     required this.columns,
     this.customActions,
     this.searchable = false,
     this.customFuture,
-    this.fullPage = false,
+    this.displayType = CrudoTableDisplayType.widget,
     this.paginated = false,
     this.onDataChanged,
     this.actionData,
@@ -45,7 +45,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     super.key,
   });
 
-  late PlutoGridStateManager tableManager;
+  PlutoGridStateManager? tableManager;
   late TResource resource;
   bool _firstLoad = true;
 
@@ -64,71 +64,25 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                   SinglePageResponse<TModel>(data: customData ?? []))
               : customFuture),
       child: Builder(
-        builder: (context) {
-          if (!fullPage) {
-            return SizedBox(
-                height: 500,
-                child: BlocListener<CrudoTableBloc, CrudoTableState>(
-                    listener: _tableStateEventListener,
-                    child: Container(
-                      margin: const EdgeInsets.all(10),
-                      child: _buildTable(context),
-                    )));
-          }
-
-          return Scaffold(
-            appBar: _buildAppBar(context),
-            body: BlocListener<CrudoTableBloc, CrudoTableState>(
-                listener: _tableStateEventListener,
-                child: Container(
-                  margin: const EdgeInsets.all(10),
-                  child: _buildTable(context),
-                )),
-          );
-        },
-      ),
+          builder: (context) => BlocListener<CrudoTableBloc, CrudoTableState>(
+              listener: _tableStateEventListener,
+              child: _buildTableWrapper(context, _buildTable(context)))),
     );
   }
 
+  /// Create the table widget
   Widget _buildTable(BuildContext context) {
     var plutoColumns = columns.map((col) => col.column).toList();
     if (_getActions().isNotEmpty) {
       plutoColumns.add(_buildActionsColumn());
     }
     return PlutoGrid(
-      configuration: PlutoGridConfiguration(
-        style: PlutoGridStyleConfig(
-          enableGridBorderShadow: false,
-          enableColumnBorderVertical: false,
-          enableColumnBorderHorizontal: true,
-          enableCellBorderVertical: false,
-          enableCellBorderHorizontal: true,
-          borderColor: Color(0xFFE1E1E1),
-          cellUnselectedColor: Colors.transparent,
-          evenRowColor: Colors.transparent,
-          rowColor: Colors.transparent,
-          gridBorderColor: Colors.transparent,
-          columnTextStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 14,
-          ),
-          gridBackgroundColor: Colors.transparent,
-          //Theme.of(context).colorScheme.surface,
-          cellTextStyle: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 14,
-          ),
-          //rowColor: Theme.of(context).colorScheme.surface,
-        ),
-        columnSize: const PlutoGridColumnSizeConfig(
-          autoSizeMode: PlutoAutoSizeMode.scale,
-          resizeMode: PlutoResizeMode.none,
-        ),
-      ),
+      configuration: _getGridConfiguration(context),
       columnMenuDelegate: CrudoTableColumnMenu(),
+      noRowsWidget: const Center(child: Text('Nessun elemento', style: TextStyle(fontSize: 20))),
       onLoaded: (PlutoGridOnLoadedEvent event) {
         tableManager = event.stateManager;
-        tableManager.setSelectingMode(PlutoGridSelectingMode.row);
+        tableManager!.setSelectingMode(PlutoGridSelectingMode.row);
         context.read<CrudoTableBloc>().add(LoadTableEvent());
       },
       columns: plutoColumns,
@@ -139,25 +93,56 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    var createAction = resource.createAction();
-    return AppBar(
-      actions: createAction != null
-          ? [
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () => createAction
-                    .execute(context, data: actionData)
-                    .then((needToRefresh) {
-                  if (needToRefresh == true) {
-                    context.read<CrudoTableBloc>().add(LoadTableEvent());
-                  }
-                }),
-              )
-            ]
-          : [],
-      title:
-          searchable ? _buildSearchBar(context) : Text(resource.pluralName()),
+  /// Create full page or simple widget table wrapper
+  Widget _buildTableWrapper(BuildContext context, Widget table) {
+    switch (displayType) {
+      case CrudoTableDisplayType.widget:
+        return _buildWidgetWrapper(context, table);
+      case CrudoTableDisplayType.fullPage:
+        return _buildFullPageWrapper(context);
+    }
+  }
+
+  /// Wrapper when table is displayed as a widget
+  Widget _buildWidgetWrapper(BuildContext context, Widget table) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        IconButton(
+          style: ButtonStyle(
+            backgroundColor: WidgetStateProperty.all(Theme.of(context).colorScheme.primary),
+          ),
+          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
+          onPressed: () => _onCreateClicked(context),
+        ),
+        Container(
+          height: 500,
+          margin: const EdgeInsets.all(10),
+          child: _buildTable(context),
+        ),
+      ],
+    );
+  }
+
+  /// Wrapper when table is displayed as a full page
+  Widget _buildFullPageWrapper(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        actions: resource.createAction() != null
+            ? [
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () => _onCreateClicked(context),
+                )
+              ]
+            : [],
+        title:
+            searchable ? _buildSearchBar(context) : Text(resource.pluralName()),
+      ),
+      body: Container(
+        margin: const EdgeInsets.all(10),
+        child: _buildTable(context),
+      ),
     );
   }
 
@@ -166,7 +151,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       builder: (context, state) {
         return AnimatedSearchBar(
           label: resource.pluralName(),
-          labelStyle: TextStyle(
+          labelStyle: const TextStyle(
             fontSize: 20,
           ),
           duration: const Duration(milliseconds: 300),
@@ -198,10 +183,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   void _tableStateEventListener(BuildContext context, CrudoTableState state) {
-    tableManager.setShowLoading(false);
+    tableManager?.setShowLoading(false);
 
     if (state is TableLoadingState) {
-      tableManager.setShowLoading(true);
+      tableManager?.setShowLoading(true);
     }
     if (state is TableLoadedState<TModel>) {
       _onDataLoaded(context, state.response);
@@ -217,7 +202,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   void _onDataLoaded(BuildContext context, PaginatedResponse<TModel> response) {
     // Clear all rows
-    tableManager.removeAllRows();
+    tableManager?.removeAllRows();
 
     // Create rows
     for (var item in response.data) {
@@ -227,10 +212,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       // Row cells for actions
       var actions = _getActions();
       if (actions.isNotEmpty) {
-        dataRow.cells['actions'] = PlutoCell(value: resource.getId(item));
+        dataRow.cells['actions'] = PlutoCell(value: item);
       }
 
-      tableManager.refRows.add(dataRow);
+      tableManager?.refRows.add(dataRow);
     }
   }
 
@@ -259,7 +244,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                 action
                     .execute(context,
                         data: {
-                          'id': columnContext.cell.value,
+                          'id': columnContext.cell.value.id.toString(),
+                          'model': columnContext.cell.value
                         }..addAll(actionData ?? {}))
                     .then((needToRefresh) {
                   if (needToRefresh == true) {
@@ -287,6 +273,18 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     );
   }
 
+  void _onCreateClicked(BuildContext context)
+  {
+    resource
+        .createAction()!
+        .execute(context, data: actionData)
+        .then((needToRefresh) {
+      if (needToRefresh == true) {
+        context.read<CrudoTableBloc>().add(LoadTableEvent());
+      }
+    });
+  }
+
   List<CrudoAction> _defaultTableActions() {
     var actions = <CrudoAction>[];
     if (resource.editAction() != null) actions.add(resource.editAction()!);
@@ -298,4 +296,38 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   List<CrudoAction> _getActions() {
     return customActions ?? _defaultTableActions();
   }
+
+  PlutoGridConfiguration _getGridConfiguration(BuildContext context) {
+    return PlutoGridConfiguration(
+      style: PlutoGridStyleConfig(
+        enableGridBorderShadow: false,
+        enableColumnBorderVertical: false,
+        enableColumnBorderHorizontal: true,
+        enableCellBorderVertical: false,
+        enableCellBorderHorizontal: true,
+        borderColor: const Color(0xFFE1E1E1),
+        cellUnselectedColor: Colors.transparent,
+        evenRowColor: Colors.transparent,
+        rowColor: Colors.transparent,
+        gridBorderColor: Colors.transparent,
+        columnTextStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 14,
+        ),
+        gridBackgroundColor: Colors.transparent,
+        //Theme.of(context).colorScheme.surface,
+        cellTextStyle: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface,
+          fontSize: 14,
+        ),
+        //rowColor: Theme.of(context).colorScheme.surface,
+      ),
+      columnSize: const PlutoGridColumnSizeConfig(
+        autoSizeMode: PlutoAutoSizeMode.scale,
+        resizeMode: PlutoResizeMode.none,
+      ),
+    );
+  }
 }
+
+enum CrudoTableDisplayType { fullPage, widget }

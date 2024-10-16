@@ -13,19 +13,19 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
     extends StatelessWidget {
   final CrudoFieldConfiguration config;
   final CrudoTable<TResource, TModel> table;
-  final Map<String, dynamic>? createData;
-  final Widget? modalForm;
 
   const CrudoTableField({
     super.key,
     required this.config,
-    this.modalForm,
     required this.table,
-    this.createData,
   });
 
   @override
   Widget build(BuildContext context) {
+
+    if(config.reactive)
+      throw Exception('CrudoTableField does not yet support reactive fields');
+
     if (!config.shouldRenderField(context)) {
       return const SizedBox();
     }
@@ -44,34 +44,13 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
           child: CrudoLabelize(
             offset: 8,
             label: config.label ?? config.name,
-            child: FormBuilderField(
-              name: config.name,
-              builder: (FormFieldState<dynamic> field) {
-                return Container(
-                    clipBehavior: Clip.antiAlias,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: Colors.white,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        if (context.read<TResource>().createAction() != null)
-                          IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(
-                                    Theme
-                                        .of(context)
-                                        .colorScheme
-                                        .primary),
-                              ),
-                              onPressed: () => onCreateClicked(context),
-                              icon: const Icon(Icons.add, color: Colors.white)),
-                        table,
-                      ],
-                    ));
-              },
+            child: Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                ),
+                child: table
             ),
           ),
         );
@@ -79,29 +58,4 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
     );
   }
 
-  void onCreateClicked(BuildContext context) async {
-    if (modalForm != null) {
-      await showDialog(
-        context: context,
-        builder: (context) =>
-            Provider(
-              create: (context) =>
-                  ResourceContext(
-                      id: "", operationType: ResourceOperationType.create),
-              child: modalForm!,
-            ),
-      );
-      return;
-    }
-
-    context
-        .read<TResource>()
-        .createAction()!
-        .execute(context, data: createData ?? {})
-        .then((needRefresh) {
-      if (needRefresh) {
-        table.onDataChanged?.call(false);
-      }
-    });
-  }
 }
