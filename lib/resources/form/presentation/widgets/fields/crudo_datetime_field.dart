@@ -24,7 +24,7 @@ class CrudoDatetimeField extends StatelessWidget {
     // Detect if preview
     if (config.shouldRenderViewField(context)) {
       return CrudoViewField(
-          name: config.name,
+          name: config.label ?? config.name,
           child: Text(context.readFormContext().get(config.name).toString() ?? ''));
     }
 
