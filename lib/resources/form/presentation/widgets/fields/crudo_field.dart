@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 class CrudoFieldConfiguration {
   final String name;
   final String? label;
+  final String? placeholder;
   final bool required;
   final bool visible;
   final bool enabled;
@@ -36,6 +37,7 @@ class CrudoFieldConfiguration {
     this.enabled = true,
     this.visible = true,
     this.reactive = false,
+    this.placeholder,
     this.dependsOn,
     this.visibleOn,
     this.enabledOn,
@@ -104,13 +106,13 @@ InputDecoration defaultDecoration = InputDecoration(
   labelStyle: const TextStyle(color: Colors.grey),
   filled: true,
   fillColor: Colors.white,
-  contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+  contentPadding: const EdgeInsets.symmetric(vertical: 19.0, horizontal: 10.0),
   border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide.none),
+      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
   enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide.none),
+      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
   focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8.0), borderSide: BorderSide.none),
+      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
 );
 
 class CrudoFieldWrapper extends StatelessWidget {

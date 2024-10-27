@@ -61,7 +61,6 @@ class FormContext {
     // Update internal data with the new values
     syncFormDataFromFields();
 
-
     // Rebuild the form by passing a new map
     formBloc.state is FormReadyState || formBloc.state is FormNotValidState
         ? formBloc.add(RebuildFormEvent(formData: Map.from(formData)))
@@ -73,7 +72,7 @@ class FormContext {
 
   /// Syncs the form and internal values
   void syncFormDataFromFields() {
-    formData.clear();
+    //formData.clear(); with this we loose data that is not inside a specific field
     formKey.currentState?.fields.forEach((key, field) {
       formData[key] = field.value;
     });
