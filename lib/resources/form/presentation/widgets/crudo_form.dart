@@ -185,6 +185,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   void _invalidateFormFields(Map<String, List> formErrors) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       for (var key in formErrors.keys.toList().reversed) {
+
+        if (!formKey.currentState!.fields.containsKey(key)) {
+          Toaster.error(formErrors[key]!.join("\n"));
+          continue;
+        }
         formKey.currentState!.fields[key]!
             .invalidate(formErrors[key]!.join("\n"));
       }
