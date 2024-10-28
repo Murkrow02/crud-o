@@ -1,6 +1,7 @@
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
+import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_factory.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -117,7 +118,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
               message: 'Sei sicuro di voler procedere?');
 
           if (!confirmed) {
-            return;
+            return ActionResult();
           }
 
           // Actually delete the resource
@@ -125,7 +126,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             await repository.delete(data?['id']);
           } catch (e) {
             Toaster.error('Errore durante l\'eliminazione');
-            return;
+            return ActionResult();
           }
 
           // Get table state and reload
@@ -135,6 +136,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                 .read<CrudoTableBloc>()
                 .add(UpdateTableEvent(tableState.request));
           }
+          return ActionResult(refreshTable: true);
         });
   }
 

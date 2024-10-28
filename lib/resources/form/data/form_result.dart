@@ -1,7 +1,7 @@
-/// This object is returned when the form is popped
-class FormResult
+/// This object is returned when the action is resolved
+/// Typically used to refresh the table when a form page pops
+class ActionResult
 {
-  final bool updatedApi;
-
-  FormResult({required this.updatedApi});
+  bool refreshTable;
+  ActionResult({this.refreshTable = false});
 }

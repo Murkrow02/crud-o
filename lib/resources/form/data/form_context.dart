@@ -1,6 +1,7 @@
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
+import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/cupertino.dart';
@@ -34,7 +35,7 @@ class FormContext {
   Map<String, dynamic> futureResults = {};
 
   /// If the API has been updated since the last time the form was loaded
-  bool updatedApi = false;
+  final ActionResult formResult = ActionResult();
 
   FormContext(
       {required this.context,

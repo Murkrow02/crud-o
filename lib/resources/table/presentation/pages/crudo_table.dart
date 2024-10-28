@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:animated_search_bar/animated_search_bar.dart';
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
+import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_provider.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_bloc.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
@@ -186,7 +189,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     tableManager?.setShowLoading(false);
 
     if (state is TableLoadingState) {
-      tableManager?.setShowLoading(true);
+     tableManager?.setShowLoading(true);
     }
     if (state is TableLoadedState<TModel>) {
       _onDataLoaded(context, state.response);
@@ -201,6 +204,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   void _onDataLoaded(BuildContext context, PaginatedResponse<TModel> response) {
+
     // Clear all rows
     tableManager?.removeAllRows();
 
@@ -247,11 +251,12 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                           'id': columnContext.cell.value.id.toString(),
                           'model': columnContext.cell.value
                         }..addAll(actionData ?? {}))
-                    .then((needToRefresh) {
-                  if (needToRefresh == true) {
+                    .then((res) {
+                  var actionResult = res as ActionResult;
+                  if (actionResult.refreshTable == true) {
                     context.read<CrudoTableBloc>().add(LoadTableEvent());
                   }
-                });
+                } );
               },
               child: ListTile(
                 leading: Icon(action.icon, color: action.color),
@@ -278,8 +283,9 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     resource
         .createAction()!
         .execute(context, data: actionData)
-        .then((needToRefresh) {
-      if (needToRefresh == true) {
+        .then((res) {
+          var actionResult = res as ActionResult;
+      if (actionResult.refreshTable == true) {
         context.read<CrudoTableBloc>().add(LoadTableEvent());
       }
     });
@@ -294,7 +300,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   List<CrudoAction> _getActions() {
-    return customActions ?? _defaultTableActions();
+    return _defaultTableActions()..addAll(customActions ?? []);
   }
 
   PlutoGridConfiguration _getGridConfiguration(BuildContext context) {
