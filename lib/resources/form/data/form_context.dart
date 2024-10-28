@@ -1,6 +1,7 @@
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
+import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/cupertino.dart';
@@ -34,7 +35,7 @@ class FormContext {
   Map<String, dynamic> futureResults = {};
 
   /// If the API has been updated since the last time the form was loaded
-  bool updatedApi = false;
+  final ActionResult formResult = ActionResult();
 
   FormContext(
       {required this.context,
@@ -61,7 +62,6 @@ class FormContext {
     // Update internal data with the new values
     syncFormDataFromFields();
 
-
     // Rebuild the form by passing a new map
     formBloc.state is FormReadyState || formBloc.state is FormNotValidState
         ? formBloc.add(RebuildFormEvent(formData: Map.from(formData)))
@@ -73,7 +73,7 @@ class FormContext {
 
   /// Syncs the form and internal values
   void syncFormDataFromFields() {
-    formData.clear();
+    //formData.clear(); with this we loose data that is not inside a specific field
     formKey.currentState?.fields.forEach((key, field) {
       formData[key] = field.value;
     });

@@ -4,6 +4,7 @@ import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
@@ -18,6 +19,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final TValue Function(TModel item) valueBuilder;
   final bool multiple;
   final Future<List<TModel>> Function() futureProvider;
+  final Future<List<TModel>> Function(String)? searchFuture;
   final bool retry;
   final Function(TModel? item)? onSelected;
 
@@ -27,6 +29,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       required this.itemBuilder,
       required this.valueBuilder,
       required this.futureProvider,
+        this.searchFuture,
       this.multiple = false,
       this.retry = true,
       this.errorText = 'Errore nel caricamento dei dati',
@@ -34,10 +37,9 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     // Detect if edit or create
     if (config.shouldRenderViewField(context)) {
-        return _buildPreviewField(context);
+      return _buildPreviewField(context);
     }
 
     return CrudoFieldWrapper(
@@ -86,7 +88,9 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   Widget _buildError(BuildContext context, dynamic error, VoidCallback retry) {
-    print(error);
+    if (kDebugMode) {
+      print(error);
+    }
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -120,35 +124,96 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   Widget _buildDropdown(
-      List<TModel> items, BuildContext context, FormFieldState<dynamic> field,
-      {bool enabled = true}) {
-    if (multiple)
+      List<TModel> items,
+      BuildContext context,
+      FormFieldState<dynamic> field,
+      {bool enabled = true}
+      ) {
+    if (multiple) {
       throw UnimplementedError('Multiple selection not implemented yet');
+    }
 
-    return CustomDropdown<TModel>(
-      enabled: config.enabled,
-      hintText: config.label,
+    // Decide whether to use `.searchRequest` or the regular constructor
+    bool useSearchRequest = true; // Or set the condition based on your logic
+
+    return _buildCustomDropdown(
       items: items,
-      listItemBuilder: (context, item, isSelected, onItemSelect) {
-        return itemBuilder(item);
-      },
+      context: context,
+      field: field,
+      config: config,
       initialItem: enabled ? getInitialItem(context, items) : null,
-      headerBuilder: (context, selectedItem, enabled) {
-        return selectedItem != null
-            ? itemBuilder(selectedItem)
-            : Text(config.label ?? config.name);
-      },
-      onChanged: (value) {
-        if (value != null) {
-          field.didChange(valueBuilder(value));
-        }
-
-        // Rebuild the form to update based on the new value
-        if (config.reactive) {
-          context.readFormContext().rebuild();
-        }
-        onSelected?.call(value);
-      },
+      itemBuilder: itemBuilder,
+      onSelected: onSelected,
+      enabled: enabled,
     );
   }
+
+
+  Widget _buildCustomDropdown({
+    required List<TModel> items,
+    required BuildContext context,
+    required FormFieldState<dynamic> field,
+    required CrudoFieldConfiguration config,
+    required TModel? initialItem,
+    required Widget Function(TModel) itemBuilder,
+    required void Function(TModel?)? onSelected,
+    bool enabled = true,
+  }) {
+    if (searchFuture != null) {
+      // Using the searchRequest constructor
+      return CustomDropdown<TModel>.searchRequest(
+        enabled: config.enabled,
+        hintText: config.label,
+        searchHintText: 'Cerca...',
+        items: items,
+        listItemBuilder: (context, item, isSelected, onItemSelect) {
+          return itemBuilder(item);
+        },
+        initialItem: enabled ? initialItem : null,
+        headerBuilder: (context, selectedItem, enabled) {
+          return selectedItem != null
+              ? itemBuilder(selectedItem)
+              : Text(config.label ?? config.name);
+        },
+        onChanged: (value) {
+          if (value != null) {
+            field.didChange(valueBuilder(value));
+          }
+
+          if (config.reactive) {
+            context.readFormContext().rebuild();
+          }
+          onSelected?.call(value);
+        },
+        futureRequest: (String searchText) => searchFuture!(searchText),
+      );
+    } else {
+      // Using the regular constructor
+      return CustomDropdown<TModel>(
+        enabled: config.enabled,
+        hintText: config.label,
+        items: items,
+        listItemBuilder: (context, item, isSelected, onItemSelect) {
+          return itemBuilder(item);
+        },
+        initialItem: enabled ? initialItem : null,
+        headerBuilder: (context, selectedItem, enabled) {
+          return selectedItem != null
+              ? itemBuilder(selectedItem)
+              : Text(config.label ?? config.name);
+        },
+        onChanged: (value) {
+          if (value != null) {
+            field.didChange(valueBuilder(value));
+          }
+
+          if (config.reactive) {
+            context.readFormContext().rebuild();
+          }
+          onSelected?.call(value);
+        },
+      );
+    }
+  }
+
 }

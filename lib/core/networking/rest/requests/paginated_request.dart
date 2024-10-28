@@ -3,13 +3,12 @@ import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
 class PaginatedRequest extends RestRequest
 {
   final int page;
-  final String? search;
   final String? orderBy;
 
   PaginatedRequest({
     required this.page,
-    this.search,
     this.orderBy,
+    super.search,
     super.queryParameters = const {},
   });
 
@@ -31,8 +30,8 @@ class PaginatedRequest extends RestRequest
   }) {
     return PaginatedRequest(
       page: page ?? this.page,
-      search: search ?? this.search,
       orderBy: orderBy ?? this.orderBy,
+      search: search ?? this.search,
     );
   }
 }

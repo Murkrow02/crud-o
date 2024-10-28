@@ -130,7 +130,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                   },
                   listener: (BuildContext context, CrudoFormState state) {
                     if (state is FormSavedState) {
-                      context.readFormContext().updatedApi = true;
+                      context.readFormContext().formResult.refreshTable = true;
                       Toaster.success("Salvato!");
                     }
                     if (state is FormModelLoadedState<TModel>) {
@@ -233,7 +233,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             if (didPop) {
               return;
             }
-            Navigator.pop(context, context.readFormContext().updatedApi);
+            Navigator.pop(context, context.readFormContext().formResult);
           },
           child: SimpleDialog(
             title: Text(context.read<TResource>().singularName()),
@@ -333,7 +333,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     editAction.execute(context,
         data: {'id': context.readResourceContext().id}).then((needToRefresh) {
       if (needToRefresh == true) {
-        context.readFormContext().updatedApi = true;
+        context.readFormContext().formResult.refreshTable = true;
         context
             .read<CrudoFormBloc<TResource, TModel>>()
             .add(LoadFormModelEvent(id: context.readResourceContext().id));
@@ -350,7 +350,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             if (didPop) {
               return;
             }
-            Navigator.pop(context, context.readFormContext().updatedApi);
+            Navigator.pop(context, context.readFormContext().formResult);
           },
           child: Scaffold(
               appBar: AppBar(
