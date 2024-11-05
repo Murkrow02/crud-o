@@ -74,7 +74,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
                       create: (context) => ResourceContext(
-                          id: data?['id'],
+                          id: data?['id']?.toString() ?? "",
                           data: data ?? {},
                           model: data?['model'],
                           operationType: ResourceOperationType.edit),
@@ -95,7 +95,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
                       create: (context) => ResourceContext(
-                          id: data?['id'],
+                          id: data?['id']?.toString() ?? "",
                           data: data ?? {},
                           model: data?['model'],
                           operationType: ResourceOperationType.view),
