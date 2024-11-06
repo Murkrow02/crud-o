@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 import 'package:crud_o/core/exceptions/rest_exception.dart';
 import 'package:crud_o/core/exceptions/unauthorized_exception.dart';
@@ -66,6 +67,7 @@ class RestClient {
   Future<dynamic> post(String endpoint, Map<String, dynamic> data,
       {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
+    logger.d("POST: $uri");
     var validatedData = validateJson(data);
     final response = await http
         .post(
@@ -76,6 +78,7 @@ class RestClient {
         .timeout(Duration(seconds: configuration.timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
+
 
   // Function to perform a DELETE request
   Future<dynamic> delete(String endpoint, {RestRequest? request}) async {
@@ -89,6 +92,32 @@ class RestClient {
         .timeout(Duration(seconds: configuration.timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
+
+  Future<Uint8List?> downloadFileBytes(String url) async {
+    logger.d("Downloading file: $url");
+    final response = await http.get(
+      Uri.parse(url),
+      headers: await configuration.getHeaders!(),
+    );
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    } else {
+      throw RestException("Failed to download file", response.statusCode);
+    }
+  }
+
+  Future<dynamic> uploadFile(String endpoint, Uint8List data, {RestRequest? request}) async {
+    Uri uri = _buildUri(endpoint, request);
+    logger.d("Uploading file: $uri");
+    final response = await http.post(
+      uri,
+      headers: await configuration.getHeaders!(),
+      body: data,
+    );
+    return handleResponseAndDecodeBody(response);
+  }
+
 
   // Generic response handler, returns response as dynamic after decoding and handling errors
   Future<dynamic> handleResponseAndDecodeBody(http.Response response) async {

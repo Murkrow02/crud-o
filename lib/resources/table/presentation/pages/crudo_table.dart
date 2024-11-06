@@ -254,7 +254,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                     .then((res) {
                   var actionResult = res as ActionResult;
                   if (actionResult.refreshTable == true) {
-                    context.read<CrudoTableBloc>().add(LoadTableEvent());
+                    refreshTable(context);
                   }
                 } );
               },
@@ -286,7 +286,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         .then((res) {
           var actionResult = res as ActionResult;
       if (actionResult.refreshTable == true) {
-        context.read<CrudoTableBloc>().add(LoadTableEvent());
+        refreshTable(context);
       }
     });
   }
@@ -333,6 +333,21 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         resizeMode: PlutoResizeMode.none,
       ),
     );
+  }
+
+  void refreshTable(BuildContext context)
+  {
+    var state = context.read<CrudoTableBloc>().state;
+
+    // If the table is already loaded, just reload the data
+    if (state is TableLoadedState<TModel>) {
+      context.read<CrudoTableBloc>().add(UpdateTableEvent(
+          state.request.copyWith(page: state.request.page)));
+      return;
+    }
+
+    // If the table is not loaded, load it from scratch
+    context.read<CrudoTableBloc>().add(LoadTableEvent());
   }
 }
 

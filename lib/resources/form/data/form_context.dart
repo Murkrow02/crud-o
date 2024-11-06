@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
+import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -45,6 +48,9 @@ class FormContext {
 
   /// Get a specific value from the form
   T get<T>(String key) => formData[key] as T;
+
+  /// Get files from the form
+  List<CrudoFile> getFiles(String key) => formData[key] as List<CrudoFile>;
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {

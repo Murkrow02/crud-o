@@ -46,6 +46,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Map<String, dynamic> Function(
       BuildContext context, Map<String, dynamic> data)? beforeSave;
 
+  /// Called after the form is saved, used to upload files or other operations
+  final Function(
+      BuildContext context, Map<String, dynamic> data)? afterSave;
+
   /// Called instead of default create
   final Future<TModel> Function(
       BuildContext context, Map<String, dynamic> data)? onCreate;
@@ -63,6 +67,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       this.onCreate,
       this.onUpdate,
       this.registerFutures,
+        this.afterSave,
       this.displayType = CrudoFormDisplayType.widget});
 
   @override
@@ -272,6 +277,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
+
     // Get data from fields
     context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
@@ -329,6 +335,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                   resourceContext: context.read()),
             );
       }
+    }
+
+    // Call after save callback
+    MOVE THIS BEFORE RELOADING THE FORM AS WE HAVE TO UPLOAD FILES SO WE NEED BEFORE REFRESHING THE FORM
+    ALSO, WHEN AFTER SAVE GETS CALLED IT SHOULD BE GIVEN THE RESOURCE ID IF JUST CREATED
+    if (afterSave != null) {
+      afterSave!(context, saveData);
     }
   }
 
