@@ -1,6 +1,7 @@
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/widgets.dart';
 
 abstract class CrudoFormEvent extends Equatable {
   @override
@@ -16,7 +17,7 @@ class LoadFormModelEvent extends CrudoFormEvent {
 }
 
 /// Builds the form with the given data to re-paint UI with new data
-class RebuildFormEvent<T> extends CrudoFormEvent {
+class RebuildFormEvent extends CrudoFormEvent {
   final Map<String, dynamic> formData;
   RebuildFormEvent({required this.formData});
 
@@ -29,7 +30,7 @@ class InitFormModelEvent extends CrudoFormEvent {
   List<Object?> get props => [];
 }
 
-class CreateFormModelEvent extends CrudoFormEvent {
+class CreateFormModelEvent<T> extends CrudoFormEvent {
   final Map<String, dynamic> formData;
   final Map<String, dynamic> createData;
   final ResourceContext resourceContext;
@@ -39,7 +40,7 @@ class CreateFormModelEvent extends CrudoFormEvent {
   List<Object?> get props => [formData, resourceContext];
 }
 
-class UpdateFormModelEvent extends CrudoFormEvent {
+class UpdateFormModelEvent<T> extends CrudoFormEvent {
   final String id;
   final Map<String, dynamic> formData;
   final Map<String, dynamic> updateData;
@@ -53,8 +54,7 @@ class CustomCreateEvent<T> extends CrudoFormEvent {
   final Future<T> createFunction;
   final ResourceContext resourceContext;
   final Map<String, dynamic> formData;
-
-  CustomCreateEvent({required this.createFunction, required this.resourceContext, required this.formData});
+  CustomCreateEvent({required this.createFunction, required this.resourceContext, required this.formData,});
 
   @override
   List<Object?> get props => [createFunction, resourceContext, formData];
@@ -64,7 +64,6 @@ class CustomUpdateEvent<T> extends CrudoFormEvent {
   final Future<T> updateFunction;
   final Map<String, dynamic> formData;
   final ResourceContext resourceContext;
-
   CustomUpdateEvent({required this.updateFunction, required this.resourceContext, required this.formData});
 
   @override

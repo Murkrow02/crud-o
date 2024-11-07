@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
+import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -21,6 +24,8 @@ class FormContext {
   ///
   /// KEEP THIS FINAL AS OTHERWISE EQUATABLE BREAKS
   final Map<String, dynamic> formData = {};
+  final Map<String, List<CrudoFile>> formFiles = {};
+
 
   /// The internal state of the form, use this to trigger events
   final CrudoFormBloc formBloc;
@@ -46,10 +51,18 @@ class FormContext {
   /// Get a specific value from the form
   T get<T>(String key) => formData[key] as T;
 
+  /// Get files from the form
+  List<CrudoFile>? getFiles(String key) => formFiles[key];
+
   /// Set a specific value in the form
   void set(String key, dynamic value) {
     formKey.currentState?.fields[key]?.didChange(value);
     formData[key] = value;
+  }
+
+  /// Set a specific file group
+  void setFiles(String key, List<CrudoFile> files) {
+    formFiles[key] = files;
   }
 
   /// Completely reloads the form by getting the data from the API

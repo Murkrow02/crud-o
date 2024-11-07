@@ -1,3 +1,4 @@
+import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/auth/bloc/crudo_auth_wrapper_bloc.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
@@ -29,6 +30,7 @@ class CrudoFieldConfiguration {
   final List<ResourceOperationType>? visibleOn;
   final List<ResourceOperationType>? enabledOn;
   final List<String>? dependsOn;
+  final List<CrudoAction> actions;
 
   CrudoFieldConfiguration({
     required this.name,
@@ -41,6 +43,7 @@ class CrudoFieldConfiguration {
     this.dependsOn,
     this.visibleOn,
     this.enabledOn,
+    this.actions = const [],
   });
 
   bool shouldRenderField(BuildContext context) {
@@ -137,10 +140,22 @@ class CrudoFieldWrapper extends StatelessWidget {
     return Padding(
       key: config.getFieldKey(context),
       padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: CrudoErrorize(
-          error: errorize ? config.getValidationError(context) : null,
-          child:
-              CrudoLabelize(label: config.label ?? config.name, child: child)),
+      child: Row(
+        children: [
+          Expanded(
+            child: CrudoErrorize(
+                error: errorize ? config.getValidationError(context) : null,
+                child:
+                    CrudoLabelize(label: config.label ?? config.name, child: child)),
+          ),
+          if (config.actions.isNotEmpty)
+            for (var action in config.actions)
+              IconButton(
+                icon: Icon(action.icon),
+                onPressed: () => action.execute(context),
+              ),
+        ],
+      ),
     );
   }
 }
