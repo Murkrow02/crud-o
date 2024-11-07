@@ -48,7 +48,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Called after the form is saved, used to upload files or other operations
   final Function(
-      BuildContext context, Map<String, dynamic> data)? afterSave;
+      BuildContext context, TModel model)? afterSave;
 
   /// Called instead of default create
   final Future<TModel> Function(
@@ -133,27 +133,21 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     // For other states, just show a loading spinner
                     return _buildLoading();
                   },
-                  listener: (BuildContext context, CrudoFormState state) {
-                    if (state is FormSavedState) {
+                  listener: (BuildContext context, CrudoFormState state) async {
+                    if (state is FormSavedState<TModel>) {
+                      // Update the result
                       context.readFormContext().formResult.refreshTable = true;
                       Toaster.success("Salvato!");
+                      deserializeModelAndRebuildForm(context, state.model);
+
+
+                      // Call user provided callback and wait for its completion
+                      if (afterSave != null) {
+                        await afterSave!(context, state.model);
+                      }
                     }
                     if (state is FormModelLoadedState<TModel>) {
-
-                      // Set model in resource context
-                      context.readResourceContext().model = state.model;
-
-                      // Convert model to form data with callback provided
-                      var formData = toFormData(context, state.model);
-                      context.readFormContext().formData.clear();
-                      context.readFormContext().formData.addAll(formData);
-
-                      // Execute futures and rebuild form
-                      _executeFutures(context).then((_) {
-                        context
-                            .read<CrudoFormBloc<TResource, TModel>>()
-                            .add(RebuildFormEvent(formData: formData));
-                      });
+                      deserializeModelAndRebuildForm(context, state.model);
                     }
                   },
                 ),
@@ -337,12 +331,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       }
     }
 
-    // Call after save callback
-    MOVE THIS BEFORE RELOADING THE FORM AS WE HAVE TO UPLOAD FILES SO WE NEED BEFORE REFRESHING THE FORM
-    ALSO, WHEN AFTER SAVE GETS CALLED IT SHOULD BE GIVEN THE RESOURCE ID IF JUST CREATED
-    if (afterSave != null) {
-      afterSave!(context, saveData);
-    }
+    // // Call after save callback
+    // MOVE THIS BEFORE RELOADING THE FORM AS WE HAVE TO UPLOAD FILES SO WE NEED BEFORE REFRESHING THE FORM
+    // ALSO, WHEN AFTER SAVE GETS CALLED IT SHOULD BE GIVEN THE RESOURCE ID IF JUST CREATED
+    // if (afterSave != null) {
+    //   afterSave!(context, saveData);
+    // }
   }
 
   void _enterEditMode(BuildContext context) {
@@ -399,6 +393,26 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         );
       },
     );
+  }
+
+  /// Converts TModel into a form representation and rebuilds the form
+  /// This is useful when loading the form for editing or when we saved the form and want to reload it
+  void deserializeModelAndRebuildForm(BuildContext context, TModel model)
+  {
+    // Set model in resource context
+    context.readResourceContext().model = model;
+
+    // Convert model to form data with callback provided
+    var formData = toFormData(context, model);
+    context.readFormContext().formData.clear();
+    context.readFormContext().formData.addAll(formData);
+
+    // Execute futures and rebuild form
+    _executeFutures(context).then((_) {
+      context
+          .read<CrudoFormBloc<TResource, TModel>>()
+          .add(RebuildFormEvent(formData: formData));
+    });
   }
 }
 

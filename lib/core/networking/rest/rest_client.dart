@@ -31,7 +31,9 @@ class RestClient {
   Uri _buildUri(String endpoint, RestRequest? request) {
     String url = configuration.baseUrl;
     return Uri.parse(
-        '$url/$endpoint${request != null ? '?${request.toQueryString()}' : ''}');
+        '$url/$endpoint${request != null
+            ? '?${request.toQueryString()}'
+            : ''}');
   }
 
   // Function to perform a GET request
@@ -40,9 +42,9 @@ class RestClient {
     logger.d("GET: $uri");
     final response = await http
         .get(
-          uri,
-          headers: await configuration.getHeaders!(),
-        )
+      uri,
+      headers: await configuration.getHeaders!(),
+    )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
@@ -55,10 +57,10 @@ class RestClient {
     logger.d("PUT: $uri");
     final response = await http
         .put(
-          uri,
-          body: jsonEncode(validatedData),
-          headers: await configuration.getHeaders!(),
-        )
+      uri,
+      body: jsonEncode(validatedData),
+      headers: await configuration.getHeaders!(),
+    )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
@@ -71,10 +73,10 @@ class RestClient {
     var validatedData = validateJson(data);
     final response = await http
         .post(
-          uri,
-          body: jsonEncode(validatedData),
-          headers: await configuration.getHeaders!(),
-        )
+      uri,
+      body: jsonEncode(validatedData),
+      headers: await configuration.getHeaders!(),
+    )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
@@ -86,9 +88,9 @@ class RestClient {
     logger.d("DELETE: $uri");
     final response = await http
         .delete(
-          uri,
-          headers: await configuration.getHeaders!(),
-        )
+      uri,
+      headers: await configuration.getHeaders!(),
+    )
         .timeout(Duration(seconds: configuration.timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
@@ -107,15 +109,41 @@ class RestClient {
     }
   }
 
-  Future<dynamic> uploadFile(String endpoint, Uint8List data, {RestRequest? request}) async {
+
+  Future<http.Response> uploadFile(String endpoint, Uint8List data, String fieldName, String fileName,
+      {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
     logger.d("Uploading file: $uri");
-    final response = await http.post(
-      uri,
-      headers: await configuration.getHeaders!(),
-      body: data,
-    );
-    return handleResponseAndDecodeBody(response);
+
+    // Create a multipart request
+    final multipartRequest = http.MultipartRequest('POST', uri);
+
+    // Add headers except Content-Type (automatically handled by MultipartRequest)
+    final headers = await configuration.getHeaders!();
+    headers.remove(
+        'Content-Type'); // Remove Content-Type if set in configuration headers
+    multipartRequest.headers.addAll(headers);
+
+    // Add the file as form data with the specified field name
+    multipartRequest.files.add(http.MultipartFile.fromBytes(
+      fieldName, // This is the field name, e.g., "image"
+      data,
+      filename: fileName,
+      //contentType: MediaType('image', 'png'), // Specify MIME type
+    ));
+
+    // Send the request
+    final streamedResponse = await multipartRequest.send();
+
+    // Convert the streamed response to a standard HTTP response
+    final response = await http.Response.fromStream(streamedResponse);
+
+    // Check for success status and handle response
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return response;
+    } else {
+      throw Exception('Failed to upload file: ${response.body}');
+    }
   }
 
 

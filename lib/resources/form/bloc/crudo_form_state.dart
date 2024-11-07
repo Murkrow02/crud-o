@@ -12,7 +12,14 @@ class FormInitialState extends CrudoFormState {}
 
 // Form is in a saved state for a fraction, only to indicate the UI that data has changed
 // While in this state form should still show a loading spinner
-class FormSavedState extends CrudoFormState {}
+class FormSavedState<T extends Object> extends CrudoFormState {
+  final T model;
+  FormSavedState({required this.model});
+
+  @override
+  List<Object> get props => [model];
+}
+
 class FormLoadingState extends CrudoFormState {}
 class FormModelLoadedState<T extends Object> extends CrudoFormState {
   final T model;

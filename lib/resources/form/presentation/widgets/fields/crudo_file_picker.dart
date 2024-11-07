@@ -41,7 +41,7 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
 
   void updateFormState()
   {
-    context.readFormContext().set(widget.config.name, _selectedFiles);
+    context.readFormContext().setFiles(widget.config.name, _selectedFiles);
   }
 
   void _removeFile(int index) {
@@ -70,18 +70,24 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
           futureBuilder: () async {
             var imageUrls = context.readFormContext().get(widget.config.name);
             for (var imageUrl in imageUrls) {
-              var imageBytes = imageUrl != null
-                  ? await restClient.downloadFileBytes(imageUrl)
-                  : null;
-              if (imageBytes != null && !_selectedFiles.contains(imageBytes)) {
-                _selectedFiles.insert(0, CrudoFile(data: imageBytes,newFile: false));
-                updateFormState();
+              try {
+                var imageBytes = imageUrl != null
+                    ? await restClient.downloadFileBytes(imageUrl)
+                    : null;
+                if (imageBytes != null && !_selectedFiles.contains(imageBytes)) {
+                  _selectedFiles.insert(0, CrudoFile(data: imageBytes, newFile: false));
+                  updateFormState();
+                }
+              } catch (e) {
+                // Handle the error (e.g., log it if necessary)
+                print("Failed to download image: $imageUrl");
               }
             }
           },
           busyBuilder: (context) =>
               const Center(child: CircularProgressIndicator()),
           dataBuilder: (context, _) {
+            updateFormState();
             return Row(
               children: [
                 ..._selectedFiles.asMap().entries.map((entry) {
