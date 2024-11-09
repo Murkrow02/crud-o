@@ -1,7 +1,9 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:collection/collection.dart';
+import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:flutter/foundation.dart';
@@ -18,6 +20,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
   final bool multiple;
+  final bool nullable;
   final Future<List<TModel>> Function() futureProvider;
   final Future<List<TModel>> Function(String)? searchFuture;
   final bool retry;
@@ -31,6 +34,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       required this.futureProvider,
       this.searchFuture,
       this.multiple = false,
+      this.nullable = false,
       this.retry = true,
       this.errorText = 'Errore nel caricamento dei dati',
       this.onSelected});
@@ -131,13 +135,13 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     }
 
     // At first use the data from the future, then use the data from the form in case devs wants to dynamically change the items
-    if(context.readFormContext().getDropdownData(config.name) == null){
+    if (context.readFormContext().getDropdownData(config.name) == null &&
+        items.isNotEmpty) {
       context.readFormContext().setDropdownData(config.name, items);
+    } else if (context.readFormContext().getDropdownData(config.name) != null) {
+      items =
+          context.readFormContext().getDropdownData<TModel>(config.name) ?? [];
     }
-    else{
-      items = context.readFormContext().getDropdownData<TModel>(config.name) ?? [];
-    }
-
 
     // Little placeholder for lazy loading display
     if (loading) {
@@ -173,60 +177,81 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     required void Function(TModel?)? onSelected,
     bool enabled = true,
   }) {
-    if (searchFuture != null) {
-      // Using the searchRequest constructor
-      return CustomDropdown<TModel>.searchRequest(
-        enabled: config.enabled,
-        hintText: config.label,
-        searchHintText: 'Cerca...',
-        items: items,
-        listItemBuilder: (context, item, isSelected, onItemSelect) {
-          return itemBuilder(item);
-        },
-        initialItem: enabled ? initialItem : null,
-        headerBuilder: (context, selectedItem, enabled) {
-          return selectedItem != null
-              ? itemBuilder(selectedItem)
-              : Text(config.label ?? config.name);
-        },
-        onChanged: (value) {
-          if (value != null) {
-            field.didChange(valueBuilder(value));
-          }
 
-          if (config.reactive) {
-            context.readFormContext().rebuild();
-          }
-          onSelected?.call(value);
-        },
-        futureRequest: (String searchText) => searchFuture!(searchText),
-      );
-    } else {
-      // Using the regular constructor
-      return CustomDropdown<TModel>(
-        enabled: config.enabled,
-        hintText: config.label,
-        items: items,
-        listItemBuilder: (context, item, isSelected, onItemSelect) {
-          return itemBuilder(item);
-        },
-        initialItem: enabled ? initialItem : null,
-        headerBuilder: (context, selectedItem, enabled) {
-          return selectedItem != null
-              ? itemBuilder(selectedItem)
-              : Text(config.label ?? config.name);
-        },
-        onChanged: (value) {
-          if (value != null) {
-            field.didChange(valueBuilder(value));
-          }
 
-          if (config.reactive) {
-            context.readFormContext().rebuild();
-          }
-          onSelected?.call(value);
-        },
-      );
-    }
+    return Row(children: [
+      Expanded(child:
+      Builder(builder: (context) {
+        if (searchFuture != null) {
+          // Using the searchRequest constructor
+          return CustomDropdown<TModel>.searchRequest(
+            enabled: config.enabled,
+            hintText: config.label,
+            searchHintText: 'Cerca...',
+            items: items,
+            listItemBuilder: (context, item, isSelected, onItemSelect) {
+              return itemBuilder(item);
+            },
+            initialItem: enabled ? initialItem : null,
+            headerBuilder: (context, selectedItem, enabled) {
+              return selectedItem != null
+                  ? itemBuilder(selectedItem)
+                  : Text(config.label ?? config.name);
+            },
+            onChanged: (value) {
+              if (value != null) {
+                field.didChange(valueBuilder(value));
+              }
+
+              if (config.reactive) {
+                context.readFormContext().rebuild();
+              }
+              onSelected?.call(value);
+            },
+            futureRequest: (String searchText) => searchFuture!(searchText),
+          );
+        } else {
+          // Using the regular constructor
+          return CustomDropdown<TModel>(
+
+            enabled: config.enabled,
+            hintText: config.label,
+            items: items,
+            listItemBuilder: (context, item, isSelected, onItemSelect) {
+              return itemBuilder(item);
+            },
+            initialItem: enabled ? initialItem : null,
+            headerBuilder: (context, selectedItem, enabled) {
+              return selectedItem != null
+                  ? itemBuilder(selectedItem)
+                  : Text(config.label ?? config.name);
+            },
+            onChanged: (value) {
+              if (value != null) {
+                field.didChange(valueBuilder(value));
+              }
+
+              if (config.reactive) {
+                context.readFormContext().rebuild();
+              }
+              onSelected?.call(value);
+            },
+          );
+        }
+      })),
+      Visibility(
+        visible: nullable,
+        child: SizedBox(
+          width: 40,
+          child: IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: () {
+              context.readFormContext().set(config.name, null);
+              context.readFormContext().rebuild();
+            },
+          ),
+        ),
+      ),
+    ]);
   }
 }

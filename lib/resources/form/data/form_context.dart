@@ -72,7 +72,7 @@ class FormContext {
   }
 
   /// Get a specific dropdown value
-  List<T>? getDropdownData<T>(String key) => formDropdownData[key];
+  List<T>? getDropdownData<T>(String key) => formDropdownData[key] as List<T>?;
 
   /// Completely reloads the form by getting the data from the API
   void reload() =>
