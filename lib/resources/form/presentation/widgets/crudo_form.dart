@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 
 class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     extends StatelessWidget {
+
   /// The key used to access the form data
   final GlobalKey<FormBuilderState> formKey = GlobalKey<FormBuilderState>();
 

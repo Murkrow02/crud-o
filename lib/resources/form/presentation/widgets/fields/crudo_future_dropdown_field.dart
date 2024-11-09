@@ -29,7 +29,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       required this.itemBuilder,
       required this.valueBuilder,
       required this.futureProvider,
-        this.searchFuture,
+      this.searchFuture,
       this.multiple = false,
       this.retry = true,
       this.errorText = 'Errore nel caricamento dei dati',
@@ -77,7 +77,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
           autoStart: true,
           futureBuilder: () => futureProvider(),
           busyBuilder: (context) =>
-              _buildDropdown([], context, field, enabled: false),
+              _buildDropdown([], context, field, loading: true),
           errorBuilder: (context, error, retry) =>
               _buildError(context, error, retry),
           dataBuilder: (context, data) =>
@@ -124,30 +124,44 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   Widget _buildDropdown(
-      List<TModel> items,
-      BuildContext context,
-      FormFieldState<dynamic> field,
-      {bool enabled = true}
-      ) {
+      List<TModel> items, BuildContext context, FormFieldState<dynamic> field,
+      {bool loading = false}) {
     if (multiple) {
       throw UnimplementedError('Multiple selection not implemented yet');
     }
 
+    // At first use the data from the future, then use the data from the form in case devs wants to dynamically change the items
+    if(context.readFormContext().getDropdownData(config.name) == null){
+      context.readFormContext().setDropdownData(config.name, items);
+    }
+    else{
+      items = context.readFormContext().getDropdownData<TModel>(config.name) ?? [];
+    }
+
+
+    // Little placeholder for lazy loading display
+    if (loading) {
+      return TextField(
+        enabled: false,
+        decoration: defaultDecoration.copyWith(
+          hintText: 'Caricamento...',
+        ),
+      );
+    }
+
     // Decide whether to use `.searchRequest` or the regular constructor
     bool useSearchRequest = true; // Or set the condition based on your logic
-
     return _buildCustomDropdown(
       items: items,
       context: context,
       field: field,
       config: config,
-      initialItem: enabled ? getInitialItem(context, items) : null,
+      initialItem: getInitialItem(context, items),
       itemBuilder: itemBuilder,
       onSelected: onSelected,
-      enabled: enabled,
+      enabled: config.enabled,
     );
   }
-
 
   Widget _buildCustomDropdown({
     required List<TModel> items,
@@ -215,5 +229,4 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       );
     }
   }
-
 }
