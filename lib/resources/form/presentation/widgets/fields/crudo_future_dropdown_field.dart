@@ -224,8 +224,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                   config.name, value != null ? valueBuilder(value) : null);
               context.readFormContext().rebuild();
               onSelected?.call(value);
-            },
-          );
+            },          );
         }
       })),
       Visibility(
