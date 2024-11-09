@@ -86,7 +86,7 @@ class FormContext {
 
     // Rebuild the form by passing a new map
     formBloc.state is FormReadyState || formBloc.state is FormNotValidState
-        ? formBloc.add(RebuildFormEvent(formData: Map.from(formData)))
+        ? formBloc.add(RebuildFormEvent(formData: Map.from(formData), force:true))
         : null;
   }
 

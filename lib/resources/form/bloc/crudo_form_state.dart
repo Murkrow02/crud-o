@@ -30,11 +30,18 @@ class FormModelLoadedState<T extends Object> extends CrudoFormState {
 }
 class FormReadyState extends CrudoFormState {
   final Map<String, dynamic> formData;
-  FormReadyState({required this.formData});
+  final bool force;
+  final DateTime? timestamp;
+
+  FormReadyState({
+    required this.formData,
+    this.force = false
+  }) : timestamp = force ? DateTime.now() : null;
 
   @override
-  List<Object> get props => [formData];
+  List<Object?> get props => [formData, timestamp];
 }
+
 class FormSavingState extends CrudoFormState {
   final Map<String, dynamic> formData;
   FormSavingState({required this.formData});
