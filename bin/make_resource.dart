@@ -109,7 +109,7 @@ String resourceStub(String name, List<String> components) {
   if (components.contains('Table')) {
     tablePageOverride = '''
   @override
-  Widget? get tablePage => ${titleCaseResource}TablePage();
+  Widget? get tablePage => const ${titleCaseResource}TablePage();
     ''';
   }
 
@@ -227,7 +227,7 @@ class ${titleCaseResource}TablePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CrudoTable<${titleCaseResource}Resource, $titleCaseResource>(
-      fullPage: true,
+      displayType: CrudoTableDisplayType.fullPage,
       paginated: true,
       columns: [
         CrudoTableColumn(

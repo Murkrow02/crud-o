@@ -138,6 +138,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     if (state is FormSavedState<TModel>) {
                       // Update the result
                       context.readFormContext().formResult.refreshTable = true;
+                      context.readFormContext().formResult.result = state.model;
                       Toaster.success("Salvato!");
                       deserializeModelAndRebuildForm(context, state.model);
 

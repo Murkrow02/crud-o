@@ -27,41 +27,49 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
   final List<CrudoFile> _selectedFiles = [];
   final List<ProtectedImage> _displayedImages = [];
 
-  FINISCI QUA CHE NON FUNZIONA PIU NIENTE GIUSTAMENTE
   @override
   void initState() {
-    // Create ProtectedImage widgets for each file URL
-    var fileUrls = context.readFormContext().get(widget.config.name) as List<String?>;
-    _displayedImages.addAll(fileUrls.map((file) => ProtectedImage(imageUrl: file)));
     super.initState();
+    // Load images from network URLs and mark as network files
+    var fileUrls = context.readFormContext().get(widget.config.name) as List<String?>?;
+    if (fileUrls == null) return;
+    for (var url in fileUrls) {
+      _displayedImages.add(ProtectedImage(imageUrl: url));
+      _selectedFiles.add(CrudoFile(url: url, source: FileSource.network));
+    }
   }
 
-  /// Called when the user picks a file from the file picker
   Future<void> _pickFile() async {
-    if (_selectedFiles.length >= widget.maxFilesCount) return;
+    if (_displayedImages.length >= widget.maxFilesCount) return;
 
     FilePickerResult? result = await FilePicker.platform.pickFiles(
-        allowMultiple: widget.maxFilesCount > 1,
-        withData: true
+      allowMultiple: widget.maxFilesCount > 1,
+      withData: true,
     );
+
     if (result != null) {
       setState(() {
-        var newFiles = result.files.map((file) => file.bytes!).toList();
-        int remainingSpace = widget.maxFilesCount - _selectedFiles.length;
-        _selectedFiles.addAll(newFiles.take(remainingSpace).map((file) => CrudoFile(data: file)));
+        List<Uint8List> newFiles = result.files.map((file) => file.bytes!).toList();
+        for (var file in newFiles) {
+          _displayedImages.add(ProtectedImage(imageBytes: file));
+          _selectedFiles.add(CrudoFile(data: file, source: FileSource.picker));
+        }
         updateFormState();
       });
     }
   }
 
-
-
   void updateFormState() {
-    context.readFormContext().setFiles(widget.config.name, _selectedFiles);
+    context.readFormContext().setFiles(
+      widget.config.name,
+      _selectedFiles.where((file) => file.source == FileSource.picker).toList(),
+    );
   }
 
   void _removeFile(int index) {
     setState(() {
+      // Remove from both lists in sync
+      _displayedImages.removeAt(index);
       _selectedFiles.removeAt(index);
       updateFormState();
     });
@@ -123,4 +131,3 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
     );
   }
 }
-
