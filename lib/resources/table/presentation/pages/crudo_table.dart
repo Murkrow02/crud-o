@@ -295,7 +295,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     var actions = <CrudoAction>[];
     if (resource.editAction() != null) actions.add(resource.editAction()!);
     if (resource.viewAction() != null) actions.add(resource.viewAction()!);
-    if (resource.canDelete) actions.add(resource.deleteAction());
+    if (resource.deleteAction() != null) actions.add(resource.deleteAction()!);
     return actions;
   }
 

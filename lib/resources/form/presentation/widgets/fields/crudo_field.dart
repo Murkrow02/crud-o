@@ -131,6 +131,7 @@ class CrudoFieldWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     // Do not render
     if (!config.shouldRenderField(context)) {
       return const SizedBox();

@@ -3,5 +3,6 @@
 class ActionResult
 {
   bool refreshTable;
+  dynamic result;
   ActionResult({this.refreshTable = false});
 }

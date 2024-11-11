@@ -25,6 +25,7 @@ class FormContext {
   /// KEEP THIS FINAL AS OTHERWISE EQUATABLE BREAKS
   final Map<String, dynamic> formData = {};
   final Map<String, List<CrudoFile>> formFiles = {};
+  final Map<String, dynamic> formDropdownData = {};
 
 
   /// The internal state of the form, use this to trigger events
@@ -65,6 +66,14 @@ class FormContext {
     formFiles[key] = files;
   }
 
+  /// Set a specific dropdown value
+  void setDropdownData(String key, List<dynamic> data) {
+    formDropdownData[key] = data;
+  }
+
+  /// Get a specific dropdown value
+  List<T>? getDropdownData<T>(String key) => formDropdownData[key] as List<T>?;
+
   /// Completely reloads the form by getting the data from the API
   void reload() =>
       formBloc.add(LoadFormModelEvent(id: context.readResourceContext().id));
@@ -77,7 +86,7 @@ class FormContext {
 
     // Rebuild the form by passing a new map
     formBloc.state is FormReadyState || formBloc.state is FormNotValidState
-        ? formBloc.add(RebuildFormEvent(formData: Map.from(formData)))
+        ? formBloc.add(RebuildFormEvent(formData: Map.from(formData), force:true))
         : null;
   }
 

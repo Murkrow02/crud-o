@@ -69,7 +69,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   }
 
   Future<void> _onReloadForm(RebuildFormEvent event, Emitter<CrudoFormState> emit) async {
-    emit(FormReadyState(formData: event.formData));
+    emit(FormReadyState(formData: event.formData, force: event.force));
   }
 
   FutureOr<void> _onCustomCreate(

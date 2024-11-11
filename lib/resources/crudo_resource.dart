@@ -105,7 +105,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  CrudoAction deleteAction() {
+  CrudoAction? deleteAction() {
     return CrudoAction(
         label: 'Elimina',
         icon: Icons.delete,
@@ -145,9 +145,6 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   /// Table to show the resource
   Widget? tablePage;
-
-  /// Override this method to define if the resource can be deleted
-  bool get canDelete => true;
 
   /// **************************************************************************************************
   /// SHORTCUTS
