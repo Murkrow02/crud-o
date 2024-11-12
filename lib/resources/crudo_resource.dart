@@ -5,6 +5,7 @@ import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_factory.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
+import 'package:crud_o/resources/resource_policy.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
@@ -15,8 +16,8 @@ import 'table/bloc/crudo_table_bloc.dart';
 
 abstract class CrudoResource<TModel extends dynamic> extends Object {
   final ResourceRepository<TModel> repository;
-
-  CrudoResource({required this.repository});
+  final ResourcePolicy<TModel>? policy;
+  CrudoResource({required this.repository, this.policy});
 
   /// **************************************************************************************************
   /// RESOURCE INFO
@@ -36,13 +37,12 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   String group() => '';
 
-  bool get showInDrawer => true;
-
   Map<String, dynamic> toMap(TModel model) => throw UnimplementedError();
 
   /// **************************************************************************************************
   /// ACTIONS
   /// **************************************************************************************************
+  //PER ORA SUCCEDE CHE LE POLICY VENGONO APPLICATE SOLO QUANDO USI L AZIONE DALLA TABELLA, DOVRESTI SPOSTARE LA LOGICA QUI
   CrudoAction? createAction() {
     if (formPage == null) return null;
     return CrudoAction(
