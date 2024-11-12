@@ -317,8 +317,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   /// Create a new item
-  void _onCreateClicked(BuildContext context) {
-    resource.createAction()!.execute(context, data: actionData).then((res) {
+  void _onCreateClicked(BuildContext context) async {
+    var createAction = await resource.createAction();
+    if (createAction == null) return;
+    createAction.execute(context, data: actionData).then((res) {
       var actionResult = res as ActionResult;
       if (actionResult.refreshTable == true) {
         refreshTable(context);

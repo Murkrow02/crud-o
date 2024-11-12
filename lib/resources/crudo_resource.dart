@@ -42,8 +42,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// **************************************************************************************************
   /// ACTIONS
   /// **************************************************************************************************
-  //PER ORA SUCCEDE CHE LE POLICY VENGONO APPLICATE SOLO QUANDO USI L AZIONE DALLA TABELLA, DOVRESTI SPOSTARE LA LOGICA QUI
-  CrudoAction? createAction() {
+  Future<CrudoAction?> createAction() async {
     if (formPage == null) return null;
     return CrudoAction(
         label: 'Crea',
