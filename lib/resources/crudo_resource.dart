@@ -44,6 +44,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// **************************************************************************************************
   Future<CrudoAction?> createAction() async {
     if (formPage == null) return null;
+    if(policy != null && !(await policy!.create())) return null;
     return CrudoAction(
         label: 'Crea',
         icon: Icons.add,
@@ -62,8 +63,9 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  CrudoAction? editAction() {
+  Future<CrudoAction?> editAction(TModel model) async {
     if (formPage == null) return null;
+    if(policy != null && !(await policy!.update(model))) return null;
     return CrudoAction(
         label: 'Modifica',
         icon: Icons.edit,
@@ -73,9 +75,9 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
                       create: (context) => ResourceContext(
-                          id: data?['id']?.toString() ?? "",
+                          id: getId(model).toString(),
                           data: data ?? {},
-                          model: data?['model'],
+                          model: model,
                           operationType: ResourceOperationType.edit),
                       child: formPage,
                     )),
@@ -83,8 +85,9 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  CrudoAction? viewAction() {
+  Future<CrudoAction?> viewAction(TModel model) async {
     if (formPage == null) return null;
+    if(policy != null && !(await policy!.view(model))) return null;
     return CrudoAction(
         label: 'Visualizza',
         icon: Icons.remove_red_eye,
@@ -94,9 +97,9 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
                       create: (context) => ResourceContext(
-                          id: data?['id']?.toString() ?? "",
+                          id: getId(model).toString(),
                           data: data ?? {},
-                          model: data?['model'],
+                          model: model,
                           operationType: ResourceOperationType.view),
                       child: formPage,
                     )),
@@ -104,7 +107,8 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  CrudoAction? deleteAction() {
+  Future<CrudoAction?> deleteAction(TModel model) async {
+    if(policy != null && !(await policy!.delete(model))) return null;
     return CrudoAction(
         label: 'Elimina',
         icon: Icons.delete,
@@ -122,7 +126,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
           // Actually delete the resource
           try {
-            await repository.delete(data?['id']);
+            await repository.delete(getId(model));
           } catch (e) {
             Toaster.error('Errore durante l\'eliminazione');
             return ActionResult();

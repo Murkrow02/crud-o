@@ -149,17 +149,22 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   Widget _buildFullPageWrapper(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        actions: resource.createAction() != null
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () => _onCreateClicked(context),
-                )
-              ]
-            : [],
-        title:
-            searchable ? _buildSearchBar(context) : Text(resource.pluralName()),
-      ),
+          title: searchable
+              ? _buildSearchBar(context)
+              : Text(resource.pluralName()),
+          actions: [
+            Futuristic<CrudoAction?>(
+              autoStart: true,
+              futureBuilder: () => resource.createAction(),
+              busyBuilder: (_) => const SizedBox(),
+              dataBuilder: (context, action) => action == null
+                  ? const SizedBox()
+                  : IconButton(
+                      icon: Icon(action.icon),
+                      onPressed: () =>
+                          action.execute(context, data: actionData)),
+            )
+          ]),
       body: Container(
         margin: const EdgeInsets.all(10),
         child: _buildTable(context),
@@ -231,14 +236,12 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
     // Create rows
     for (var item in response.data) {
+
       // Row cells for data info
       var dataRow = PlutoRow(cells: _getCells(item));
 
       // Row cells for actions
-      var actions = await _getActionsForItem(item);
-      if (actions.isNotEmpty) {
-        dataRow.cells['actions'] = PlutoCell(value: item);
-      }
+      dataRow.cells['actions'] = PlutoCell(value: item);
 
       tableManager?.refRows.add(dataRow);
     }
@@ -262,10 +265,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       renderer: (columnContext) => Builder(builder: (context) {
         var item = columnContext.cell.value as TModel;
         return Futuristic<List<CrudoAction>>(
-          futureBuilder: () async => _getActionsForItem(item),
+          futureBuilder: () => _getActionsForItem(item),
           autoStart: true,
           busyBuilder: (_) => const CircularProgressIndicator.adaptive(),
-          dataBuilder: (context, actions) => actions == null
+          dataBuilder: (context, actions) => actions == null || actions.isEmpty
               ? const SizedBox()
               : _buildActionsMenu(context, columnContext, item, actions),
         );
@@ -332,64 +335,31 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   Future<List<CrudoAction>> _defaultTableActionsForItem(TModel item) async {
     var actions = <CrudoAction>[];
 
-    Future checkEditAction() async {
-      // No action
-      if (resource.editAction() == null) return;
-      // No policy
-      if (resource.policy == null) {
-        actions.add(resource.editAction()!);
-        return;
-      }
-      // Check policy
-      resource.policy!.update(item).then((canUpdate) {
-        if (canUpdate) {
-          actions.add(resource.editAction()!);
-        }
-      });
+    // View
+    var viewAction = await resource.viewAction(item);
+    if (viewAction != null) {
+      actions.add(viewAction);
     }
 
-    Future checkViewAction() async {
-      // No action
-      if (resource.viewAction() == null) return;
-      // No policy
-      if (resource.policy == null) {
-        actions.add(resource.viewAction()!);
-        return;
-      }
-      // Check policy
-      resource.policy!.view(item).then((canView) {
-        if (canView) {
-          actions.add(resource.viewAction()!);
-        }
-      });
+    // Edit
+    var editAction = await resource.editAction(item);
+    if (editAction != null) {
+      actions.add(editAction);
     }
 
-    Future checkDeleteAction() async {
-      // No action
-      if (resource.deleteAction() == null) return;
-      // No policy
-      if (resource.policy == null) {
-        actions.add(resource.deleteAction()!);
-        return;
-      }
-      // Check policy
-      resource.policy!.delete(item).then((canDelete) {
-        if (canDelete) {
-          actions.add(resource.deleteAction()!);
-        }
-      });
+    // Delete
+    var deleteAction = await resource.deleteAction(item);
+    if (deleteAction != null) {
+      actions.add(deleteAction);
     }
-
-    // Run all checks asynchronously
-    Future.wait([checkEditAction(), checkViewAction(), checkDeleteAction()]);
 
     return actions;
   }
 
   /// Add the default actions to the custom actions
   Future<List<CrudoAction>> _getActionsForItem(TModel item) async {
-    return await _defaultTableActionsForItem(item)
-      ..addAll(customActions ?? []);
+    var defaultActions = await _defaultTableActionsForItem(item);
+    return defaultActions..addAll(customActions ?? []);
   }
 
   /// Configure plutogrid package
