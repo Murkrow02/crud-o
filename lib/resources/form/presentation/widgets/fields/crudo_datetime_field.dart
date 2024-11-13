@@ -4,15 +4,19 @@ import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:intl/intl.dart';
 
 import 'crudo_field.dart';
 
 class CrudoDatetimeField extends StatelessWidget {
   final CrudoFieldConfiguration config;
-
+  final DateFormat? format;
+  final DateTimePickerType inputType;
   const CrudoDatetimeField({
     super.key,
     required this.config,
+    this.format,
+    this.inputType = DateTimePickerType.both,
   });
 
   @override
@@ -23,9 +27,14 @@ class CrudoDatetimeField extends StatelessWidget {
 
     // Detect if preview
     if (config.shouldRenderViewField(context)) {
+      var rawDate = context.readFormContext().get<DateTime?>(config.name);
+      var formattedDate = rawDate != null
+          ? DateFormat(format?.pattern ?? getDefaultFormat().pattern)
+              .format(rawDate)
+          : '';
       return CrudoViewField(
           name: config.label ?? config.name,
-          child: Text(context.readFormContext().get(config.name).toString() ?? ''));
+          child: Text(formattedDate));
     }
 
     return CrudoFieldWrapper(
@@ -33,6 +42,12 @@ class CrudoDatetimeField extends StatelessWidget {
         config: config,
         child: FormBuilderDateTimePicker(
           name: config.name,
+          format: format ?? getDefaultFormat(),
+          inputType: inputType == DateTimePickerType.date
+              ? InputType.date
+              : inputType == DateTimePickerType.time
+                  ? InputType.time
+                  : InputType.both,
           enabled: config.shouldEnableField(context),
           initialValue: context.readFormContext().get(config.name) as DateTime?,
           validator: FormBuilderValidators.compose([
@@ -41,4 +56,12 @@ class CrudoDatetimeField extends StatelessWidget {
           decoration: defaultDecoration,
         ));
   }
+
+  DateFormat getDefaultFormat() {
+    return inputType == DateTimePickerType.date
+        ? DateFormat('dd-MM-yyyy')
+        : DateFormat('dd-MM-yyyy HH:mm:ss');
+  }
 }
+enum DateTimePickerType { date, time, both }
+
