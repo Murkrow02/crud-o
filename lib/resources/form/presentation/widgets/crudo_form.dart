@@ -342,17 +342,18 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   }
 
   void _enterEditMode(BuildContext context) {
-    var editAction = context.read<TResource>().editAction();
-    if (editAction == null) return;
-    editAction.execute(context,
-        data: {'id': context.readResourceContext().id}).then((needToRefresh) {
-      if (needToRefresh == true) {
-        context.readFormContext().formResult.refreshTable = true;
-        context
-            .read<CrudoFormBloc<TResource, TModel>>()
-            .add(LoadFormModelEvent(id: context.readResourceContext().id));
-      }
-    });
+    throw UnimplementedError();
+    // var editAction = context.read<TResource>().editAction();
+    // if (editAction == null) return;
+    // editAction.execute(context,
+    //     data: {'id': context.readResourceContext().id}).then((needToRefresh) {
+    //   if (needToRefresh == true) {
+    //     context.readFormContext().formResult.refreshTable = true;
+    //     context
+    //         .read<CrudoFormBloc<TResource, TModel>>()
+    //         .add(LoadFormModelEvent(id: context.readResourceContext().id));
+    //   }
+    // });
   }
 
   Widget _buildFullPageFormWrapper(BuildContext context, Widget form) {

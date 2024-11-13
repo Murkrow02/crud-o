@@ -10,7 +10,6 @@ class LoadTableEvent extends CrudoTableEvent {}
 
 class UpdateTableEvent extends CrudoTableEvent {
   final PaginatedRequest request;
-
   UpdateTableEvent(this.request);
 
   @override

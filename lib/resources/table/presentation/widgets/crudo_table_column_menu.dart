@@ -9,18 +9,18 @@ class CrudoTableColumnMenu implements PlutoColumnMenuDelegate<CrudoTableMenuItem
     required PlutoColumn column,
   }) {
     return [
-        const PopupMenuItem<CrudoTableMenuItem>(
-          value: CrudoTableMenuItem.moveNext,
-          height: 36,
-          enabled: true,
-          child: Text('Ordina decrescente (WIP)', style: TextStyle(fontSize: 13)),
-        ),
-        const PopupMenuItem<CrudoTableMenuItem>(
-          value: CrudoTableMenuItem.movePrevious,
-          height: 36,
-          enabled: true,
-          child: Text('Ordina crescente (WIP)', style: TextStyle(fontSize: 13)),
-        ),
+        // const PopupMenuItem<CrudoTableMenuItem>(
+        //   value: CrudoTableMenuItem.moveNext,
+        //   height: 36,
+        //   enabled: true,
+        //   child: Text('Ordina decrescente (WIP)', style: TextStyle(fontSize: 13)),
+        // ),
+        // const PopupMenuItem<CrudoTableMenuItem>(
+        //   value: CrudoTableMenuItem.movePrevious,
+        //   height: 36,
+        //   enabled: true,
+        //   child: Text('Ordina crescente (WIP)', style: TextStyle(fontSize: 13)),
+        // ),
     ];
   }
 

@@ -4,10 +4,11 @@ import 'package:crud_o/resources/resource_provider.dart';
 import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:futuristic/futuristic.dart';
 
 class CrudoDashboardDrawer extends StatelessWidget {
-
   final Widget? afterAvatar;
+
   const CrudoDashboardDrawer({super.key, this.afterAvatar});
 
   @override
@@ -19,74 +20,46 @@ class CrudoDashboardDrawer extends StatelessWidget {
             _buildDrawerHeader(context),
             _buildResourceTiles(context),
             const Divider(),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title:  Text('Logout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
-              onTap: () {
-                context.logout();
-              },
-            ),
+            _buildDrawerFooter(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildResourceTiles(BuildContext context){
-
-    // Get table and resources
-    var tables = context.read<RegisteredResources>().tables;
-    var resourcesWithTables = context.read<RegisteredResources>().resources.where((e) => e.tablePage != null).toList();
-
-    // Group resources by group
-    var groupedResources = <String, List<MapEntry<CrudoResource, Widget>>>{};
-    for (int i = 0; i < resourcesWithTables.length; i++) {
-      var resource = resourcesWithTables[i];
-      var table = tables[i];
-      var group = resource.group();
-      if (!groupedResources.containsKey(group)) {
-        groupedResources[group] = [];
-      }
-      if(resource.showInDrawer) {
-        groupedResources[group]!.add(MapEntry(resource, table));
-      }
-    }
-
-    return Expanded(
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            for (var group in groupedResources.keys)
-              Column(
-                children: [
-
-                  // If group is not empty, show expansion tile
-                  if (group != '')
-                    ExpansionTile(
-                      shape: Border(bottom: BorderSide(color: Theme.of(context).dividerColor)),
-                      initiallyExpanded: true,
-                      title: Text(group),
-                      children: [
-                        for (var entry in groupedResources[group]!)
-                          _buildResourceTile(context, entry.key, entry.value),
-                          const SizedBox(height: 15),
-                      ],
-                    ),
-
-                  // Default group, just show tiles
-                  if (group == '')
-                    for (var entry in groupedResources[group]!)
-                      _buildResourceTile(context, entry.key, entry.value),
-                ],
+  /// Header with user info, displayed at the top of the drawer
+  Widget _buildDrawerHeader(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      color: Theme.of(context).colorScheme.surfaceContainer,
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const SizedBox(
+                height: 60,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(
+                      'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50'),
+                ),
               ),
-          ],
-        ),
+              const SizedBox(width: 10),
+              Text('John Doe',
+                  style: TextStyle(
+                      fontSize: 20,
+                      color: Theme.of(context).colorScheme.onSurface)),
+            ],
+          ),
+          if (afterAvatar != null) afterAvatar!,
+        ],
       ),
     );
   }
 
-
-  Widget _buildResourceTile(BuildContext context, CrudoResource resource, Widget table) {
+  /// Single tile for a resource
+  Widget _buildResourceTile(
+      BuildContext context, CrudoResource resource, Widget table) {
     return SizedBox(
       width: double.infinity,
       height: 50,
@@ -108,28 +81,103 @@ class CrudoDashboardDrawer extends StatelessWidget {
     );
   }
 
-  Widget _buildDrawerHeader(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      color: Theme.of(context).colorScheme.surfaceContainer,
-      child: Column(
-        children: [
-           Row(
-            children: [
-              const SizedBox(
-                height: 60,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage('https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50'),
-                ),
+  /// List of tiles for all resources
+  Widget _buildResourceTiles(BuildContext context) {
+    return Futuristic<Map<String, List<MapEntry<CrudoResource, Widget>>>>(
+        autoStart: true,
+        futureBuilder: () => _getAvailableResources(context),
+        errorBuilder:(context,error,retry) => Text('Error: ${error.toString()}'),
+        busyBuilder: (context) => Expanded(child: const Center(child: CircularProgressIndicator())),
+        dataBuilder: (context, groupedResources) {
+          if (groupedResources == null) return const Text('No resources available');
+          return Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  for (var group in groupedResources.keys)
+                    Column(
+                      children: [
+                        // If group is not empty, show expansion tile
+                        if (group != '')
+                          ExpansionTile(
+                            shape: Border(
+                                bottom: BorderSide(
+                                    color: Theme.of(context).dividerColor)),
+                            initiallyExpanded: true,
+                            title: Text(group),
+                            children: [
+                              for (var entry in groupedResources[group]!)
+                                _buildResourceTile(
+                                    context, entry.key, entry.value),
+                              const SizedBox(height: 15),
+                            ],
+                          ),
+
+                        // Default group, just show tiles
+                        if (group == '')
+                          for (var entry in groupedResources[group]!)
+                            _buildResourceTile(context, entry.key, entry.value),
+                      ],
+                    ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Text('John Doe', style: TextStyle(fontSize: 20, color: Theme.of(context).colorScheme.onSurface)),
-            ],
-          ),
-          if (afterAvatar != null) afterAvatar!,
-        ],
-      ),
+            ),
+          );
+        });
+  }
+
+  /// Footer with logout options, displayed at the bottom of the drawer
+  Widget _buildDrawerFooter(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.logout, color: Colors.red),
+      title: Text('Logout',
+          style: TextStyle(color: Theme.of(context).colorScheme.error)),
+      onTap: () {
+        context.logout();
+      },
     );
+  }
+
+  /// This is the trickiest part of the widget
+  /// It groups resources by group, and checks if the user can view each resource using the policy viewAny() method
+  /// If the resource has a policy, it will only be shown if the user can view it
+  Future<Map<String, List<MapEntry<CrudoResource, Widget>>>> _getAvailableResources(BuildContext context) async {
+
+    // Get table and resources
+    var tables = context.read<RegisteredResources>().tables;
+    var resourcesWithTables = context
+        .read<RegisteredResources>()
+        .resources
+        .where((e) => e.tablePage != null)
+        .toList();
+
+    // Group resources by group
+    var groupedResources = <String, List<MapEntry<CrudoResource, Widget>>>{};
+
+    // Create a list of futures for each resource's viewAny() check
+    List<Future<void>> tasks = [];
+
+    for (int i = 0; i < resourcesWithTables.length; i++) {
+      var resource = resourcesWithTables[i];
+      var table = tables[i];
+      var group = resource.group();
+
+      if (!groupedResources.containsKey(group)) {
+        groupedResources[group] = [];
+      }
+
+      // If resource has a policy, we add its viewAny() check
+      if (resource.policy != null) {
+        var canView = await resource.policy!.viewAny();
+        if (canView) {
+          groupedResources[group]!.add(MapEntry(resource, table));
+        }
+      } else {
+        // If no policy, directly add the resource
+        groupedResources[group]!.add(MapEntry(resource, table));
+      }
+    }
+
+    return groupedResources;
   }
 }
