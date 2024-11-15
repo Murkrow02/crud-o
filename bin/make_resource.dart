@@ -30,7 +30,7 @@ void main(List<String> arguments) {
   final snakeCaseName = toSnakeCase(name);
 
   // Components
-  var options = ['Form', 'Table'];
+  var options = ['Form', 'Table', 'Policy'];
   final selectedComponentsIndexes = MultiSelect(
     prompt: 'What do you want to add to the resource?',
     options: options,
@@ -45,6 +45,7 @@ void main(List<String> arguments) {
   final repositoryPath = '$path/${snakeCaseName}_repository.dart';
   final formPath = '$path/pages/${snakeCaseName}_form_page.dart';
   final tablePath = '$path/pages/${snakeCaseName}_table_page.dart';
+  final policyPath = '$path/${snakeCaseName}_policy.dart';
 
   // Create resource file
   final resourceFile = File(resourcePath);
@@ -73,13 +74,20 @@ void main(List<String> arguments) {
     tableFile.createSync(recursive: true);
     tableFile.writeAsStringSync(tablePageStub(name));
   }
+
+  // Create policy file if Policy is selected
+  if (selectedComponents.contains('Policy')) {
+    final policyFile = File(policyPath);
+    policyFile.createSync(recursive: true);
+    policyFile.writeAsStringSync(policyStub(name));
+  }
 }
 
 String resourceStub(String name, List<String> components) {
   var titleCaseResource = name;
   var titleCaseResourcePlural = '${titleCaseResource}s';
 
-  // Conditional imports for form and table pages
+  // Conditional imports for form, table, and policy pages
   var imports = [
     "import 'package:crud_o/resources/crudo_resource.dart';",
     "import 'package:flutter/material.dart';",
@@ -94,6 +102,10 @@ String resourceStub(String name, List<String> components) {
     imports.add("import 'pages/${toSnakeCase(name)}_table_page.dart';");
     imports.add(
         "import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';");
+  }
+
+  if (components.contains('Policy')) {
+    imports.add("import '${toSnakeCase(name)}_policy.dart';");
   }
 
   // Conditional formPage and tablePage overrides
@@ -113,12 +125,17 @@ String resourceStub(String name, List<String> components) {
     ''';
   }
 
+  // Add policy to constructor if Policy is selected
+  var policyConstructor = components.contains('Policy')
+      ? ', policy: ${titleCaseResource}Policy()'
+      : '';
+
   return '''
 ${imports.join('\n')}
 
 class ${titleCaseResource}Resource extends CrudoResource<$titleCaseResource> {
 
-  ${titleCaseResource}Resource() : super(repository: ${titleCaseResource}Repository());
+  ${titleCaseResource}Resource() : super(repository: ${titleCaseResource}Repository()$policyConstructor);
 
   $formPageOverride
 
@@ -176,6 +193,40 @@ class ${titleCaseResource}Repository extends ResourceRepository<$titleCaseResour
   ''';
 }
 
+String policyStub(String name) {
+  var titleCaseResource = name;
+  return '''
+import 'package:crud_o/resources/resource_policy.dart';
+
+class ${titleCaseResource}Policy implements ResourcePolicy<$titleCaseResource> {
+  @override
+  Future<bool> create() async {
+    return true;
+  }
+
+  @override
+  Future<bool> delete($titleCaseResource model) async {
+    return true;
+  }
+
+  @override
+  Future<bool> update($titleCaseResource model) async {
+    return true;
+  }
+
+  @override
+  Future<bool> view($titleCaseResource model) async {
+    return true;
+  }
+
+  @override
+  Future<bool> viewAny() async {
+    return true;
+  }
+}
+  ''';
+}
+
 String formPageStub(String name) {
   var titleCaseResource = name;
   return '''
@@ -190,13 +241,13 @@ class ${titleCaseResource}FormPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CrudoForm<${titleCaseResource}Resource, $titleCaseResource> (
+    return CrudoForm<${titleCaseResource}Resource, $titleCaseResource>(
       displayType: CrudoFormDisplayType.fullPage,
       formBuilder: (context, formData, futureResult, formController) => Column(children: [
          CrudoTextField(
             config: CrudoFieldConfiguration(
               name: 'name',
-              label: 'Nome',
+              label: 'Name',
               required: true,
             ),
           ),
@@ -238,10 +289,10 @@ class ${titleCaseResource}TablePage extends StatelessWidget {
             return PlutoCell(value: model.name);
           },
         ),
+        // Add more columns here
       ],
     );
   }
 }
   ''';
 }
-

@@ -7,9 +7,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futuristic/futuristic.dart';
 
 class CrudoDashboardDrawer extends StatelessWidget {
-  final Widget? afterAvatar;
+  final CrudoDashboardDrawerConfig? config;
 
-  const CrudoDashboardDrawer({super.key, this.afterAvatar});
+  const CrudoDashboardDrawer({super.key, this.config});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,7 @@ class CrudoDashboardDrawer extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onSurface)),
             ],
           ),
-          if (afterAvatar != null) afterAvatar!,
+          if (config?.afterAvatar != null) config!.afterAvatar!,
         ],
       ),
     );
@@ -128,13 +128,18 @@ class CrudoDashboardDrawer extends StatelessWidget {
 
   /// Footer with logout options, displayed at the bottom of the drawer
   Widget _buildDrawerFooter(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.logout, color: Colors.red),
-      title: Text('Logout',
-          style: TextStyle(color: Theme.of(context).colorScheme.error)),
-      onTap: () {
-        context.logout();
-      },
+    return Column(
+      children: [
+        if (config?.beforeLogout != null) config!.beforeLogout!,
+        ListTile(
+          leading: const Icon(Icons.logout, color: Colors.red),
+          title: Text('Logout',
+              style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          onTap: () {
+            context.logout();
+          },
+        ),
+      ],
     );
   }
 
@@ -180,4 +185,11 @@ class CrudoDashboardDrawer extends StatelessWidget {
 
     return groupedResources;
   }
+}
+
+class CrudoDashboardDrawerConfig
+{
+  final Widget? afterAvatar;
+  final Widget? beforeLogout;
+  CrudoDashboardDrawerConfig({this.afterAvatar, this.beforeLogout});
 }

@@ -9,18 +9,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class CrudoDashboard extends StatelessWidget {
-
-  final Widget? afterAvatar;
   final Widget child;
-  const CrudoDashboard({super.key, this.afterAvatar, required this.child});
+  final CrudoDashboardDrawerConfig? drawerConfig;
+  final PreferredSizeWidget? appBar;
+  const CrudoDashboard({super.key, this.drawerConfig, required this.child, this.appBar});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: CrudoDashboardDrawer(afterAvatar: afterAvatar),
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-      ),
+      drawer: CrudoDashboardDrawer(config: drawerConfig),
+      appBar: appBar,
       body: child,
     );
   }
