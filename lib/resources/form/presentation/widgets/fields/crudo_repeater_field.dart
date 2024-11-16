@@ -16,6 +16,9 @@ class CrudoRepeaterField extends StatefulWidget {
   final CrudoFieldConfiguration config;
   final Widget Function(BuildContext context, int index) itemBuilder;
   final int initialItemCount;
+
+  /// If true, the data will be automatically flattened to a single level
+  /// This converts data from <Key, <Key, Value>> -> key[index].key: value
   final bool autoFlattenData;
 
   const CrudoRepeaterField({
@@ -38,14 +41,19 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     super.initState();
     // Initialize the repeater with the initial item count
     _items = List.generate(widget.initialItemCount, (index) => index);
+    updateFieldValue();
+
+    // If autoFlattenData is enabled, flatten the data
+    if (widget.autoFlattenData) {
+      _autoFlattenData();
+    }
   }
 
   /// This updates the value of the repeater field in order to help validation
   /// When the field is required but empty, the form will show an error
   void updateFieldValue() {
-    context.readFormContext().formKey.currentState!.patchValue({
-      '${widget.config.name}_count': _items.isNotEmpty ? _items.length : null
-    });
+    context.readFormContext().set('${widget.config.name}_count',
+        _items.isNotEmpty ? _items.length : null);
   }
 
   @override
@@ -59,15 +67,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                 ''),
       );
     }
-
-    if (widget.autoFlattenData) {
-      _autoFlattenData();
-    }
-    // Update value of the field with items count
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      updateFieldValue();
-    });
-
 
     // Edit or create mode
     return FormBuilderField(
