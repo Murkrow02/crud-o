@@ -26,6 +26,7 @@ class FormContext {
   final Map<String, dynamic> formData = {};
   final Map<String, List<CrudoFile>> formFiles = {};
   final Map<String, dynamic> formDropdownData = {};
+  final Map<String, int> formDropdownFutureSignatures = {}; // Keep track of the future signatures to check weather we need to reload the dropdowns
 
 
   /// The internal state of the form, use this to trigger events
