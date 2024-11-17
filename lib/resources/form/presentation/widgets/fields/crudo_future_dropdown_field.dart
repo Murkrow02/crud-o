@@ -40,6 +40,10 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    // Clear data if we got a new future
+    _clearDataIfNewFuture(context);
+
     // Detect if edit or create
     if (config.shouldRenderViewField(context)) {
       return _buildPreviewField(context);
@@ -241,5 +245,15 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
         ),
       ),
     ]);
+  }
+
+  /// This checks if the future provider has changed and clears the data if so
+  /// This is needed since user can manually change the dropdown data so we cant always rely on the future
+  /// We take data from the future only the first time or if the future provider changes
+  void _clearDataIfNewFuture(BuildContext context) {
+    if (context.readFormContext().formDropdownFutureSignatures[config.name] != futureProvider.hashCode) {
+      context.readFormContext().formDropdownData.remove(config.name);
+      context.readFormContext().formDropdownFutureSignatures[config.name] = futureProvider.hashCode;
+    }
   }
 }
