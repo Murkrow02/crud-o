@@ -5,17 +5,19 @@ import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:futuristic/futuristic.dart';
 import 'crudo_field.dart';
-
 
 class CrudoFilePicker extends StatefulWidget {
   final CrudoFieldConfiguration config;
   final int maxFilesCount;
+  final ImageManipulationConfig? imageManipulationConfig;
 
   const CrudoFilePicker({
     super.key,
     required this.config,
+    this.imageManipulationConfig,
     this.maxFilesCount = 1,
   });
 
@@ -31,7 +33,8 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
   void initState() {
     super.initState();
     // Load images from network URLs and mark as network files
-    var fileUrls = context.readFormContext().get(widget.config.name) as List<String?>?;
+    var fileUrls =
+        context.readFormContext().get(widget.config.name) as List<String?>?;
     if (fileUrls == null) return;
     for (var url in fileUrls) {
       _displayedImages.add(ProtectedImage(imageUrl: url));
@@ -39,33 +42,73 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
     }
   }
 
+  /// Called whenever a new file is going to be picked
   Future<void> _pickFile() async {
     if (_displayedImages.length >= widget.maxFilesCount) return;
 
+    // Show file picker
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       allowMultiple: widget.maxFilesCount > 1,
       withData: true,
     );
 
-    if (result != null) {
-      setState(() {
-        List<Uint8List> newFiles = result.files.map((file) => file.bytes!).toList();
-        for (var file in newFiles) {
-          _displayedImages.add(ProtectedImage(imageBytes: file));
-          _selectedFiles.add(CrudoFile(data: file, source: FileSource.picker));
-        }
-        updateFormState();
-      });
+    // No file picked
+    if (result == null || result.files.isEmpty) return;
+
+    // Process picked files
+    var pickedFiles = result.files;
+    for (var file in pickedFiles) {
+      if (file.bytes == null) continue;
+
+      // Check if need manipulation
+      var fileBytes = file.bytes!;
+      if(widget.imageManipulationConfig != null) {
+        fileBytes = await _manipulateImage(fileBytes, widget.imageManipulationConfig!);
+      }
+
+      // Add to preview UI
+      _displayedImages.add(ProtectedImage(imageBytes: fileBytes));
+
+      // Add to selected files
+      _selectedFiles.add(CrudoFile(data: fileBytes, source: FileSource.picker));
+    }
+
+    // Update form state
+    setState(() {
+      updateFormState();
+    });
+  }
+  
+  /// Apply image manipulation to the original image bytes
+  Future<Uint8List> _manipulateImage(Uint8List originalImage, ImageManipulationConfig config) async {
+    try {
+      assert(config.compressionRatio != null && config.compressionRatio! >= 0 &&
+          config.compressionRatio! <= 100, 'Ratio must be between 0 and 100');
+      return await FlutterImageCompress.compressWithList(
+        originalImage,
+        //minHeight: 1920,
+        //minWidth: 1080,
+        quality: config.compressionRatio ?? 100,
+        //rotate: 135,
+      );
+    }
+    catch(e){
+      print("ERROR: unable to manipulate image");
+      return originalImage;
     }
   }
 
+  /// Update the form state with only the actual files selected by the user
   void updateFormState() {
     context.readFormContext().setFiles(
-      widget.config.name,
-      _selectedFiles.where((file) => file.source == FileSource.picker).toList(),
-    );
+          widget.config.name,
+          _selectedFiles
+              .where((file) => file.source == FileSource.picker)
+              .toList(),
+        );
   }
 
+  /// Remove file from the list
   void _removeFile(int index) {
     setState(() {
       // Remove from both lists in sync
@@ -108,7 +151,8 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.close, size: 16, color: Colors.red),
+                          child: const Icon(Icons.close,
+                              size: 16, color: Colors.red),
                         ),
                       ),
                     ),
@@ -130,4 +174,10 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
       ),
     );
   }
+}
+
+class ImageManipulationConfig {
+  int? compressionRatio;
+
+  ImageManipulationConfig({this.compressionRatio});
 }

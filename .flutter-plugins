@@ -1,5 +1,10 @@
 # This is a generated file; do not edit or check into version control.
 file_picker=/home/murkrow/.pub-cache/hosted/pub.dev/file_picker-8.1.3/
+flutter_image_compress=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_image_compress-2.3.0/
+flutter_image_compress_common=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_image_compress_common-1.0.5/
+flutter_image_compress_macos=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_image_compress_macos-1.0.2/
+flutter_image_compress_ohos=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_image_compress_ohos-0.0.3/
+flutter_image_compress_web=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_image_compress_web-0.1.4+1/
 flutter_keyboard_visibility=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_keyboard_visibility-6.0.0/
 flutter_keyboard_visibility_linux=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_keyboard_visibility_linux-1.0.0/
 flutter_keyboard_visibility_macos=/home/murkrow/.pub-cache/hosted/pub.dev/flutter_keyboard_visibility_macos-1.0.0/
