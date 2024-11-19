@@ -1,3 +1,4 @@
+import 'package:crud_o/lang/temp_lang.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -51,7 +52,7 @@ class CrudoDatetimeField extends StatelessWidget {
           enabled: config.shouldEnableField(context),
           initialValue: context.readFormContext().get(config.name) as DateTime?,
           validator: FormBuilderValidators.compose([
-            if (config.required) FormBuilderValidators.required(),
+            if (config.required) FormBuilderValidators.required(errorText: TempLang.requiredField),
           ]),
           decoration: defaultDecoration,
         ));

@@ -1,3 +1,4 @@
+import 'package:crud_o/lang/temp_lang.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -71,7 +72,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     // Edit or create mode
     return FormBuilderField(
       validator:
-          widget.config.required ? FormBuilderValidators.required() : null,
+          widget.config.required ? FormBuilderValidators.required(errorText: TempLang.requiredField) : null,
       name: '${widget.config.name}_count',
       builder: (FormFieldState<dynamic> field) {
         return CrudoFieldWrapper(

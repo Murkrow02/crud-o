@@ -6,24 +6,27 @@ import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
 import 'package:crud_o/resources/form/data/form_result.dart';
-import 'package:crud_o/resources/resource_provider.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_bloc.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
+import 'package:crud_o/resources/table/data/controllers/crudo_table_settings_controller.dart';
 import 'package:crud_o/resources/table/data/models/crudo_table_column.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_column_menu.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_footer.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o/resources/table/presentation/widgets/crudo_table_settings_popup.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futuristic/futuristic.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     extends StatelessWidget {
   final List<CrudoTableColumn<TModel>> columns;
   final List<CrudoAction>? customActions;
   final bool searchable;
+  final bool enableColumnHiding;
   final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)?
       customFuture;
   final List<TModel>? customData;
@@ -40,6 +43,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     required this.columns,
     this.customActions,
     this.searchable = false,
+    this.enableColumnHiding = false,
     this.customFuture,
     this.displayType = CrudoTableDisplayType.widget,
     this.paginated = false,
@@ -52,6 +56,9 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   // Used to control the table
   PlutoGridStateManager? tableManager;
 
+  // Used to control table settings (CRUDO)
+  CrudoTableSettingsController? settingsController;
+
   // The resource we are working with
   late TResource resource;
 
@@ -60,29 +67,31 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   @override
   Widget build(BuildContext context) {
+
+    // Ensure that only one of customData and customFuture is provided
     assert(customData == null || customFuture == null,
         'Cannot provide both customData and customFuture');
 
+    // Get resource for easier access
     resource = context.read();
 
+    // Create the table bloc
     return BlocProvider<CrudoTableBloc>(
-      create: (context) => CrudoTableBloc<TResource, TModel>(
-          resource: resource,
-          customFuture: customData != null
-              ? (PaginatedRequest request) => Future.value(
-                  SinglePageResponse<TModel>(data: customData ?? []))
-              : customFuture),
-      child: Builder(
-          builder: (context) => BlocListener<CrudoTableBloc, CrudoTableState>(
-              listener: _tableStateEventListener,
-              child: _buildTableWrapper(context, _buildTable(context)))),
-    );
+        create: (context) => CrudoTableBloc<TResource, TModel>(
+            resource: resource,
+            customFuture: customData != null
+                ? (PaginatedRequest request) => Future.value(
+                    SinglePageResponse<TModel>(data: customData ?? []))
+                : customFuture),
+        child: Builder(
+            builder: (context) => BlocListener<CrudoTableBloc, CrudoTableState>(
+                listener: _tableStateEventListener,
+                child: _buildTableWrapper(context, _buildTable(context)))),
+      );
   }
 
   /// Create the table widget
   Widget _buildTable(BuildContext context) {
-    var plutoColumns = columns.map((col) => col.column).toList();
-    plutoColumns.add(_buildActionsColumn());
     return PlutoGrid(
       configuration: _getGridConfiguration(context),
       columnMenuDelegate: CrudoTableColumnMenu(),
@@ -100,12 +109,18 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       },
       noRowsWidget: const Center(
           child: Text('Nessun elemento', style: TextStyle(fontSize: 20))),
-      onLoaded: (PlutoGridOnLoadedEvent event) {
+      onLoaded: (PlutoGridOnLoadedEvent event) async {
         tableManager = event.stateManager;
         tableManager!.setSelectingMode(PlutoGridSelectingMode.row);
+        settingsController = CrudoTableSettingsController(
+            columns: columns,
+            tableManager: tableManager!,
+            resource: resource);
+        await settingsController!.hideColumns();
         context.read<CrudoTableBloc>().add(LoadTableEvent());
       },
-      columns: plutoColumns,
+      columns: columns.map((col) => col.column).toList()
+        ..add(_buildActionsColumn()),
       rows: [],
       createFooter: (tableManager) => paginated
           ? CrudoTableFooter(tableManager: tableManager)
@@ -153,6 +168,18 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
               ? _buildSearchBar(context)
               : Text(resource.pluralName()),
           actions: [
+            if (enableColumnHiding)
+              IconButton(
+                icon: const Icon(Icons.visibility),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => CrudoTableSettingsPopup(
+                      settingsController: settingsController!,
+                    ),
+                  );
+                },
+              ),
             Futuristic<CrudoAction?>(
               autoStart: true,
               futureBuilder: () => resource.createAction(),
@@ -236,7 +263,6 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
     // Create rows
     for (var item in response.data) {
-
       // Row cells for data info
       var dataRow = PlutoRow(cells: _getCells(item));
 
@@ -254,7 +280,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       field: 'actions',
       frozen: PlutoColumnFrozen.end,
       width: 10,
-      enableDropToResize: false,
+      enableDropToResize: true,
       enableColumnDrag: false,
       enableRowDrag: false,
       enableRowChecked: false,
@@ -390,7 +416,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       ),
       columnSize: const PlutoGridColumnSizeConfig(
         autoSizeMode: PlutoAutoSizeMode.scale,
-        resizeMode: PlutoResizeMode.none,
+        resizeMode: PlutoResizeMode.normal,
       ),
     );
   }

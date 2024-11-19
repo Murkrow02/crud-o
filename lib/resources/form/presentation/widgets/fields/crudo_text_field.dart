@@ -1,3 +1,4 @@
+import 'package:crud_o/lang/temp_lang.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -55,9 +56,9 @@ class CrudoTextField extends StatelessWidget {
               ?.initialValue[config.name]
               ?.toString(),
           validator: FormBuilderValidators.compose([
-            if (config.required) FormBuilderValidators.required(),
+            if (config.required) FormBuilderValidators.required(errorText: TempLang.requiredField),
             if (numeric)
-              FormBuilderValidators.numeric(checkNullOrEmpty: config.required),
+              FormBuilderValidators.numeric(checkNullOrEmpty: config.required, errorText: TempLang.numericField),
           ]),
           decoration: defaultDecoration,
           keyboardType: numeric ? TextInputType.number : keyboardType,

@@ -9,7 +9,7 @@ environment:
 
 dependencies:
   animated_custom_dropdown:
-    path: ../flutter-custom-dropdown
+    git: https://github.com/Murkrow02/flutter-custom-dropdown
   animated_search_bar: ^2.7.2
   collection: ^1.18.0
   custom_sliding_segmented_control: ^1.8.4
@@ -30,7 +30,7 @@ dependencies:
   multi_image_picker_view: ^1.1.0
   pluto_grid_plus: ^8.4.2
   provider: ^6.1.2
-  shared_preferences: ^2.3.2
+  shared_preferences: ^2.3.3
   smooth_counter: ^0.2.0
   toastification: ^2.2.0
 
