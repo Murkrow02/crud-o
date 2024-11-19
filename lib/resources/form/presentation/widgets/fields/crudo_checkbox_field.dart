@@ -23,7 +23,7 @@ class CrudoCheckboxField extends StatelessWidget {
       return CrudoViewField(
           name: config.label ?? config.name,
           child: Text(
-              context.readFormContext().get(config.name)?.toString() ?? ''));
+              context.readFormContext().get(config.name) == true ? 'Si' : 'No'));
     }
 
     // Edit or create

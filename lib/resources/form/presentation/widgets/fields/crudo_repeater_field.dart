@@ -59,87 +59,86 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
   @override
   Widget build(BuildContext context) {
-    // Check if we should render a preview
-    if (widget.config.shouldRenderViewField(context)) {
-      return CrudoViewField(
-        name: widget.config.label ?? widget.config.name,
-        child: Text(
-            context.readFormContext().get(widget.config.name)?.toString() ??
-                ''),
-      );
-    }
 
-    // Edit or create mode
-    return FormBuilderField(
-      validator:
-          widget.config.required ? FormBuilderValidators.required(errorText: TempLang.requiredField) : null,
-      name: '${widget.config.name}_count',
-      builder: (FormFieldState<dynamic> field) {
-        return CrudoFieldWrapper(
-          config: widget.config.copyWith(
-            name: '${widget.config.name}_count',
-          ),
-          child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-              child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Colors.grey.withOpacity(0.5),
-                      width: 1,
+    return AbsorbPointer(
+      absorbing: widget.config.shouldRenderViewField(context),
+      child: FormBuilderField(
+        validator:
+            widget.config.required ? FormBuilderValidators.required(errorText: TempLang.requiredField) : null,
+        name: '${widget.config.name}_count',
+        builder: (FormFieldState<dynamic> field) {
+          return CrudoFieldWrapper(
+            config: widget.config.copyWith(
+              name: '${widget.config.name}_count',
+            ),
+            child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+                child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.grey.withOpacity(0.5),
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(5),
                     ),
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  child: Column(
-                    children: [
-                      ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _items.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              title: widget.itemBuilder(context, index),
-                              trailing: SizedBox(
-                                width: 25,
-                                height: 25,
-                                child: IconButton(
-                                  style: ButtonStyle(
-                                    backgroundColor: WidgetStateProperty.all(
-                                        Theme.of(context).colorScheme.error),
+                    child: Column(
+                      children: [
+                        ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _items.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                title: widget.itemBuilder(context, index),
+                                trailing: SizedBox(
+                                  width: 25,
+                                  height: 25,
+                                  child: Visibility(
+                                    visible: !widget.config.shouldRenderViewField(context),
+                                    child: IconButton(
+                                      style: ButtonStyle(
+                                        backgroundColor: WidgetStateProperty.all(
+                                            Theme.of(context).colorScheme.error),
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _items.removeAt(index);
+                                          updateFieldValue();
+                                        });
+                                      },
+                                      icon: Icon(Icons.remove,
+                                          size: 10,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onError),
+                                    ),
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _items.removeAt(index);
-                                      updateFieldValue();
-                                    });
-                                  },
-                                  icon: Icon(Icons.remove,
-                                      size: 10,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onError),
                                 ),
+                              );
+                            }),
+                        const SizedBox(height: 8),
+                        Visibility(
+                          visible: !widget.config.shouldRenderViewField(context),
+                          child: IconButton(
+                              style: ButtonStyle(
+                                backgroundColor: WidgetStateProperty.all(
+                                    Theme.of(context).colorScheme.primary),
                               ),
-                            );
-                          }),
-                      const SizedBox(height: 8),
-                      IconButton(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all(
-                                Theme.of(context).colorScheme.primary),
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              _items.add(_items.length);
-                              updateFieldValue();
-                            });
-                          },
-                          icon: Icon(Icons.add,
-                              color: Theme.of(context).colorScheme.onPrimary)),
-                    ],
-                  ))),
-        );
-      },
+                              onPressed: () {
+                                setState(() {
+                                  _items.add(_items.length);
+                                  updateFieldValue();
+                                });
+                              },
+                              icon: Icon(Icons.add,
+                                  color: Theme.of(context).colorScheme.onPrimary)),
+                        ),
+                      ],
+                    ))),
+          );
+        },
+      ),
     );
   }
 
