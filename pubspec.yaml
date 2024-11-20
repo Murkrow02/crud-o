@@ -8,10 +8,10 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
-  animated_custom_dropdown:
-    git: https://github.com/Murkrow02/flutter-custom-dropdown
 #  animated_custom_dropdown:
-#    path: ../flutter-custom-dropdown
+#    git: https://github.com/Murkrow02/flutter-custom-dropdown
+  animated_custom_dropdown:
+    path: ../flutter-custom-dropdown
   animated_search_bar: ^2.7.2
   collection: ^1.18.0
   custom_sliding_segmented_control: ^1.8.4

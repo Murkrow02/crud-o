@@ -98,7 +98,11 @@ class FormContext {
   void syncFormDataFromFields() {
     //formData.clear(); with this we loose data that is not inside a specific field
     formKey.currentState?.fields.forEach((key, field) {
-      formData[key] = field.value;
+
+      // Check first if the previous value was removed from internal data
+      if (formData.containsKey(key)) {
+        formData[key] = field.value;
+      }
     });
   }
 
