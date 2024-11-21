@@ -26,6 +26,7 @@ dependencies:
   form_builder_validators: ^11.0.0
   futuristic: ^0.2.0
   http: ^1.2.2
+  image_picker: ^1.1.2
   interact_cli: ^2.4.0
   intl: ^0.19.0
   logger: ^2.4.0

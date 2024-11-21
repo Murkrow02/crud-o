@@ -35,31 +35,31 @@ class CrudoRepeaterField extends StatefulWidget {
 }
 
 class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
-  List<int> _items = [];
+  int _itemsCount = 0;
 
   @override
   void initState() {
     super.initState();
     // Initialize the repeater with the initial item count
-    _items = List.generate(widget.initialItemCount, (index) => index);
+    _itemsCount = widget.initialItemCount;
     updateFieldValue();
 
     // If autoFlattenData is enabled, flatten the data
     if (widget.autoFlattenData) {
-      _autoFlattenData();
+      var flattenedData = _autoFlattenData();
+      context.readFormContext().formData.addAll(flattenedData);
     }
   }
-
   /// This updates the value of the repeater field in order to help validation
   /// When the field is required but empty, the form will show an error
   void updateFieldValue() {
-    context.readFormContext().set('${widget.config.name}_count',
-        _items.isNotEmpty ? _items.length : null);
+    context.readFormContext().set('${widget.config.name}_count', _itemsCount);
   }
 
   @override
   Widget build(BuildContext context) {
 
+    var formData = context.readFormContext().formData;
     return AbsorbPointer(
       absorbing: widget.config.shouldRenderViewField(context),
       child: FormBuilderField(
@@ -87,7 +87,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                         ListView.builder(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _items.length,
+                            itemCount: _itemsCount,
                             itemBuilder: (context, index) {
                               return ListTile(
                                 title: widget.itemBuilder(context, index),
@@ -101,12 +101,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                                         backgroundColor: WidgetStateProperty.all(
                                             Theme.of(context).colorScheme.error),
                                       ),
-                                      onPressed: () {
-                                        setState(() {
-                                          _items.removeAt(index);
-                                          updateFieldValue();
-                                        });
-                                      },
+                                      onPressed: () => _removeRepeaterItem(index),
                                       icon: Icon(Icons.remove,
                                           size: 10,
                                           color: Theme.of(context)
@@ -127,7 +122,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _items.add(_items.length);
+                                  _itemsCount++;
                                   updateFieldValue();
                                 });
                               },
@@ -142,13 +137,59 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     );
   }
 
+  /// This method provides the functionality to remove an item from the repeater UI.
+  /// It also removes the corresponding data from the form data map by finding all keys that match the pattern 'key[index].*'.
+  /// After removal, it shifts subsequent items' keys to ensure the indices remain consistent.
+  void _removeRepeaterItem(int index) {
+    // Find all keys in form data that are in the form of 'key[index].*'
+    var searchKey = '${widget.config.name}[$index].';
+    var keysToRemove = context.readFormContext().formData.keys
+        .where((key) => key.startsWith(searchKey))
+        .toList();
+
+    // Remove all values that match the pattern
+    for (var key in keysToRemove) {
+      context.readFormContext().formData.remove(key);
+    }
+
+    // Shift the indices of subsequent items
+    for (int i = index + 1; i < _itemsCount; i++) {
+      var oldKeyPrefix = '${widget.config.name}[$i].';
+      var newKeyPrefix = '${widget.config.name}[${i - 1}].';
+
+      // Update all keys in formData that start with the oldKeyPrefix
+      var keysToUpdate = context.readFormContext().formData.keys
+          .where((key) => key.startsWith(oldKeyPrefix))
+          .toList();
+
+      for (var key in keysToUpdate) {
+        var newKey = key.replaceFirst(oldKeyPrefix, newKeyPrefix);
+        context.readFormContext().formData[newKey] =
+            context.readFormContext().formData.remove(key);
+      }
+    }
+
+    var newFormData = context.readFormContext().formData;
+    _itemsCount--;
+    updateFieldValue();
+    //context.readFormContext().rebuild();
+    // // Update the UI
+    // setState(() {
+    //   _items.removeAt(index);
+    //   updateFieldValue();
+    // });
+  }
+
+
+
+
+
   /// This methods automatically converts data from <Key, <Key, Value>> -> key[index].key: value
-  void _autoFlattenData() {
-    var formData = context.readFormContext().formData;
+  Map<String, dynamic> _autoFlattenData() {
     var key = widget.config.name;
-    var items = formData[key];
+    var items = context.readFormContext().formData[key];
     if (items == null || items is! List || items.isEmpty) {
-      return;
+      return {};
     }
 
     var flattenedData = <String, dynamic>{};
@@ -180,14 +221,13 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     // Start flattening from the root
     flatten(items, key);
 
-    // Update the form data with the flattened data
-    formData.addAll(flattenedData);
-
     // Update repeater items count
     WidgetsBinding.instance.addPostFrameCallback((_) {
       setState(() {
-        _items = List.generate(items.length, (index) => index);
+        _itemsCount = items.length;
       });
     });
+
+    return flattenedData;
   }
 }

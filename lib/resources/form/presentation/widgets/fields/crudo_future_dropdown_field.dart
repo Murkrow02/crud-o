@@ -192,6 +192,8 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
         if (searchFuture != null) {
           // Using the searchRequest constructor
           return CustomDropdown<TModel>.searchRequest(
+            searchHintText: 'Effettua una ricerca per visualizzare più risultati',
+           // header: const Text("Effettua una ricerca per visualizzare più risultati"),
             initialItem: initialItem,
             enabled: config.enabled,
             hintText: config.label,

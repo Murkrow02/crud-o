@@ -31,6 +31,7 @@ class CrudoFieldConfiguration {
   final List<ResourceOperationType>? enabledOn;
   final List<String>? dependsOn;
   final List<CrudoAction> actions;
+  final void Function(BuildContext context, dynamic value)? onChanged;
 
   CrudoFieldConfiguration({
     required this.name,
@@ -44,6 +45,7 @@ class CrudoFieldConfiguration {
     this.visibleOn,
     this.enabledOn,
     this.actions = const [],
+    this.onChanged,
   });
 
   bool shouldRenderField(BuildContext context) {

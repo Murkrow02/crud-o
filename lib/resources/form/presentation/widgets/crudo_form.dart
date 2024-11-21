@@ -28,6 +28,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Build the form fields
   final Function(BuildContext context) formBuilder;
 
+  /// Custom title on top of the form
+  final String? customTitle;
+
   /// Convert the model to form data
   final Map<String, dynamic> Function(BuildContext context, TModel model)
       toFormData;
@@ -64,6 +67,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       required this.formBuilder,
       required this.toFormData,
       this.beforeValidate,
+      this.customTitle,
       this.beforeSave,
       this.onCreate,
       this.onUpdate,
@@ -243,7 +247,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             Navigator.pop(context, context.readFormContext().formResult);
           },
           child: SimpleDialog(
-            title: Text(context.read<TResource>().singularName()),
+            title: Text(customTitle ?? context.read<TResource>().singularName()),
             children: [
               form,
               Row(
@@ -370,7 +374,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           },
           child: Scaffold(
               appBar: AppBar(
-                title: Text(context.read<TResource>().singularName()),
+                title: Text(customTitle ?? context.read<TResource>().singularName()),
                 actions: [
                   if (state is FormSavingState)
                     const CircularProgressIndicator.adaptive()
@@ -388,11 +392,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                           onPressed: () => _onSave(context)),
                 ],
               ),
-              body: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: form,
-                ),
+              body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: form,
               )),
         );
       },
