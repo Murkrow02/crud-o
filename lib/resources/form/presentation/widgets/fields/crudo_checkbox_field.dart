@@ -37,6 +37,7 @@ class CrudoCheckboxField extends StatelessWidget {
             if(config.reactive) {
               context.readFormContext().rebuild();
             }
+            config.onChanged?.call(context, value);
           },
           validator: FormBuilderValidators.compose([
             if (config.required) FormBuilderValidators.required(errorText: TempLang.requiredField),

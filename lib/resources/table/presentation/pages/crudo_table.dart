@@ -28,7 +28,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   final bool searchable;
   final bool enableColumnHiding;
   final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)?
-      customFuture;
+  customFuture;
   final List<TModel>? customData;
 
   // Map of data to pass to the actions,
@@ -67,27 +67,29 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   @override
   Widget build(BuildContext context) {
-
     // Ensure that only one of customData and customFuture is provided
     assert(customData == null || customFuture == null,
-        'Cannot provide both customData and customFuture');
+    'Cannot provide both customData and customFuture');
 
     // Get resource for easier access
     resource = context.read();
 
     // Create the table bloc
     return BlocProvider<CrudoTableBloc>(
-        create: (context) => CrudoTableBloc<TResource, TModel>(
-            resource: resource,
-            customFuture: customData != null
-                ? (PaginatedRequest request) => Future.value(
-                    SinglePageResponse<TModel>(data: customData ?? []))
-                : customFuture),
-        child: Builder(
-            builder: (context) => BlocListener<CrudoTableBloc, CrudoTableState>(
-                listener: _tableStateEventListener,
-                child: _buildTableWrapper(context, _buildTable(context)))),
-      );
+      create: (context) =>
+          CrudoTableBloc<TResource, TModel>(
+              resource: resource,
+              customFuture: customData != null
+                  ? (PaginatedRequest request) =>
+                  Future.value(
+                      SinglePageResponse<TModel>(data: customData ?? []))
+                  : customFuture),
+      child: Builder(
+          builder: (context) =>
+              BlocListener<CrudoTableBloc, CrudoTableState>(
+                  listener: _tableStateEventListener,
+                  child: _buildTableWrapper(context, _buildTable(context)))),
+    );
   }
 
   /// Create the table widget
@@ -96,15 +98,17 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       configuration: _getGridConfiguration(context),
       columnMenuDelegate: CrudoTableColumnMenu(),
       onSorted: (PlutoGridOnSortedEvent event) {
-        var state = context.read<CrudoTableBloc>().state;
+        var state = context
+            .read<CrudoTableBloc>()
+            .state;
         if (state is TableLoadedState<TModel>) {
           context.read<CrudoTableBloc>().add(UpdateTableEvent(state.request
               .copyWith(
-                  sortBy: SortParameter(
-                      event.column.field,
-                      event.column.sort.isAscending
-                          ? SortDirection.asc
-                          : SortDirection.desc))));
+              sortBy: SortParameter(
+                  event.column.field,
+                  event.column.sort.isAscending
+                      ? SortDirection.asc
+                      : SortDirection.desc))));
         }
       },
       noRowsWidget: const Center(
@@ -113,16 +117,15 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         tableManager = event.stateManager;
         tableManager!.setSelectingMode(PlutoGridSelectingMode.row);
         settingsController = CrudoTableSettingsController(
-            columns: columns,
-            tableManager: tableManager!,
-            resource: resource);
+            columns: columns, tableManager: tableManager!, resource: resource);
         await settingsController!.hideColumns();
         context.read<CrudoTableBloc>().add(LoadTableEvent());
       },
       columns: columns.map((col) => col.column).toList()
         ..add(_buildActionsColumn()),
       rows: [],
-      createFooter: (tableManager) => paginated
+      createFooter: (tableManager) =>
+      paginated
           ? CrudoTableFooter(tableManager: tableManager)
           : const SizedBox(),
     );
@@ -143,13 +146,13 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        IconButton(
-          style: ButtonStyle(
-            backgroundColor:
-                WidgetStateProperty.all(Theme.of(context).colorScheme.primary),
-          ),
-          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.onPrimary),
-          onPressed: () => _onCreateClicked(context),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            if(enableColumnHiding)
+              _buildColumnHidingButton(context),
+            _buildCreateActionButton(context),
+          ],
         ),
         Container(
           height: 500,
@@ -169,28 +172,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
               : Text(resource.pluralName()),
           actions: [
             if (enableColumnHiding)
-              IconButton(
-                icon: const Icon(Icons.visibility),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => CrudoTableSettingsPopup(
-                      settingsController: settingsController!,
-                    ),
-                  );
-                },
-              ),
-            Futuristic<CrudoAction?>(
-              autoStart: true,
-              futureBuilder: () => resource.createAction(),
-              busyBuilder: (_) => const SizedBox(),
-              dataBuilder: (context, action) => action == null
-                  ? const SizedBox()
-                  : IconButton(
-                      icon: Icon(action.icon),
-                      onPressed: () =>
-                          action.execute(context, data: actionData)),
-            )
+              _buildColumnHidingButton(context),
+            _buildCreateActionButton(context)
           ]),
       body: Container(
         margin: const EdgeInsets.all(10),
@@ -213,7 +196,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
           searchDecoration: InputDecoration(
             hintText: 'Cerca',
             hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onPrimary,
+              color: Theme
+                  .of(context)
+                  .colorScheme
+                  .onPrimary,
             ),
             alignLabelWithHint: true,
             border: InputBorder.none,
@@ -256,8 +242,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   /// Fired whenever there is new data to display
-  void _onDataLoaded(
-      BuildContext context, PaginatedResponse<TModel> response) async {
+  void _onDataLoaded(BuildContext context,
+      PaginatedResponse<TModel> response) async {
     // Clear all rows
     tableManager?.removeAllRows();
 
@@ -288,38 +274,44 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       enableContextMenu: false,
       enableFilterMenuItem: false,
       type: PlutoColumnType.text(),
-      renderer: (columnContext) => Builder(builder: (context) {
-        var item = columnContext.cell.value as TModel;
-        return Futuristic<List<CrudoAction>>(
-          futureBuilder: () => _getActionsForItem(item),
-          autoStart: true,
-          busyBuilder: (_) => const CircularProgressIndicator.adaptive(),
-          dataBuilder: (context, actions) => actions == null || actions.isEmpty
-              ? const SizedBox()
-              : _buildActionsMenu(context, columnContext, item, actions),
-        );
-      }),
+      renderer: (columnContext) =>
+          Builder(builder: (context) {
+            var item = columnContext.cell.value as TModel;
+            return Futuristic<List<CrudoAction>>(
+              futureBuilder: () => _getActionsForItem(item),
+              autoStart: true,
+              busyBuilder: (_) => const CircularProgressIndicator.adaptive(),
+              dataBuilder: (context, actions) =>
+              actions == null || actions.isEmpty
+                  ? const SizedBox()
+                  : _buildActionsMenu(context, columnContext, item, actions),
+            );
+          }),
     );
   }
 
-  Widget _buildActionsMenu(
-      BuildContext context,
+  Widget _buildActionsMenu(BuildContext context,
       PlutoColumnRendererContext columnContext,
       TModel item,
       List<CrudoAction> actions) {
     return PopupMenuButton(
         padding: const EdgeInsets.only(right: 10),
         icon: Icon(Icons.more_vert,
-            color: Theme.of(context).colorScheme.onSurface),
-        itemBuilder: (context) => actions.map((action) {
+            color: Theme
+                .of(context)
+                .colorScheme
+                .onSurface),
+        itemBuilder: (context) =>
+            actions.map((action) {
               return PopupMenuItem(
                 onTap: () async {
                   action
                       .execute(context,
-                          data: {
-                            'id': columnContext.cell.value.id.toString(),
-                            'model': item,
-                          }..addAll(actionData ?? {}))
+                      data: {
+                        'id': columnContext.cell.value.id.toString(),
+                        'model': item,
+                      }
+                        ..addAll(actionData ?? {}))
                       .then((res) {
                     var actionResult = res as ActionResult;
                     if (actionResult.refreshTable == true) {
@@ -330,7 +322,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                 child: ListTile(
                   leading: Icon(action.icon, color: action.color),
                   title:
-                      Text(action.label, style: TextStyle(color: action.color)),
+                  Text(action.label, style: TextStyle(color: action.color)),
                 ),
               );
             }).toList());
@@ -340,7 +332,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   Map<String, PlutoCell> _getCells(TModel model) {
     return Map.fromEntries(
       columns.map(
-        (mapping) => MapEntry(mapping.column.field, mapping.cellBuilder(model)),
+            (mapping) =>
+            MapEntry(mapping.column.field, mapping.cellBuilder(model)),
       ),
     );
   }
@@ -403,13 +396,19 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         rowColor: Colors.transparent,
         gridBorderColor: Colors.transparent,
         columnTextStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
+          color: Theme
+              .of(context)
+              .colorScheme
+              .onSurface,
           fontSize: 14,
         ),
         gridBackgroundColor: Colors.transparent,
         //Theme.of(context).colorScheme.surface,
         cellTextStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
+          color: Theme
+              .of(context)
+              .colorScheme
+              .onSurface,
           fontSize: 14,
         ),
         //rowColor: Theme.of(context).colorScheme.surface,
@@ -423,7 +422,9 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   /// Call this method to refresh the table
   void refreshTable(BuildContext context) {
-    var state = context.read<CrudoTableBloc>().state;
+    var state = context
+        .read<CrudoTableBloc>()
+        .state;
 
     // If the table is already loaded, just reload the data
     if (state is TableLoadedState<TModel>) {
@@ -434,6 +435,35 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
     // If the table is not loaded, load it from scratch
     context.read<CrudoTableBloc>().add(LoadTableEvent());
+  }
+
+  Widget _buildColumnHidingButton(BuildContext context) {
+    return IconButton(
+      icon: const Icon(Icons.visibility),
+      onPressed: () {
+        showDialog(
+          context: context,
+          builder: (context) =>
+              CrudoTableSettingsPopup(
+                settingsController: settingsController!,
+              ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCreateActionButton(BuildContext context) {
+    return Futuristic<CrudoAction?>(
+        autoStart: true,
+        futureBuilder: () => resource.createAction(),
+        busyBuilder: (_) => const SizedBox(),
+        dataBuilder: (context, action) =>
+        action == null
+            ? const SizedBox()
+            : IconButton(
+          icon: Icon(action.icon),
+          onPressed: () => _onCreateClicked(context),
+        ));
   }
 }
 

@@ -52,3 +52,7 @@ a custom Future `authCheck` to check if the user is logged in or not, then you c
 
 The `CrudoAuth` will also provide a `login` and `logout` extension on the BuildContext so
 you can easily call these methods from anywhere in your app to login or logout the user.
+
+## Permissions
+CRUD-O uses [Image picker](https://pub.dev/packages/image_picker) to pick images from the gallery or the camera. 
+Make sure to add the necessary permissions to your `AndroidManifest.xml` and `Info.plist` files as described in the project's documentation.
