@@ -14,11 +14,15 @@ TValue> extends StatelessWidget {
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
   final Function(TModel? item)? onSelected;
+  final String? searchHintText;
+  final int minSearchLength;
 
   const CrudoResourceDropdown({super.key,
     required this.config,
     required this.itemBuilder,
     required this.valueBuilder,
+    this.searchHintText,
+    this.minSearchLength = 1,
     this.decoration = const InputDecoration(),
     this.onSelected});
 
@@ -30,6 +34,8 @@ TValue> extends StatelessWidget {
       itemBuilder: itemBuilder,
       valueBuilder: valueBuilder,
       onSelected: onSelected,
+      searchHintText: searchHintText,
+      minSearchLength: minSearchLength,
       futureProvider: () async {
         var alreadySelectedId = context.readFormContext().get(config.name);
         return context

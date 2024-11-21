@@ -24,6 +24,8 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final bool nullable;
   final Future<List<TModel>> Function() futureProvider;
   final Future<List<TModel>> Function(String)? searchFuture;
+  final String? searchHintText;
+  final int minSearchLength;
   final bool retry;
   final Function(TModel? item)? onSelected;
 
@@ -33,6 +35,8 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     required this.valueBuilder,
     required this.futureProvider,
     this.searchFuture,
+    this.searchHintText,
+    this.minSearchLength = 1,
     this.multiple = false,
     this.nullable = false,
     this.retry = true,
@@ -192,7 +196,8 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
         if (searchFuture != null) {
           // Using the searchRequest constructor
           return CustomDropdown<TModel>.searchRequest(
-            searchHintText: 'Effettua una ricerca per visualizzare più risultati',
+            minSearchLength: minSearchLength,
+            searchHintText: searchHintText ?? 'Cerca...',
            // header: const Text("Effettua una ricerca per visualizzare più risultati"),
             initialItem: initialItem,
             enabled: config.enabled,
