@@ -106,8 +106,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                   builder: (context, state) {
                     // Form is ready, display the form
                     if (state is FormReadyState) {
-                      context.readFormContext().formData.clear();
-                      context.readFormContext().formData.addAll(state.formData);
+                      context.readFormContext().replaceFormData(state.formData);
                       return _buildFormBuilder(context);
                     }
 
@@ -166,7 +165,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     return FormBuilder(
       autovalidateMode: AutovalidateMode.onUserInteraction,
         key: formKey,
-        initialValue: context.readFormContext().formData,
+        initialValue: context.readFormContext().getFormData(),
         child: formBuilder(context));
   }
 
@@ -257,13 +256,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     const CircularProgressIndicator.adaptive()
                   else if (state is FormNotValidState ||
                       state is FormReadyState)
-                    if (context.read<ResourceContext>().operationType ==
-                        ResourceOperationType.view)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _enterEditMode(context),
-                      )
-                    else
+                    // if (context.read<ResourceContext>().operationType ==
+                    //     ResourceOperationType.view)
+                    //   IconButton(
+                    //     icon: const Icon(Icons.edit),
+                    //     onPressed: () => _enterEditMode(context),
+                    //   )
+                    // else
                       IconButton(
                           icon: const Icon(Icons.save),
                           onPressed: () => _onSave(context)),
@@ -280,7 +279,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   void _onSave(BuildContext context) {
 
     // Get data from fields
-    context.readFormContext().syncFormDataFromFields();
+   // context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
     context.readFormContext().validationErrors = {};
 
@@ -307,14 +306,14 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         ResourceOperationType.edit) {
       if (onUpdate != null) {
         context.readFormContext().formBloc.add(CustomUpdateEvent<TModel>(
-            formData: context.readFormContext().formData,
+            formData: context.readFormContext().getFormData(),
             updateFunction: onUpdate!(context, saveData),
             resourceContext: context.read()));
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
               UpdateFormModelEvent(
                   updateData: saveData,
-                  formData: context.readFormContext().formData,
+                  formData: context.readFormContext().getFormData(),
                   id: context.readResourceContext().id),
             );
       }
@@ -325,13 +324,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         ResourceOperationType.create) {
       if (onCreate != null) {
         context.readFormContext().formBloc.add(CustomCreateEvent<TModel>(
-          formData: context.readFormContext().formData,
+          formData: context.readFormContext().getFormData(),
             createFunction: onCreate!(context, saveData),
             resourceContext: context.read()));
       } else {
         context.read<CrudoFormBloc<TResource, TModel>>().add(
               CreateFormModelEvent(
-                  formData: context.readFormContext().formData,
+                  formData: context.readFormContext().getFormData(),
                   createData: saveData,
                   resourceContext: context.read()),
             );
@@ -380,13 +379,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     const CircularProgressIndicator.adaptive()
                   else if (state is FormNotValidState ||
                       state is FormReadyState)
-                    if (context.read<ResourceContext>().operationType ==
-                        ResourceOperationType.view)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _enterEditMode(context),
-                      )
-                    else
+                    // if (context.read<ResourceContext>().operationType ==
+                    //     ResourceOperationType.view)
+                    //   IconButton(
+                    //     icon: const Icon(Icons.edit),
+                    //     onPressed: () => _enterEditMode(context),
+                    //   )
+                   // else
                       IconButton(
                           icon: const Icon(Icons.save),
                           onPressed: () => _onSave(context)),
@@ -410,8 +409,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Convert model to form data with callback provided
     var formData = toFormData(context, model);
-    context.readFormContext().formData.clear();
-    context.readFormContext().formData.addAll(formData);
+    context.readFormContext().replaceFormData(formData);
 
     // Execute futures and rebuild form
     _executeFutures(context).then((_) {

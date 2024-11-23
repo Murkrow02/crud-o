@@ -237,7 +237,9 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       }
     }
     if (state is TableErrorState && state.tracedError.error.toString() != '') {
-      Toaster.error(state.tracedError.error.toString());
+      // Maybe provide a callback to handle error by the user
+      // Toaster.error(state.tracedError.error.toString());
+      debugPrint(state.tracedError.error.toString());
     }
   }
 

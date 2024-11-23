@@ -81,6 +81,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   Widget _buildEditField(BuildContext context) {
     return FormBuilderField(
       name: config.name,
+      initialValue: context.readFormContext().get(config.name),
       validator: FormBuilderValidators.compose([
         if (config.required) FormBuilderValidators.required(errorText: TempLang.requiredField),
       ]),
@@ -133,8 +134,9 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     if (value == null || items.isEmpty) {
       return null;
     }
-    return items.firstWhereOrNull(
+    var item = items.firstWhereOrNull(
             (el) => valueBuilder(el).toString() == value.toString());
+      return item;
   }
 
   Widget _buildDropdown(List<TModel> items, BuildContext context,
@@ -177,71 +179,58 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     );
   }
 
-  Widget _buildCustomDropdown({
-    required List<TModel> items,
-    required BuildContext context,
-    required FormFieldState<dynamic> field,
-    required CrudoFieldConfiguration config,
-    required TModel? initialItem,
-    required Widget Function(TModel) itemBuilder,
-    required void Function(TModel?)? onSelected,
-    bool enabled = true,
-  }) {
+  void _handleDropdownChange(BuildContext context, CrudoFieldConfiguration config, TModel? value, void Function(TModel?)? onSelected) {
+    var valueToSet = value != null ? valueBuilder(value) : null;
+    context.readFormContext().set(config.name, valueToSet);
+    context.readFormContext().formKey.currentState?.fields[config.name]?.didChange(valueToSet); // Used for validation, in future manually add validation
+  if (config.reactive) {
+    context.readFormContext().rebuild();
+  }
+  onSelected?.call(value);
+}
 
-
-
-    return Row(children: [
-      Expanded(child:
-      Builder(builder: (context) {
-        if (searchFuture != null) {
-          // Using the searchRequest constructor
-          return CustomDropdown<TModel>.searchRequest(
-            minSearchLength: minSearchLength,
-            searchHintText: searchHintText ?? 'Cerca...',
-           // header: const Text("Effettua una ricerca per visualizzare più risultati"),
-            initialItem: initialItem,
-            enabled: config.enabled,
-            hintText: config.label,
-            items: items,
-            listItemBuilder: (context, item, isSelected, onItemSelect) {
-              return itemBuilder(item);
-            },
-            headerBuilder: (context, selectedItem, enabled) {
-              return initialItem != null
-                  ? itemBuilder(initialItem)
-                  : Text(config.label ?? config.name);
-            },
-            onChanged: (value) {
-              context.readFormContext().set(
-                  config.name, value != null ? valueBuilder(value) : null);
-              context.readFormContext().rebuild();
-              onSelected?.call(value);
-            },
-            futureRequest: (String searchText) => searchFuture!(searchText),
-          );
-        } else {
-          // Using the regular constructor
-          return CustomDropdown<TModel>(
-            initialItem: initialItem,
-            enabled: config.enabled,
-            hintText: config.label,
-            items: items,
-            listItemBuilder: (context, item, isSelected, onItemSelect) {
-              return itemBuilder(item);
-            },
-            headerBuilder: (context, selectedItem, enabled) {
-              return initialItem != null
-                  ? itemBuilder(initialItem)
-                  : Text(config.label ?? config.name);
-            },
-            onChanged: (value) {
-              context.readFormContext().set(
-                  config.name, value != null ? valueBuilder(value) : null);
-              context.readFormContext().rebuild();
-              onSelected?.call(value);
-            },          );
-        }
-      })),
+Widget _buildCustomDropdown({
+  required List<TModel> items,
+  required BuildContext context,
+  required FormFieldState<dynamic> field,
+  required CrudoFieldConfiguration config,
+  required TModel? initialItem,
+  required Widget Function(TModel) itemBuilder,
+  required void Function(TModel?)? onSelected,
+  bool enabled = true,
+}) {
+  return Row(
+    children: [
+      Expanded(
+        child: Builder(
+          builder: (context) {
+            if (searchFuture != null) {
+              return CustomDropdown<TModel>.searchRequest(
+                minSearchLength: minSearchLength,
+                searchHintText: searchHintText ?? 'Cerca...',
+                initialItem: initialItem,
+                enabled: config.enabled,
+                hintText: config.label,
+                items: items,
+                listItemBuilder: (context, item, isSelected, onItemSelect) => itemBuilder(item),
+                headerBuilder: (context, selectedItem, enabled) => initialItem != null ? itemBuilder(initialItem) : Text(config.label ?? config.name),
+                onChanged: (value) => _handleDropdownChange(context, config, value, onSelected),
+                futureRequest: (String searchText) => searchFuture!(searchText),
+              );
+            } else {
+              return CustomDropdown<TModel>(
+                initialItem: initialItem,
+                enabled: config.enabled,
+                hintText: config.label,
+                items: items,
+                listItemBuilder: (context, item, isSelected, onItemSelect) => itemBuilder(item),
+                headerBuilder: (context, selectedItem, enabled) => initialItem != null ? itemBuilder(initialItem) : Text(config.label ?? config.name),
+                onChanged: (value) => _handleDropdownChange(context, config, value, onSelected),
+              );
+            }
+          },
+        ),
+      ),
       Visibility(
         visible: nullable,
         child: SizedBox(
@@ -255,8 +244,9 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
           ),
         ),
       ),
-    ]);
-  }
+    ],
+  );
+}
 
   /// This checks if the future provider has changed and clears the data if so
   /// This is needed since user can manually change the dropdown data so we cant always rely on the future
