@@ -133,8 +133,9 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     if (value == null || items.isEmpty) {
       return null;
     }
-    return items.firstWhereOrNull(
+    var item = items.firstWhereOrNull(
             (el) => valueBuilder(el).toString() == value.toString());
+      return item;
   }
 
   Widget _buildDropdown(List<TModel> items, BuildContext context,
