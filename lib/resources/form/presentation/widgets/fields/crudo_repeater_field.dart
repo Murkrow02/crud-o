@@ -42,12 +42,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     super.initState();
     // Initialize the repeater with the initial item count
     _itemsCount = widget.initialItemCount;
-    updateFieldValue();
-  }
-  /// This updates the value of the repeater field in order to help validation
-  /// When the field is required but empty, the form will show an error
-  void updateFieldValue() {
-    context.readFormContext().set('${widget.config.name}_count', _itemsCount);
   }
 
   @override
@@ -65,12 +59,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
     return AbsorbPointer(
       absorbing: widget.config.shouldRenderViewField(context),
-      child: FormBuilderField(
-        validator:
-            widget.config.required ? FormBuilderValidators.required(errorText: TempLang.requiredField) : null,
-        name: '${widget.config.name}_count',
-        builder: (FormFieldState<dynamic> field) {
-          return CrudoFieldWrapper(
+      child: CrudoFieldWrapper(
             config: widget.config.copyWith(
               name: '${widget.config.name}_count',
             ),
@@ -126,7 +115,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                               onPressed: () {
                                 setState(() {
                                   _itemsCount++;
-                                  updateFieldValue();
                                 });
                               },
                               icon: Icon(Icons.add,
@@ -134,8 +122,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                         ),
                       ],
                     ))),
-          );
-        },
       ),
     );
   }
@@ -174,7 +160,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
       }
     }
 
-    updateFieldValue();
     setState(() {
       _itemsCount--;
     });
@@ -184,7 +169,10 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   /// This methods automatically converts data from <Key, <Key, Value>> -> key[index].key: value
   Map<String, dynamic> _autoFlattenData() {
     var key = widget.config.name;
-    var items = context.readFormContext().getFormData()[key];
+    var items = context.readFormContext().get(key);
+
+    // Remove original data
+    context.readFormContext().unset(key);
     if (items == null || items is! List || items.isEmpty) {
       return {};
     }

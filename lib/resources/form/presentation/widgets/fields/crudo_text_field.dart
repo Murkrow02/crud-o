@@ -47,23 +47,24 @@ class CrudoTextField extends StatelessWidget {
         child: FormBuilderTextField(
           name: config.name,
           enabled: config.shouldEnableField(context),
+          onChanged: (value) {
+            context.readFormContext().set(config.name, numeric ? numericTransformer(value) : value);
+          },
 
           // This is needed since form builder does not like ints as initial values
           initialValue: context
-              .readFormContext()
-              .formKey
-              .currentState
-              ?.initialValue[config.name]
-              ?.toString(),
+              .readFormContext().get(config.name)?.toString(),
           validator: FormBuilderValidators.compose([
-            if (config.required) FormBuilderValidators.required(errorText: TempLang.requiredField),
+            if (config.required) FormBuilderValidators.required(
+                errorText: TempLang.requiredField),
             if (numeric)
-              FormBuilderValidators.numeric(checkNullOrEmpty: config.required, errorText: TempLang.numericField),
+              FormBuilderValidators.numeric(checkNullOrEmpty: config.required,
+                  errorText: TempLang.numericField),
           ]),
           decoration: defaultDecoration,
           keyboardType: numeric ? TextInputType.number : keyboardType,
           valueTransformer:
-              valueTransformer ?? (numeric ? numericTransformer : null),
+          valueTransformer ?? (numeric ? numericTransformer : null),
           maxLines: maxLines,
         ));
   }
@@ -72,7 +73,7 @@ class CrudoTextField extends StatelessWidget {
     return value == null
         ? null
         : value == ''
-            ? 0
-            : num.tryParse(value.toString()) ?? 0;
+        ? 0
+        : num.tryParse(value.toString()) ?? 0;
   }
 }

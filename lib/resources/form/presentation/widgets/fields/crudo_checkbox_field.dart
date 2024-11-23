@@ -34,6 +34,7 @@ class CrudoCheckboxField extends StatelessWidget {
           name: config.name,
           enabled: config.shouldEnableField(context),
           onChanged: (value) {
+            context.readFormContext().set(config.name, value ?? false);
             if(config.reactive) {
               context.readFormContext().rebuild();
             }

@@ -256,13 +256,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     const CircularProgressIndicator.adaptive()
                   else if (state is FormNotValidState ||
                       state is FormReadyState)
-                    if (context.read<ResourceContext>().operationType ==
-                        ResourceOperationType.view)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _enterEditMode(context),
-                      )
-                    else
+                    // if (context.read<ResourceContext>().operationType ==
+                    //     ResourceOperationType.view)
+                    //   IconButton(
+                    //     icon: const Icon(Icons.edit),
+                    //     onPressed: () => _enterEditMode(context),
+                    //   )
+                    // else
                       IconButton(
                           icon: const Icon(Icons.save),
                           onPressed: () => _onSave(context)),
@@ -279,7 +279,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   void _onSave(BuildContext context) {
 
     // Get data from fields
-    context.readFormContext().syncFormDataFromFields();
+   // context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
     context.readFormContext().validationErrors = {};
 
@@ -379,13 +379,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     const CircularProgressIndicator.adaptive()
                   else if (state is FormNotValidState ||
                       state is FormReadyState)
-                    if (context.read<ResourceContext>().operationType ==
-                        ResourceOperationType.view)
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => _enterEditMode(context),
-                      )
-                    else
+                    // if (context.read<ResourceContext>().operationType ==
+                    //     ResourceOperationType.view)
+                    //   IconButton(
+                    //     icon: const Icon(Icons.edit),
+                    //     onPressed: () => _enterEditMode(context),
+                    //   )
+                   // else
                       IconButton(
                           icon: const Icon(Icons.save),
                           onPressed: () => _onSave(context)),

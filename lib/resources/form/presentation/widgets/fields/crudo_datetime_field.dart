@@ -13,6 +13,7 @@ class CrudoDatetimeField extends StatelessWidget {
   final CrudoFieldConfiguration config;
   final DateFormat? format;
   final DateTimePickerType inputType;
+
   const CrudoDatetimeField({
     super.key,
     required this.config,
@@ -31,7 +32,7 @@ class CrudoDatetimeField extends StatelessWidget {
       var rawDate = context.readFormContext().get<DateTime?>(config.name);
       var formattedDate = rawDate != null
           ? DateFormat(format?.pattern ?? getDefaultFormat().pattern)
-              .format(rawDate)
+          .format(rawDate)
           : '';
       return CrudoViewField(
           name: config.label ?? config.name,
@@ -42,17 +43,24 @@ class CrudoDatetimeField extends StatelessWidget {
         errorize: false,
         config: config,
         child: FormBuilderDateTimePicker(
+          onChanged: (value) {
+            context.readFormContext().set(config.name, value);
+            if (config.reactive) {
+              context.readFormContext().rebuild();
+            }
+          },
           name: config.name,
           format: format ?? getDefaultFormat(),
           inputType: inputType == DateTimePickerType.date
               ? InputType.date
               : inputType == DateTimePickerType.time
-                  ? InputType.time
-                  : InputType.both,
+              ? InputType.time
+              : InputType.both,
           enabled: config.shouldEnableField(context),
           initialValue: context.readFormContext().get(config.name) as DateTime?,
           validator: FormBuilderValidators.compose([
-            if (config.required) FormBuilderValidators.required(errorText: TempLang.requiredField),
+            if (config.required) FormBuilderValidators.required(
+                errorText: TempLang.requiredField),
           ]),
           decoration: defaultDecoration,
         ));
