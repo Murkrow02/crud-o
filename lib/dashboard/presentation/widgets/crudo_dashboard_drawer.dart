@@ -1,4 +1,5 @@
 import 'package:crud_o/auth/crudo_auth.dart';
+import 'package:crud_o/auth/data/models/crudo_user.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/resource_provider.dart';
 import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
@@ -34,23 +35,31 @@ class CrudoDashboardDrawer extends StatelessWidget {
       color: Theme.of(context).colorScheme.surfaceContainer,
       child: Column(
         children: [
-          Row(
-            children: [
-              const SizedBox(
-                height: 60,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: NetworkImage(
-                      'https://www.gravatar.com/avatar/205e460b479e2e5b48aec07710c08d50'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text('John Doe',
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Theme.of(context).colorScheme.onSurface)),
-            ],
-          ),
+          if (config?.getUserData != null)
+            Futuristic<CrudoUser>(
+              autoStart: true,
+              futureBuilder: config!.getUserData!,
+              busyBuilder: (context) => const CircularProgressIndicator(),
+              dataBuilder: (context, user) {
+                if (user == null) return const SizedBox();
+                return Row(
+                  children: [
+                    SizedBox(
+                      height: 60,
+                      child: CircleAvatar(
+                        radius: 50,
+                        backgroundImage: MemoryImage(user.avatar),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(user.name,
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Theme.of(context).colorScheme.onSurface)),
+                  ],
+                );
+              },
+            ),
           if (config?.afterAvatar != null) config!.afterAvatar!,
         ],
       ),
@@ -86,10 +95,13 @@ class CrudoDashboardDrawer extends StatelessWidget {
     return Futuristic<Map<String, List<MapEntry<CrudoResource, Widget>>>>(
         autoStart: true,
         futureBuilder: () => _getAvailableResources(context),
-        errorBuilder:(context,error,retry) => Text('Error: ${error.toString()}'),
-        busyBuilder: (context) => Expanded(child: const Center(child: CircularProgressIndicator())),
+        errorBuilder: (context, error, retry) =>
+            Text('Error: ${error.toString()}'),
+        busyBuilder: (context) =>
+            Expanded(child: const Center(child: CircularProgressIndicator())),
         dataBuilder: (context, groupedResources) {
-          if (groupedResources == null) return const Text('No resources available');
+          if (groupedResources == null)
+            return const Text('No resources available');
           return Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -146,8 +158,8 @@ class CrudoDashboardDrawer extends StatelessWidget {
   /// This is the trickiest part of the widget
   /// It groups resources by group, and checks if the user can view each resource using the policy viewAny() method
   /// If the resource has a policy, it will only be shown if the user can view it
-  Future<Map<String, List<MapEntry<CrudoResource, Widget>>>> _getAvailableResources(BuildContext context) async {
-
+  Future<Map<String, List<MapEntry<CrudoResource, Widget>>>>
+      _getAvailableResources(BuildContext context) async {
     // Get table and resources
     var tables = context.read<RegisteredResources>().tables;
     var resourcesWithTables = context
@@ -187,9 +199,11 @@ class CrudoDashboardDrawer extends StatelessWidget {
   }
 }
 
-class CrudoDashboardDrawerConfig
-{
+class CrudoDashboardDrawerConfig {
   final Widget? afterAvatar;
   final Widget? beforeLogout;
-  CrudoDashboardDrawerConfig({this.afterAvatar, this.beforeLogout});
+  final Future<CrudoUser> Function()? getUserData;
+
+  CrudoDashboardDrawerConfig(
+      {this.afterAvatar, this.beforeLogout, this.getUserData});
 }
