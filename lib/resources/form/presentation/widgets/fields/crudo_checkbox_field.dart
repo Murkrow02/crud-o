@@ -21,7 +21,7 @@ class CrudoCheckboxField extends StatelessWidget {
     // Detect if preview
     if (config.shouldRenderViewField(context)) {
       return CrudoViewField(
-          name: config.label ?? config.name,
+          config: config,
           child: Text(
               context.readFormContext().get(config.name) == true ? 'Si' : 'No'));
     }
@@ -34,6 +34,7 @@ class CrudoCheckboxField extends StatelessWidget {
           name: config.name,
           enabled: config.shouldEnableField(context),
           onChanged: (value) {
+            context.readFormContext().set(config.name, value ?? false);
             if(config.reactive) {
               context.readFormContext().rebuild();
             }

@@ -42,32 +42,24 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     super.initState();
     // Initialize the repeater with the initial item count
     _itemsCount = widget.initialItemCount;
-    updateFieldValue();
-
-    // If autoFlattenData is enabled, flatten the data
-    if (widget.autoFlattenData) {
-      var flattenedData = _autoFlattenData();
-      context.readFormContext().formData.addAll(flattenedData);
-    }
-  }
-  /// This updates the value of the repeater field in order to help validation
-  /// When the field is required but empty, the form will show an error
-  void updateFieldValue() {
-    context.readFormContext().set('${widget.config.name}_count', _itemsCount);
   }
 
   @override
   Widget build(BuildContext context) {
 
-    var formData = context.readFormContext().formData;
+    var alreadyFlattened = context.readFormContext().get('${widget.config.name}_flattened'); // This is pure shit, change when possible to keep form data clean
+    if (widget.autoFlattenData && alreadyFlattened == null || !alreadyFlattened) {
+      var flattenedData = _autoFlattenData();
+      flattenedData.forEach((key, value) {
+        context.readFormContext().set(key, value);
+      });
+      context.readFormContext().set('${widget.config.name}_flattened', true);
+    }
+
+
     return AbsorbPointer(
       absorbing: widget.config.shouldRenderViewField(context),
-      child: FormBuilderField(
-        validator:
-            widget.config.required ? FormBuilderValidators.required(errorText: TempLang.requiredField) : null,
-        name: '${widget.config.name}_count',
-        builder: (FormFieldState<dynamic> field) {
-          return CrudoFieldWrapper(
+      child: CrudoFieldWrapper(
             config: widget.config.copyWith(
               name: '${widget.config.name}_count',
             ),
@@ -123,7 +115,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                               onPressed: () {
                                 setState(() {
                                   _itemsCount++;
-                                  updateFieldValue();
                                 });
                               },
                               icon: Icon(Icons.add,
@@ -131,8 +122,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
                         ),
                       ],
                     ))),
-          );
-        },
       ),
     );
   }
@@ -141,15 +130,16 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   /// It also removes the corresponding data from the form data map by finding all keys that match the pattern 'key[index].*'.
   /// After removal, it shifts subsequent items' keys to ensure the indices remain consistent.
   void _removeRepeaterItem(int index) {
+
     // Find all keys in form data that are in the form of 'key[index].*'
     var searchKey = '${widget.config.name}[$index].';
-    var keysToRemove = context.readFormContext().formData.keys
+    var keysToRemove = context.readFormContext().getFormData().keys
         .where((key) => key.startsWith(searchKey))
         .toList();
 
     // Remove all values that match the pattern
     for (var key in keysToRemove) {
-      context.readFormContext().formData.remove(key);
+      context.readFormContext().unset(key);
     }
 
     // Shift the indices of subsequent items
@@ -158,36 +148,31 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
       var newKeyPrefix = '${widget.config.name}[${i - 1}].';
 
       // Update all keys in formData that start with the oldKeyPrefix
-      var keysToUpdate = context.readFormContext().formData.keys
+      var keysToUpdate = context.readFormContext().getFormData().keys
           .where((key) => key.startsWith(oldKeyPrefix))
           .toList();
 
       for (var key in keysToUpdate) {
         var newKey = key.replaceFirst(oldKeyPrefix, newKeyPrefix);
-        context.readFormContext().formData[newKey] =
-            context.readFormContext().formData.remove(key);
+        var oldValue = context.readFormContext().get(key);
+        context.readFormContext().set(newKey, oldValue);
+        context.readFormContext().unset(key);
       }
     }
 
-    var newFormData = context.readFormContext().formData;
-    _itemsCount--;
-    updateFieldValue();
-    //context.readFormContext().rebuild();
-    // // Update the UI
-    // setState(() {
-    //   _items.removeAt(index);
-    //   updateFieldValue();
-    // });
+    setState(() {
+      _itemsCount--;
+    });
   }
-
-
-
 
 
   /// This methods automatically converts data from <Key, <Key, Value>> -> key[index].key: value
   Map<String, dynamic> _autoFlattenData() {
     var key = widget.config.name;
-    var items = context.readFormContext().formData[key];
+    var items = context.readFormContext().get(key);
+
+    // Remove original data
+    context.readFormContext().unset(key);
     if (items == null || items is! List || items.isEmpty) {
       return {};
     }

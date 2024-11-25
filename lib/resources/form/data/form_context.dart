@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:typed_data';
 
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
@@ -23,10 +24,13 @@ class FormContext {
   /// in addition to the keys that are used by fields in the form
   ///
   /// KEEP THIS FINAL AS OTHERWISE EQUATABLE BREAKS
-  final Map<String, dynamic> formData = {};
+  final Map<String, dynamic> _formData = {};
+
+  Map<String, dynamic> getFormData() => Map.unmodifiable(_formData);
   final Map<String, List<CrudoFile>> formFiles = {};
   final Map<String, dynamic> formDropdownData = {};
-  final Map<String, int> formDropdownFutureSignatures = {}; // Keep track of the future signatures to check weather we need to reload the dropdowns
+  final Map<String, int> formDropdownFutureSignatures = {
+  }; // Keep track of the future signatures to check weather we need to reload the dropdowns
 
 
   /// The internal state of the form, use this to trigger events
@@ -44,22 +48,44 @@ class FormContext {
   /// If the API has been updated since the last time the form was loaded
   final ActionResult formResult = ActionResult();
 
-  FormContext(
-      {required this.context,
-      required this.formBloc,
-      required this.formKey,
-      this.validationErrors = const {}});
+  FormContext({required this.context,
+    required this.formBloc,
+    required this.formKey,
+    this.validationErrors = const {}});
 
   /// Get a specific value from the form
-  T get<T>(String key) => formData[key] as T;
+  T get<T>(String key) => _formData[key] as T;
 
   /// Get files from the form
   List<CrudoFile>? getFiles(String key) => formFiles[key];
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {
-    formKey.currentState?.fields[key]?.didChange(value);
-    formData[key] = value;
+   // formKey.currentState?.fields[key]?.didChange(value?.toString());
+    _formData[key] = value;
+  }
+
+  /// Unset a specific value in the form
+  void unset(String key) {
+   // formKey.currentState?.fields[key]?.didChange(null);
+    _formData.remove(key);
+  }
+
+  /// Clear all the form data
+  void clear() {
+    // formKey.currentState?.fields.forEach((key, field) {
+    //   field.didChange(null);
+    // });
+    _formData.clear();
+  }
+
+  /// Replace the form data with the given data
+  void replaceFormData(Map<String, dynamic> data) {
+    clear();
+    data.forEach((key, value) {
+      //formKey.currentState?.fields[key]?.didChange(value?.toString());
+      _formData[key] = value;
+    });
   }
 
   /// Set a specific file group
@@ -77,39 +103,40 @@ class FormContext {
 
   /// Completely reloads the form by getting the data from the API
   void reload() =>
-      formBloc.add(LoadFormModelEvent(id: context.readResourceContext().id));
+      formBloc.add(LoadFormModelEvent(id: context
+          .readResourceContext()
+          .id));
 
   /// Builds the form with the given data to re-paint UI with new data
   void rebuild() {
-
     // Update internal data with the new values
-    syncFormDataFromFields();
+    //syncFormDataFromFields();
 
     // Rebuild the form by passing a new map
     formBloc.state is FormReadyState || formBloc.state is FormNotValidState
-        ? formBloc.add(RebuildFormEvent(formData: Map.from(formData), force:true))
+        ? formBloc.add(
+        RebuildFormEvent(formData: Map.from(_formData), force: true))
         : null;
   }
 
   /// Returns the result of a registered future operation
   T? getFutureResult<T>(String key) => futureResults[key] as T?;
 
-  /// Syncs the form and internal values
-  void syncFormDataFromFields() {
-    //formData.clear(); with this we loose data that is not inside a specific field
-    formKey.currentState?.fields.forEach((key, field) {
-
-      // Check first if the previous value was removed from internal data
-      if (formData.containsKey(key)) {
-        formData[key] = field.value;
-      }
-    });
-  }
+  // /// Syncs the form and internal values
+  // void syncFormDataFromFields() {
+  //   //formData.clear(); with this we loose data that is not inside a specific field
+  //   formKey.currentState?.fields.forEach((key, field) {
+  //     // Check first if the previous value was removed from internal data
+  //     if (_formData.containsKey(key)) {
+  //       _formData[key] = field.value;
+  //     }
+  //   });
+  // }
 
   Map<String, dynamic> exportFormData() {
     var exportedData = <String, dynamic>{};
-    for (var key in formKey.currentState!.fields.keys) {
-      var value = formKey.currentState!.fields[key]!.value;
+    for (var key in _formData.keys) {
+      var value = _formData[key];
 
       // Match the key pattern for 'x[index].y' or 'x[index]'
       var match = RegExp(r'^(\w+)\[(\d+)\](?:\.(\w+))?$').firstMatch(key);
@@ -127,9 +154,13 @@ class FormContext {
         }
 
         // Ensure the list has enough elements to accommodate the current index
-        var list = exportedData[parentKey] as List;
+        var list = exportedData[parentKey] as List?;
+        if (list == null) {
+          exportedData[parentKey] = list = [];
+        }
+
         while (list.length <= index) {
-          list.add(childKey == null ? null : {}); // Add null for list, map otherwise
+          list.add(childKey == null ? null : {});
         }
 
         if (childKey == null) {
@@ -149,8 +180,11 @@ class FormContext {
         exportedData[key] = value;
       }
     }
+
     return exportedData;
   }
+
+
 
 
   /// Returns true if all the future operations have been loaded

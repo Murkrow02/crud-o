@@ -18,7 +18,7 @@ class ConfirmationDialog {
               // Cancel button
               TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: Text("Cancel",
+                  child: Text("Annulla",
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.error))),
 

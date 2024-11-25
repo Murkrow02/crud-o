@@ -1,45 +1,58 @@
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:flutter/material.dart';
 
 class CrudoViewField extends StatelessWidget {
-  final String name;
+  final CrudoFieldConfiguration config;
   final Widget child;
 
   const CrudoViewField({
     super.key,
-    required this.name,
+    required this.config,
     required this.child,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      child: Card(
-        elevation: 2.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                name,
-                textAlign: TextAlign.start,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                 // color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 20.0,
+    return Row(
+      children: [
+        Expanded(
+          child: SizedBox(
+            width: double.infinity,
+            child: Card(
+              elevation: 2.0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      config.label ?? config.name,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                       // color: Theme.of(context).colorScheme.onSurface,
+                        fontSize: 20.0,
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    child,
+                  ],
                 ),
               ),
-              const SizedBox(height: 5),
-              child,
-            ],
+            ),
           ),
         ),
-      ),
+        if (config.actions.isNotEmpty)
+          for (var action in config.actions)
+            IconButton(
+              icon: Icon(action.icon),
+              onPressed: () => action.execute(context),
+            ),
+      ],
     );
   }
 }

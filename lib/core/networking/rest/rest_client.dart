@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:crud_o/core/bus/events/unauthorized_bus_event.dart';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 import 'package:crud_o/core/exceptions/rest_exception.dart';
 import 'package:crud_o/core/exceptions/unauthorized_exception.dart';
 import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
 import 'package:crud_o/core/networking/rest/rest_client_configuration.dart';
+import 'package:crud_o/core/bus/crudo_bus.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
@@ -159,6 +161,7 @@ class RestClient {
     // Unauthorized
     if (response.statusCode == 401) {
       logger.e("Request: ${response.request?.url} failed. \n ${response.body}");
+      crudoEventBus.fire(UnauthorizedBusEvent(response: response));
       throw UnauthorizedException("Unauthorized");
     }
 
