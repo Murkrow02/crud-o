@@ -36,7 +36,7 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
         // Detect if preview
         if (config.shouldRenderViewField(context)) {
           return CrudoViewField(
-              name: config.label ?? config.name, child: table);
+              config: config, child: table);
         }
 
         return CrudoErrorize(

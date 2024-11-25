@@ -1,19 +1,14 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:collection/collection.dart';
-import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/lang/temp_lang.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
-import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_extra_fields/form_builder_extra_fields.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:futuristic/futuristic.dart';
-import 'package:provider/provider.dart';
 
 class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final CrudoFieldConfiguration config;
@@ -70,7 +65,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       dataBuilder: (context, data) {
         var initialItem = getInitialItem(context, data ?? []);
         return CrudoViewField(
-          name: config.label ?? config.name,
+          config: config,
           child:
           initialItem != null ? itemBuilder(initialItem) : const Text(''),
         );

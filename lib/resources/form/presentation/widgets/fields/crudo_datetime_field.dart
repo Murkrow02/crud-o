@@ -35,7 +35,7 @@ class CrudoDatetimeField extends StatelessWidget {
           .format(rawDate)
           : '';
       return CrudoViewField(
-          name: config.label ?? config.name,
+          config: config,
           child: Text(formattedDate));
     }
 
