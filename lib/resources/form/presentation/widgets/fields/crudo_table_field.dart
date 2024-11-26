@@ -1,12 +1,7 @@
-import 'package:crud_o/auth/bloc/crudo_auth_wrapper_bloc.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
-import 'package:crud_o/resources/resource_context.dart';
-import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:provider/provider.dart';
 import 'crudo_field.dart';
 
 class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>

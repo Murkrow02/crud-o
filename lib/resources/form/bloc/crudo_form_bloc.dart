@@ -44,9 +44,9 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     try {
       emit(FormSavingState(formData: event.formData));
       var apiModel = await resource.repository.update(event.id, event.updateData);
-      emit(FormSavedState(model: apiModel));
+      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
     } on ApiValidationException catch (e) {
-      _handleApiValidationException(emit, event.formData, e);
+      emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
@@ -60,9 +60,9 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
           .add(event.createData);
       event.resourceContext.operationType = ResourceOperationType.edit;
       event.resourceContext.id = resource.getId(apiModel);
-      emit(FormSavedState(model: apiModel));
+      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
     } on ApiValidationException catch (e) {
-      _handleApiValidationException(emit, event.formData, e);
+      emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
@@ -79,9 +79,9 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       var apiModel = await event.createFunction;
       event.resourceContext.operationType = ResourceOperationType.edit;
       event.resourceContext.id = resource.getId(apiModel);
-      emit(FormSavedState(model: apiModel));
+      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
     } on ApiValidationException catch (e) {
-      _handleApiValidationException(emit, event.formData, e);
+      emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
@@ -93,43 +93,11 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     try {
       emit(FormSavingState(formData: event.formData));
       var apiModel = await event.updateFunction;
-      emit(FormSavedState(model: apiModel));
+      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
     } on ApiValidationException catch (e) {
-      _handleApiValidationException(emit, event.formData, e);
+      emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
   }
-
-
-
-  // Called when the api returns a validation error
-  void _handleApiValidationException(
-    Emitter<CrudoFormState> emit,
-    Map<String, dynamic> formData,
-    ApiValidationException e,
-  ) {
-    final formErrors = <String, List<String>>{};
-    final globalErrors = <String>[];
-
-    e.errors.forEach((key, value) {
-
-      // The form contains the error key
-      if (formData.containsKey(key)) {
-        formErrors[key] = value;
-      } else {
-        globalErrors.addAll(value);
-      }
-    });
-
-    emit(FormNotValidState(
-        oldFormData: formData,
-        formErrors: formErrors,
-        nonFormErrors: globalErrors));
-  }
-
-
-
-
-
 }

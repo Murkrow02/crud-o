@@ -1,4 +1,5 @@
 import 'package:crud_o/core/models/traced_error.dart';
+import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
@@ -14,10 +15,11 @@ class FormInitialState extends CrudoFormState {}
 // While in this state form should still show a loading spinner
 class FormSavedState<T extends Object> extends CrudoFormState {
   final T model;
-  FormSavedState({required this.model});
+  final CrudoFormSaveAction saveAction;
+  FormSavedState({required this.model, required this.saveAction});
 
   @override
-  List<Object> get props => [model];
+  List<Object> get props => [model, saveAction];
 }
 
 class FormLoadingState extends CrudoFormState {}
@@ -30,16 +32,18 @@ class FormModelLoadedState<T extends Object> extends CrudoFormState {
 }
 class FormReadyState extends CrudoFormState {
   final Map<String, dynamic> formData;
-  final bool force;
+  final Map<String, List<String>>? apiErrors;
+  final bool force; /// Forces a rebuild
   final DateTime? timestamp;
 
   FormReadyState({
     required this.formData,
+    this.apiErrors,
     this.force = false
   }) : timestamp = force ? DateTime.now() : null;
 
   @override
-  List<Object?> get props => [formData, timestamp];
+  List<Object?> get props => [formData, timestamp, apiErrors];
 }
 
 class FormSavingState extends CrudoFormState {
@@ -48,17 +52,6 @@ class FormSavingState extends CrudoFormState {
 
   @override
   List<Object> get props => [formData];
-}
-class FormNotValidState extends CrudoFormState {
-  final Map<String, dynamic> oldFormData;
-  final Map<String, List<dynamic>> formErrors;
-  final List<String> nonFormErrors;
-
-  FormNotValidState(
-      {required this.oldFormData, required this.formErrors, required this.nonFormErrors});
-
-  @override
-  List<Object> get props => [oldFormData, formErrors, nonFormErrors];
 }
 
 class FormErrorState extends CrudoFormState {

@@ -3,9 +3,6 @@ import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
-import 'package:form_builder_validators/form_builder_validators.dart';
-
 import 'crudo_field.dart';
 
 class CrudoCheckboxField extends StatelessWidget {
@@ -29,10 +26,9 @@ class CrudoCheckboxField extends StatelessWidget {
     // Edit or create
     return CrudoFieldWrapper(
         config: config,
-        errorize: false,
-        child: FormBuilderCheckbox(
-          name: config.name,
-          enabled: config.shouldEnableField(context),
+        child: Checkbox(
+          // name: config.name,
+          // enabled: config.shouldEnableField(context),
           onChanged: (value) {
             context.readFormContext().set(config.name, value ?? false);
             if(config.reactive) {
@@ -40,10 +36,7 @@ class CrudoCheckboxField extends StatelessWidget {
             }
             config.onChanged?.call(context, value);
           },
-          validator: FormBuilderValidators.compose([
-            if (config.required) FormBuilderValidators.required(errorText: TempLang.requiredField),
-          ]),
-          title: Text(config.placeholder??''),
+          value: context.readFormContext().get(config.name) == true,
         ));
   }
 }
