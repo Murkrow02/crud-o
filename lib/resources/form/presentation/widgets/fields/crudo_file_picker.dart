@@ -1,12 +1,13 @@
 import 'dart:typed_data';
 import 'package:crud_o/common/widgets/protected_image.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
+import 'package:crud_o/resources/form/data/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import 'crudo_field.dart';
 
 class CrudoFilePicker extends StatefulWidget {
   final CrudoFieldConfiguration config;

@@ -270,15 +270,23 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     );
   }
 
+  /// Build the save actions like saveAndClose and saveAndCreateAnother
   List<Widget> _buildSaveActions(BuildContext context) {
     return [
       if (saveActions.contains(CrudoFormSaveAction.saveAndClose))
         IconButton(
             icon: const Icon(Icons.save),
+            tooltip: "Salva e chiudi",
+            // Remove padding
+            style: ButtonStyle(
+                padding: WidgetStateProperty.all(const EdgeInsets.all(2))),
             onPressed: () =>
                 _onSave(context, CrudoFormSaveAction.saveAndClose)),
       if (saveActions.contains(CrudoFormSaveAction.saveAndCreateAnother))
         IconButton(
+          tooltip: "Salva e crea un altro",
+            style: ButtonStyle(
+                padding: WidgetStateProperty.all(const EdgeInsets.all(2))),
             icon: const SaveAndCreateAnotherIcon(),
             onPressed: () =>
                 _onSave(context, CrudoFormSaveAction.saveAndCreateAnother)),

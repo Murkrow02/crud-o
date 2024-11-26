@@ -1,8 +1,10 @@
 import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o/resources/form/data/crudo_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_errorize.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_labelize.dart';
 import 'package:crud_o/resources/table/presentation/pages/crudo_table.dart';
 import 'package:flutter/material.dart';
-import 'crudo_field.dart';
 
 class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
     extends StatelessWidget {

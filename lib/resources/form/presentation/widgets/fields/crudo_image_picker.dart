@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 import 'package:crud_o/common/widgets/protected_image.dart';
+import 'package:crud_o/resources/form/data/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'crudo_file_picker.dart';
-import 'crudo_field.dart';
 
 class CrudoImagePicker extends StatelessWidget {
   final CrudoFieldConfiguration config;
