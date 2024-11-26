@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import 'package:crud_o/common/widgets/protected_image.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
-import 'package:crud_o/resources/form/data/crudo_field.dart';
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';

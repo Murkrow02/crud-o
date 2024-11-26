@@ -1,9 +1,30 @@
-
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_labelize.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
+
+class CrudoField extends StatelessWidget {
+  final Widget Function(BuildContext context, void Function(BuildContext context, dynamic value) onChanged) builder;
+  final CrudoFieldConfiguration config;
+  const CrudoField({super.key, required this.builder, required this.config});
+
+  @override
+  Widget build(BuildContext context) {
+    return CrudoFieldWrapper(config: config, child: builder(context, onChanged));
+  }
+
+  void onChanged(BuildContext context, dynamic value)
+  {
+    context.readFormContext().set(config.name, value);
+    if (config.reactive) {
+      context.readFormContext().rebuild();
+    }
+    config.onChanged?.call(context, value);
+  }
+}
 
 /// The common configuration used for all CrudoFields
 ///
@@ -104,4 +125,3 @@ class CrudoFieldConfiguration {
     );
   }
 }
-

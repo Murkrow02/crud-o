@@ -1,7 +1,7 @@
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/form/data/crudo_field.dart';
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_future_dropdown_field.dart';
 import 'package:flutter/material.dart';
