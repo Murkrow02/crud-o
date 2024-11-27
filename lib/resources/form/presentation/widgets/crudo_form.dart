@@ -390,9 +390,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         saveBehaviour != CrudoFormSaveBehaviour.saveAndCreateAnother) {
       var createAnother = await ConfirmationDialog.ask(
           context: context,
-          title: "Creare un altro?",
-          message:
-              "Vuoi creare un altro elemento di ${context.read<TResource>().singularName()}?");
+          title: "Crea nuovo",
+          message:"Vuoi creare un altro elemento di questo tipo?");
       if (createAnother == true) {
         context.readResourceContext().setOperationType(ResourceOperationType.create);
         context.readFormContext().init();

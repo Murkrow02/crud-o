@@ -57,11 +57,11 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
     return AbsorbPointer(
       absorbing: widget.config.shouldRenderViewField(context),
-      child: CrudoFieldWrapper(
+      child: CrudoField(
             config: widget.config.copyWith(
               name: '${widget.config.name}_count',
             ),
-            child: Padding(
+            builder: (context, onChanged) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
                 child: Container(
                     padding: const EdgeInsets.all(8),

@@ -29,18 +29,18 @@ class CrudoTextField extends StatelessWidget {
       throw Exception('CrudoTextField does not yet support reactive fields');
     }
 
-    // Detect if preview
-    if (config.shouldRenderViewField(context)) {
-      return CrudoViewField(
-          config: config,
-          child: Text(
-              context.readFormContext().get(config.name)?.toString() ?? ''));
-    }
+    // // Detect if preview
+    // if (config.shouldRenderViewField(context)) {
+    //   return CrudoViewField(
+    //       config: config,
+    //       child: Text(
+    //           context.readFormContext().get(config.name)?.toString() ?? ''));
+    // }
 
     // Edit or create
-    return CrudoFieldWrapper(
+    return CrudoField(
         config: config,
-        child: TextField(
+        builder: (context, onChanged) => TextField(
           controller: TextEditingController(
               text: context.readFormContext().get(config.name)?.toString()),
           enabled: config.shouldEnableField(context),
@@ -49,22 +49,8 @@ class CrudoTextField extends StatelessWidget {
                 .readFormContext()
                 .set(config.name, numeric ? numericTransformer(value) : value);
           },
-
-          // name: config.name,
-          // // This is needed since form builder does not like ints as initial values
-          // initialValue: context
-          //     .readFormContext().get(config.name)?.toString(),
-          // validator: FormBuilderValidators.compose([
-          //   if (config.required) FormBuilderValidators.required(
-          //       errorText: TempLang.requiredField),
-          //   if (numeric)
-          //     FormBuilderValidators.numeric(checkNullOrEmpty: config.required,
-          //         errorText: TempLang.numericField),
-          // ]),
           decoration: defaultDecoration,
           keyboardType: numeric ? TextInputType.number : keyboardType,
-          // valueTransformer:
-          // valueTransformer ?? (numeric ? numericTransformer : null),
           maxLines: maxLines,
         ));
   }

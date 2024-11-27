@@ -36,9 +36,9 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
               config: config, child: table);
         }
 
-        return CrudoErrorize(
-          error: config.getValidationError(context),
-          child: CrudoLabelize(
+        return CrudoField(
+          config: config,
+          builder: (context, onChanged) => CrudoLabelize(
             offset: 8,
             label: config.label ?? config.name,
             child: Container(

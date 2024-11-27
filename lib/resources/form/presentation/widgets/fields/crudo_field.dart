@@ -1,5 +1,6 @@
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_errorize.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_labelize.dart';
 import 'package:crud_o/resources/resource_context.dart';
@@ -13,7 +14,15 @@ class CrudoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CrudoFieldWrapper(config: config, child: builder(context, onChanged));
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: CrudoErrorize(
+        config: config,
+        child: CrudoLabelize(
+            label: config.label ?? config.name,
+            child: builder(context, onChanged)),
+      ),
+    );
   }
 
   void onChanged(BuildContext context, dynamic value)
@@ -87,10 +96,6 @@ class CrudoFieldConfiguration {
     return enabled &&
         (enabledOn == null ||
             enabledOn!.contains(resourceContext.getCurrentOperationType()));
-  }
-
-  String getValidationError(BuildContext context) {
-    return context.readFormContext().validationErrors[name]?.first ?? '';
   }
 
   ValueKey? getFieldKey(BuildContext context) {

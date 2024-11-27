@@ -16,23 +16,26 @@ class CrudoCheckboxField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // // Detect if preview
-    // if (config.shouldRenderViewField(context)) {
-    //   return CrudoViewField(
-    //       config: config,
-    //       child: Text(context.readFormContext().get(config.name) == true
-    //           ? 'Si'
-    //           : 'No'));
-    // }
-
     return CrudoField(
         config: config,
         builder: (context, onChanged) {
-          return Checkbox(
-            onChanged: (value) {
-              onChanged(context, value);
-            },
-            value: context.readFormContext().get(config.name) == true,
+          return CrudoFieldWrapper(
+            child: SizedBox(
+              height: 55,
+              child: Row(
+                children: [
+                  Checkbox(
+                    onChanged: (value) {
+                      onChanged(context, value);
+                    },
+                    value: context.readFormContext().get(config.name) == true,
+                  ),
+                  if (config.placeholder != null) ...[
+                    const SizedBox(width: 10),
+                    Text(config.placeholder!)]
+                ],
+              ),
+            ),
           );
         });
   }

@@ -1,13 +1,17 @@
+import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o/resources/form/data/crudo_field_entry.dart';
+import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:flutter/material.dart';
 
 class CrudoErrorize extends StatelessWidget {
-  final String? error;
   final Widget child;
-
-  const CrudoErrorize({super.key, required this.error, required this.child});
+  final CrudoFieldConfiguration config;
+  const CrudoErrorize({super.key, required this.child, required this.config});
 
   @override
   Widget build(BuildContext context) {
+    var error = context.readFormContext().validationErrors[config.name]?.first;
     if (error == null || error!.isEmpty) {
       return child;
     }

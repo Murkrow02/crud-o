@@ -45,16 +45,16 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     // Clear data if we got a new future
     _clearDataIfNewFuture(context);
 
-    // Detect if edit or create
-    if (config.shouldRenderViewField(context)) {
-      return _buildPreviewField(context);
-    }
+    // // Detect if edit or create
+    // if (config.shouldRenderViewField(context)) {
+    //   return _buildPreviewField(context);
+    // }
 
-    return CrudoFieldWrapper(
-        config: config,
-        child: Builder(builder: (context) {
+    return CrudoField(
+        builder: (context, onChanged) {
           return _buildEditField(context);
-        }));
+        },
+        config: config);
   }
 
   Widget _buildPreviewField(BuildContext context) {
@@ -165,7 +165,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     var valueToSet = value != null ? valueBuilder(value) : null;
     context.readFormContext().set(config.name, valueToSet);
     //if (config.reactive) {
-      context.readFormContext().rebuild();
+    context.readFormContext().rebuild();
     //}
     onSelected?.call(value);
   }
