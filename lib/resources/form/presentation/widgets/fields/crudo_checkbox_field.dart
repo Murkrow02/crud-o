@@ -25,9 +25,7 @@ class CrudoCheckboxField extends StatelessWidget {
               child: Row(
                 children: [
                   Checkbox(
-                    onChanged: (value) {
-                      onChanged(context, value);
-                    },
+                    onChanged: (value) => onChanged(context, value),
                     value: context.readFormContext().get(config.name) == true,
                   ),
                   if (config.placeholder != null) ...[
