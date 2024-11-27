@@ -13,9 +13,14 @@ class ResourceContext {
   /// This can be empty in case of a new resource
   String id;
 
-  /// The operation type of the resource
+  /// The (current) operation type of the resource
   /// Can be create, edit, view...
-  ResourceOperationType operationType;
+  /// This can change through the lifecycle of the context
+  late ResourceOperationType _currentOperationType;
+
+  /// The original operation type of the resource
+  /// This can't change through the lifecycle of the context
+  final ResourceOperationType operationType;
 
   /// If the operation type is edit or view, here is the model of the resource
   /// Usually this is pre-loaded when context is fired from the table
@@ -23,9 +28,13 @@ class ResourceContext {
 
   /// Extra data passed to the subtree like in form of key-value pairs
   /// Useful if need to pass more data other than the id and operation type
-  Map<String, dynamic> data;
+  final Map<String, dynamic> data;
+
   ResourceContext(
-      {required this.id, required this.operationType, this.data = const {}, this.model});
+      {required this.id, required this.operationType, this.data = const {}, this.model})
+  {
+    _currentOperationType = operationType;
+  }
 
   ResourceContext copyWith(
       {String? id,
@@ -40,6 +49,14 @@ class ResourceContext {
 
   /// Get the model of the resource
   T getModel<T>() => model as T;
+
+  /// Set the operation type of the resource
+  void setOperationType(ResourceOperationType operationType) {
+    _currentOperationType = operationType;
+  }
+
+  /// Get the operation type of the resource
+  ResourceOperationType getCurrentOperationType() => _currentOperationType;
 }
 
 extension ResourceContextExtension on BuildContext {

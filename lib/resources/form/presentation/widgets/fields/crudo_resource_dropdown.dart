@@ -1,8 +1,8 @@
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
+import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_future_dropdown_field.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,12 +15,14 @@ TValue> extends StatelessWidget {
   final TValue Function(TModel item) valueBuilder;
   final Function(TModel? item)? onSelected;
   final String? searchHintText;
+  final bool nullable;
   final int minSearchLength;
 
   const CrudoResourceDropdown({super.key,
     required this.config,
     required this.itemBuilder,
     required this.valueBuilder,
+    this.nullable = false,
     this.searchHintText,
     this.minSearchLength = 1,
     this.decoration = const InputDecoration(),
@@ -34,6 +36,7 @@ TValue> extends StatelessWidget {
       itemBuilder: itemBuilder,
       valueBuilder: valueBuilder,
       onSelected: onSelected,
+      nullable: nullable,
       searchHintText: searchHintText,
       minSearchLength: minSearchLength,
       futureProvider: () async {

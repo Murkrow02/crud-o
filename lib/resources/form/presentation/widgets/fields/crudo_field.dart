@@ -1,10 +1,39 @@
 import 'package:crud_o/actions/crudo_action.dart';
-import 'package:crud_o/auth/bloc/crudo_auth_wrapper_bloc.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
-import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_errorize.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
+import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_labelize.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
+
+class CrudoField extends StatelessWidget {
+  final Widget Function(BuildContext context, void Function(BuildContext context, dynamic value) onChanged) builder;
+  final CrudoFieldConfiguration config;
+  const CrudoField({super.key, required this.builder, required this.config});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: CrudoErrorize(
+        config: config,
+        child: CrudoLabelize(
+            label: config.label ?? config.name,
+            child: builder(context, onChanged)),
+      ),
+    );
+  }
+
+  void onChanged(BuildContext context, dynamic value)
+  {
+    context.readFormContext().set(config.name, value);
+    if (config.reactive) {
+      context.readFormContext().rebuild();
+    }
+    config.onChanged?.call(context, value);
+  }
+}
 
 /// The common configuration used for all CrudoFields
 ///
@@ -52,25 +81,21 @@ class CrudoFieldConfiguration {
     var resourceContext = context.readResourceContext();
     return visible &&
         (visibleOn == null ||
-            visibleOn!.contains(resourceContext.operationType));
+            visibleOn!.contains(resourceContext.getCurrentOperationType()));
   }
 
   bool shouldRenderViewField(BuildContext context) {
     var resourceContext = context.readResourceContext();
-    return resourceContext.operationType == ResourceOperationType.view &&
+    return resourceContext.getCurrentOperationType() == ResourceOperationType.view &&
         (visibleOn == null ||
-            visibleOn!.contains(resourceContext.operationType));
+            visibleOn!.contains(resourceContext.getCurrentOperationType()));
   }
 
   bool shouldEnableField(BuildContext context) {
     var resourceContext = context.readResourceContext();
     return enabled &&
         (enabledOn == null ||
-            enabledOn!.contains(resourceContext.operationType));
-  }
-
-  String getValidationError(BuildContext context) {
-    return context.readFormContext().validationErrors[name]?.first ?? '';
+            enabledOn!.contains(resourceContext.getCurrentOperationType()));
   }
 
   ValueKey? getFieldKey(BuildContext context) {
@@ -102,114 +127,6 @@ class CrudoFieldConfiguration {
       visibleOn: visibleOn ?? this.visibleOn,
       enabledOn: enabledOn ?? this.enabledOn,
       dependsOn: dependsOn ?? this.dependsOn,
-    );
-  }
-}
-
-InputDecoration defaultDecoration = InputDecoration(
-  floatingLabelBehavior: FloatingLabelBehavior.always,
-  labelStyle: const TextStyle(color: Colors.grey),
-  filled: true,
-  fillColor: Colors.white,
-  contentPadding: const EdgeInsets.symmetric(vertical: 19.0, horizontal: 10.0),
-  border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
-  enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
-  focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
-);
-
-class CrudoFieldWrapper extends StatelessWidget {
-  final CrudoFieldConfiguration config;
-  final Widget child;
-  final bool errorize;
-
-  const CrudoFieldWrapper(
-      {super.key,
-      required this.config,
-      required this.child,
-      this.errorize = true});
-
-  @override
-  Widget build(BuildContext context) {
-
-    // Do not render
-    if (!config.shouldRenderField(context)) {
-      return const SizedBox();
-    }
-
-    // Render form component
-    return Padding(
-      key: config.getFieldKey(context),
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: CrudoErrorize(
-                error: errorize ? config.getValidationError(context) : null,
-                child:
-                    CrudoLabelize(label: config.label ?? config.name, child: child)),
-          ),
-          if (config.actions.isNotEmpty)
-            for (var action in config.actions)
-              IconButton(
-                icon: Icon(action.icon),
-                onPressed: () => action.execute(context),
-              ),
-        ],
-      ),
-    );
-  }
-}
-
-class CrudoLabelize extends StatelessWidget {
-  final String label;
-  final Widget child;
-  final double offset;
-
-  const CrudoLabelize(
-      {super.key, required this.label, required this.child, this.offset = 10});
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(clipBehavior: Clip.none, children: [
-      child,
-      Positioned(
-          top: -offset,
-          left: 10,
-          child: Text(
-            label,
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
-          )),
-    ]);
-  }
-}
-
-class CrudoErrorize extends StatelessWidget {
-  final String? error;
-  final Widget child;
-
-  const CrudoErrorize({super.key, required this.error, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    if (error == null || error!.isEmpty) {
-      return child;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        child,
-        Padding(
-          padding: const EdgeInsets.only(top: 8.0, left: 8.0),
-          child: Text(
-            error!,
-            style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 12),
-          ),
-        ),
-      ],
     );
   }
 }
