@@ -118,8 +118,8 @@ class FormContext {
   List<T>? getDropdownData<T>(String key) => formDropdownData[key] as List<T>?;
 
   /// Completely reloads the form by getting the data from the API or by starting a new form
-  void reload() {
-    var currentOperationType = context.readResourceContext().operationType;
+  void init() {
+    var currentOperationType = context.readResourceContext().getCurrentOperationType();
     if (currentOperationType == ResourceOperationType.create) {
       clear();
       formBloc.add(InitFormModelEvent());

@@ -44,7 +44,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     try {
       emit(FormSavingState(formData: event.formData));
       var apiModel = await resource.repository.update(event.id, event.updateData);
-      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
+      emit(FormSavedState(model: apiModel));
     } on ApiValidationException catch (e) {
       emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {
@@ -58,9 +58,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
       emit(FormSavingState(formData: event.formData));
       var apiModel = await resource.repository
           .add(event.createData);
-      event.resourceContext.operationType = ResourceOperationType.edit;
-      event.resourceContext.id = resource.getId(apiModel);
-      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
+      emit(FormSavedState(model: apiModel));
     } on ApiValidationException catch (e) {
       emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {
@@ -77,9 +75,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     try {
       emit(FormSavingState(formData: event.formData));
       var apiModel = await event.createFunction;
-      event.resourceContext.operationType = ResourceOperationType.edit;
-      event.resourceContext.id = resource.getId(apiModel);
-      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
+      emit(FormSavedState(model: apiModel));
     } on ApiValidationException catch (e) {
       emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {
@@ -93,7 +89,7 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
     try {
       emit(FormSavingState(formData: event.formData));
       var apiModel = await event.updateFunction;
-      emit(FormSavedState(model: apiModel, saveAction: event.saveAction));
+      emit(FormSavedState(model: apiModel));
     } on ApiValidationException catch (e) {
       emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
     } catch (e, s) {

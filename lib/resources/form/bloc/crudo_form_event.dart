@@ -36,42 +36,36 @@ class CreateFormModelEvent<T> extends CrudoFormEvent {
   final Map<String, dynamic> formData;
   final Map<String, dynamic> createData;
   final ResourceContext resourceContext;
-  final CrudoFormSaveAction saveAction;
-  CreateFormModelEvent({required this.formData, required this.createData, required this.resourceContext, required this.saveAction});
+  CreateFormModelEvent({required this.formData, required this.createData, required this.resourceContext});
 
   @override
-  List<Object?> get props => [formData, resourceContext, createData, saveAction];
+  List<Object?> get props => [formData, resourceContext, createData];
 }
 
 class UpdateFormModelEvent<T> extends CrudoFormEvent {
   final String id;
   final Map<String, dynamic> formData;
   final Map<String, dynamic> updateData;
-  final CrudoFormSaveAction saveAction;
-  UpdateFormModelEvent({required this.id, required this.formData, required this.updateData, required this.saveAction});
+  UpdateFormModelEvent({required this.id, required this.formData, required this.updateData});
 
   @override
-  List<Object?> get props => [id, formData, updateData, saveAction];
+  List<Object?> get props => [id, formData, updateData];
 }
 
 class CustomCreateEvent<T> extends CrudoFormEvent {
   final Future<T> createFunction;
-  final ResourceContext resourceContext;
   final Map<String, dynamic> formData;
-  final CrudoFormSaveAction saveAction;
-  CustomCreateEvent({required this.createFunction, required this.resourceContext, required this.formData, required this.saveAction});
+  CustomCreateEvent({required this.createFunction, required this.formData});
 
   @override
-  List<Object?> get props => [createFunction, resourceContext, formData, saveAction];
+  List<Object?> get props => [createFunction, formData];
 }
 
 class CustomUpdateEvent<T> extends CrudoFormEvent {
   final Future<T> updateFunction;
   final Map<String, dynamic> formData;
-  final ResourceContext resourceContext;
-  final CrudoFormSaveAction saveAction;
-  CustomUpdateEvent({required this.updateFunction, required this.resourceContext, required this.formData, required this.saveAction});
+  CustomUpdateEvent({required this.updateFunction, required this.formData});
 
   @override
-  List<Object?> get props => [updateFunction, resourceContext, formData, saveAction];
+  List<Object?> get props => [updateFunction, formData];
 }

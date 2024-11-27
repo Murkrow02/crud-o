@@ -72,21 +72,21 @@ class CrudoFieldConfiguration {
     var resourceContext = context.readResourceContext();
     return visible &&
         (visibleOn == null ||
-            visibleOn!.contains(resourceContext.operationType));
+            visibleOn!.contains(resourceContext.getCurrentOperationType()));
   }
 
   bool shouldRenderViewField(BuildContext context) {
     var resourceContext = context.readResourceContext();
-    return resourceContext.operationType == ResourceOperationType.view &&
+    return resourceContext.getCurrentOperationType() == ResourceOperationType.view &&
         (visibleOn == null ||
-            visibleOn!.contains(resourceContext.operationType));
+            visibleOn!.contains(resourceContext.getCurrentOperationType()));
   }
 
   bool shouldEnableField(BuildContext context) {
     var resourceContext = context.readResourceContext();
     return enabled &&
         (enabledOn == null ||
-            enabledOn!.contains(resourceContext.operationType));
+            enabledOn!.contains(resourceContext.getCurrentOperationType()));
   }
 
   String getValidationError(BuildContext context) {

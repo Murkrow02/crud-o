@@ -15,11 +15,10 @@ class FormInitialState extends CrudoFormState {}
 // While in this state form should still show a loading spinner
 class FormSavedState<T extends Object> extends CrudoFormState {
   final T model;
-  final CrudoFormSaveAction saveAction;
-  FormSavedState({required this.model, required this.saveAction});
+  FormSavedState({required this.model});
 
   @override
-  List<Object> get props => [model, saveAction];
+  List<Object> get props => [model];
 }
 
 class FormLoadingState extends CrudoFormState {}

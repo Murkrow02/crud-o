@@ -164,9 +164,9 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       void Function(TModel?)? onSelected) {
     var valueToSet = value != null ? valueBuilder(value) : null;
     context.readFormContext().set(config.name, valueToSet);
-    if (config.reactive) {
+    //if (config.reactive) {
       context.readFormContext().rebuild();
-    }
+    //}
     onSelected?.call(value);
   }
 
