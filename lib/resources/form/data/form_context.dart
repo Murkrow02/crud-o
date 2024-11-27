@@ -56,21 +56,16 @@ class FormContext {
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {
-    // formKey.currentState?.fields[key]?.didChange(value?.toString());
     _formData[key] = value;
   }
 
   /// Unset a specific value in the form
   void unset(String key) {
-    // formKey.currentState?.fields[key]?.didChange(null);
     _formData.remove(key);
   }
 
   /// Clear all the form data
   void clear() {
-    // formKey.currentState?.fields.forEach((key, field) {
-    //   field.reset();
-    // });
     _formData.clear();
   }
 
@@ -123,7 +118,8 @@ class FormContext {
     if (currentOperationType == ResourceOperationType.create) {
       clear();
       formBloc.add(InitFormModelEvent());
-    } else if (currentOperationType == ResourceOperationType.edit) {
+    } else if (currentOperationType == ResourceOperationType.edit ||
+        currentOperationType == ResourceOperationType.view) {
       formBloc.add(LoadFormModelEvent(id: context.readResourceContext().id));
     }
   }
@@ -142,17 +138,6 @@ class FormContext {
 
   /// Returns the result of a registered future operation
   T? getFutureResult<T>(String key) => futureResults[key] as T?;
-
-  // /// Syncs the form and internal values
-  // void syncFormDataFromFields() {
-  //   //formData.clear(); with this we loose data that is not inside a specific field
-  //   formKey.currentState?.fields.forEach((key, field) {
-  //     // Check first if the previous value was removed from internal data
-  //     if (_formData.containsKey(key)) {
-  //       _formData[key] = field.value;
-  //     }
-  //   });
-  // }
 
   Map<String, dynamic> exportFormData() {
     var exportedData = <String, dynamic>{};

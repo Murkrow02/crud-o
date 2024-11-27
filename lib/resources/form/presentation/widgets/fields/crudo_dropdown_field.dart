@@ -10,7 +10,6 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
   final TValue Function(TModel item) valueBuilder;
   final bool multiple;
   final List<TModel>? items;
-  final Function(TModel? item)? onSelected;
 
   const CrudoDropdownField(
       {super.key,
@@ -21,7 +20,7 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
       this.decoration = const InputDecoration(),
       this.multiple = false,
       this.errorText = 'Errore nel caricamento dei dati',
-      this.onSelected});
+      });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +32,6 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
       futureProvider: items != null
           ? () => Future.value(items)
           : () => _errorFuture().then((value) => value),
-      onSelected: onSelected,
     );
   }
 

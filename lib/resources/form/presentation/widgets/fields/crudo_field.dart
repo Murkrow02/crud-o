@@ -1,5 +1,6 @@
 import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_errorize.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_labelize.dart';
@@ -8,25 +9,57 @@ import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
 class CrudoField extends StatelessWidget {
-  final Widget Function(BuildContext context, void Function(BuildContext context, dynamic value) onChanged) builder;
+  final Widget Function(BuildContext context,
+          void Function(BuildContext context, dynamic value) onChanged)
+      editModeBuilder;
+  final Widget Function(BuildContext context)? viewModeBuilder;
+  final String? viewModeValue;
   final CrudoFieldConfiguration config;
-  const CrudoField({super.key, required this.builder, required this.config});
+
+  const CrudoField({
+    super.key,
+    required this.editModeBuilder,
+    required this.config,
+    this.viewModeBuilder,
+    this.viewModeValue,
+  });
 
   @override
   Widget build(BuildContext context) {
+
+    if(!config.shouldRenderField(context)) {
+      return const SizedBox.shrink();
+    }
+
+    // Assert to provide either viewModeBuilder or viewModeValue or none of them
+    assert(viewModeBuilder == null || viewModeValue == null,
+        'You can provide either viewModeBuilder or viewModeValue, not both');
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      child: CrudoErrorize(
-        config: config,
-        child: CrudoLabelize(
-            label: config.label ?? config.name,
-            child: builder(context, onChanged)),
-      ),
+      child: (context.readResourceContext().getCurrentOperationType() ==
+              ResourceOperationType.view)
+          ? viewModeBuilder == null
+              ? _defaultViewModeBuilder(context)
+              : viewModeBuilder!(context)
+          : CrudoErrorize(
+              config: config,
+              child: CrudoLabelize(
+                  label: config.label ?? config.name,
+                  child: editModeBuilder(context, _onChanged)),
+            ),
     );
   }
 
-  void onChanged(BuildContext context, dynamic value)
-  {
+  Widget _defaultViewModeBuilder(BuildContext context) {
+    return CrudoViewField(
+        config: config,
+        child: Text(viewModeValue ??
+            context.readFormContext().get(config.name)?.toString() ??
+            ''));
+  }
+
+  void _onChanged(BuildContext context, dynamic value) {
     context.readFormContext().set(config.name, value);
     if (config.reactive) {
       context.readFormContext().rebuild();
@@ -80,13 +113,6 @@ class CrudoFieldConfiguration {
   bool shouldRenderField(BuildContext context) {
     var resourceContext = context.readResourceContext();
     return visible &&
-        (visibleOn == null ||
-            visibleOn!.contains(resourceContext.getCurrentOperationType()));
-  }
-
-  bool shouldRenderViewField(BuildContext context) {
-    var resourceContext = context.readResourceContext();
-    return resourceContext.getCurrentOperationType() == ResourceOperationType.view &&
         (visibleOn == null ||
             visibleOn!.contains(resourceContext.getCurrentOperationType()));
   }

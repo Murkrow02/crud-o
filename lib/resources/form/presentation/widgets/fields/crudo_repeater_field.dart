@@ -1,8 +1,10 @@
 import 'package:crud_o/lang/temp_lang.dart';
+import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
+import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
@@ -39,14 +41,18 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   void initState() {
     super.initState();
     // Initialize the repeater with the initial item count
-    _itemsCount = widget.initialItemCount;
+    _itemsCount = context.readResourceContext().getCurrentOperationType() ==
+            ResourceOperationType.view
+        ? 0
+        : widget.initialItemCount;
   }
 
   @override
   Widget build(BuildContext context) {
-
-    var alreadyFlattened = context.readFormContext().get('${widget.config.name}_flattened'); // This is pure shit, change when possible to keep form data clean
-    if (widget.autoFlattenData && alreadyFlattened == null || !alreadyFlattened) {
+    var alreadyFlattened = context.readFormContext().get(
+        '${widget.config.name}_flattened'); // This is pure shit, change when possible to keep form data clean
+    if (widget.autoFlattenData && alreadyFlattened == null ||
+        !alreadyFlattened) {
       var flattenedData = _autoFlattenData();
       flattenedData.forEach((key, value) {
         context.readFormContext().set(key, value);
@@ -54,84 +60,80 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
       context.readFormContext().set('${widget.config.name}_flattened', true);
     }
 
-
-    return AbsorbPointer(
-      absorbing: widget.config.shouldRenderViewField(context),
-      child: CrudoField(
-            config: widget.config.copyWith(
-              name: '${widget.config.name}_count',
-            ),
-            builder: (context, onChanged) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-                child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.grey.withOpacity(0.5),
-                        width: 1,
+    return CrudoField(
+        config: widget.config.copyWith(
+          name: '${widget.config.name}_count',
+        ),
+        viewModeBuilder: (context) => CrudoViewField(config: widget.config, child: _buildRepeaterItems(context)),
+        editModeBuilder: (context, onChanged) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+            child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.5),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Column(children: [
+                  _buildRepeaterItems(context),
+                  const SizedBox(height: 8),
+                  IconButton(
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(
+                            Theme.of(context).colorScheme.primary),
                       ),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Column(
-                      children: [
-                        ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _itemsCount,
-                            itemBuilder: (context, index) {
-                              return ListTile(
-                                title: widget.itemBuilder(context, index),
-                                trailing: SizedBox(
-                                  width: 25,
-                                  height: 25,
-                                  child: Visibility(
-                                    visible: !widget.config.shouldRenderViewField(context),
-                                    child: IconButton(
-                                      style: ButtonStyle(
-                                        backgroundColor: WidgetStateProperty.all(
-                                            Theme.of(context).colorScheme.error),
-                                      ),
-                                      onPressed: () => _removeRepeaterItem(index),
-                                      icon: Icon(Icons.remove,
-                                          size: 10,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onError),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
-                        const SizedBox(height: 8),
-                        Visibility(
-                          visible: !widget.config.shouldRenderViewField(context),
-                          child: IconButton(
-                              style: ButtonStyle(
-                                backgroundColor: WidgetStateProperty.all(
-                                    Theme.of(context).colorScheme.primary),
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _itemsCount++;
-                                });
-                              },
-                              icon: Icon(Icons.add,
-                                  color: Theme.of(context).colorScheme.onPrimary)),
-                        ),
-                      ],
-                    ))),
-      ),
-    );
+                      onPressed: () {
+                        setState(() {
+                          _itemsCount++;
+                        });
+                      },
+                      icon: Icon(Icons.add,
+                          color: Theme.of(context).colorScheme.onPrimary)),
+                ]))));
+  }
+
+  Widget _buildRepeaterItems(BuildContext context) {
+    return ListView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: _itemsCount,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: widget.itemBuilder(context, index),
+            trailing: SizedBox(
+              width: 25,
+              height: 25,
+              child: Visibility(
+                visible:
+                    context.readResourceContext().getCurrentOperationType() !=
+                        ResourceOperationType.view,
+                child: IconButton(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.all(
+                        Theme.of(context).colorScheme.error),
+                  ),
+                  onPressed: () => _removeRepeaterItem(index),
+                  icon: Icon(Icons.remove,
+                      size: 10, color: Theme.of(context).colorScheme.onError),
+                ),
+              ),
+            ),
+          );
+        });
   }
 
   /// This method provides the functionality to remove an item from the repeater UI.
   /// It also removes the corresponding data from the form data map by finding all keys that match the pattern 'key[index].*'.
   /// After removal, it shifts subsequent items' keys to ensure the indices remain consistent.
   void _removeRepeaterItem(int index) {
-
     // Find all keys in form data that are in the form of 'key[index].*'
     var searchKey = '${widget.config.name}[$index].';
-    var keysToRemove = context.readFormContext().getFormData().keys
+    var keysToRemove = context
+        .readFormContext()
+        .getFormData()
+        .keys
         .where((key) => key.startsWith(searchKey))
         .toList();
 
@@ -146,7 +148,10 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
       var newKeyPrefix = '${widget.config.name}[${i - 1}].';
 
       // Update all keys in formData that start with the oldKeyPrefix
-      var keysToUpdate = context.readFormContext().getFormData().keys
+      var keysToUpdate = context
+          .readFormContext()
+          .getFormData()
+          .keys
           .where((key) => key.startsWith(oldKeyPrefix))
           .toList();
 
@@ -162,7 +167,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
       _itemsCount--;
     });
   }
-
 
   /// This methods automatically converts data from <Key, <Key, Value>> -> key[index].key: value
   Map<String, dynamic> _autoFlattenData() {

@@ -23,7 +23,6 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final String? searchHintText;
   final int minSearchLength;
   final bool retry;
-  final Function(TModel? item)? onSelected;
 
   const CrudoFutureDropdownField(
       {super.key,
@@ -37,8 +36,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       this.multiple = false,
       this.nullable = false,
       this.retry = true,
-      this.errorText = 'Errore nel caricamento dei dati',
-      this.onSelected});
+      this.errorText = 'Errore nel caricamento dei dati'});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +49,8 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     // }
 
     return CrudoField(
-        builder: (context, onChanged) {
+        viewModeBuilder: (context) => _buildPreviewField(context),
+        editModeBuilder: (context, onChanged) {
           return _buildEditField(context);
         },
         config: config);
@@ -68,7 +67,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
         return CrudoViewField(
           config: config,
           child:
-              initialItem != null ? itemBuilder(initialItem) : const Text(''),
+              initialItem != null ? itemBuilder(initialItem) : const Text('N/A'),
         );
       },
     );
@@ -152,22 +151,15 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       config: config,
       initialItem: getInitialItem(context, items),
       itemBuilder: itemBuilder,
-      onSelected: onSelected,
       enabled: config.enabled,
     );
   }
 
   void _handleDropdownChange(
-      BuildContext context,
-      CrudoFieldConfiguration config,
-      TModel? value,
-      void Function(TModel?)? onSelected) {
+      BuildContext context, CrudoFieldConfiguration config, TModel? value) {
     var valueToSet = value != null ? valueBuilder(value) : null;
     context.readFormContext().set(config.name, valueToSet);
-    //if (config.reactive) {
     context.readFormContext().rebuild();
-    //}
-    onSelected?.call(value);
   }
 
   Widget _buildCustomDropdown({
@@ -176,7 +168,6 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     required CrudoFieldConfiguration config,
     required TModel? initialItem,
     required Widget Function(TModel) itemBuilder,
-    required void Function(TModel?)? onSelected,
     bool enabled = true,
   }) {
     return Row(
@@ -199,7 +190,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                           ? itemBuilder(initialItem)
                           : Text(config.label ?? config.name),
                   onChanged: (value) =>
-                      _handleDropdownChange(context, config, value, onSelected),
+                      _handleDropdownChange(context, config, value),
                   futureRequest: (String searchText) =>
                       searchFuture!(searchText),
                 );
@@ -216,7 +207,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                           ? itemBuilder(initialItem)
                           : Text(config.label ?? config.name),
                   onChanged: (value) =>
-                      _handleDropdownChange(context, config, value, onSelected),
+                      _handleDropdownChange(context, config, value),
                 );
               }
             },

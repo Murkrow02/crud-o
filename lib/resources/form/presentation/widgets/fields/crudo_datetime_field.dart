@@ -20,10 +20,6 @@ class CrudoDatetimeField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (config.reactive) {
-      throw Exception(
-          'CrudoDatetimeField does not yet support reactive fields');
-    }
 
     // // Detect if preview
     // if (config.shouldRenderViewField(context)) {
@@ -39,8 +35,9 @@ class CrudoDatetimeField extends StatelessWidget {
 
     return CrudoField(
       config: config,
-      builder: (context, onChanged) => DateTimeField(
+      editModeBuilder: (context, onChanged) => DateTimeField(
         decoration: defaultDecoration,
+        enabled: config.shouldEnableField(context),
         onChanged: (DateTime? value) => onChanged(context, value),
         initialValue: context.readFormContext().get(config.name) as DateTime?,
         format: format ?? getDefaultFormat(),
@@ -49,7 +46,7 @@ class CrudoDatetimeField extends StatelessWidget {
             context: context,
             firstDate: DateTime(1900),
             initialDate: currentValue ?? DateTime.now(),
-            lastDate: DateTime(2100),
+            lastDate: DateTime.now().add(const Duration(days: 365 * 100)),
           );
         },
       ),

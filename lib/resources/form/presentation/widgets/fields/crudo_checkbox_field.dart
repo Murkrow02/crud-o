@@ -17,8 +17,9 @@ class CrudoCheckboxField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CrudoField(
+      viewModeValue: context.readFormContext().get(config.name) == true ? "Si" : "No",
         config: config,
-        builder: (context, onChanged) {
+        editModeBuilder: (context, onChanged) {
           return CrudoFieldWrapper(
             child: SizedBox(
               height: 55,

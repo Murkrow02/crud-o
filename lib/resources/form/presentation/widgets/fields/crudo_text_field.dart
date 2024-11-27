@@ -25,41 +25,27 @@ class CrudoTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (config.reactive) {
-      throw Exception('CrudoTextField does not yet support reactive fields');
-    }
-
-    // // Detect if preview
-    // if (config.shouldRenderViewField(context)) {
-    //   return CrudoViewField(
-    //       config: config,
-    //       child: Text(
-    //           context.readFormContext().get(config.name)?.toString() ?? ''));
-    // }
-
-    // Edit or create
     return CrudoField(
         config: config,
-        builder: (context, onChanged) => TextField(
-          controller: TextEditingController(
-              text: context.readFormContext().get(config.name)?.toString()),
-          enabled: config.shouldEnableField(context),
-          onChanged: (value) {
-            context
-                .readFormContext()
-                .set(config.name, numeric ? numericTransformer(value) : value);
-          },
-          decoration: defaultDecoration,
-          keyboardType: numeric ? TextInputType.number : keyboardType,
-          maxLines: maxLines,
-        ));
+        editModeBuilder: (context, onChanged) =>
+            TextField(
+              controller: TextEditingController(
+                  text: context.readFormContext().get(config.name)?.toString()),
+              enabled: config.shouldEnableField(context),
+              onChanged: (value) =>
+                  onChanged(
+                      context, numeric ? numericTransformer(value) : value),
+              decoration: defaultDecoration,
+              keyboardType: numeric ? TextInputType.number : keyboardType,
+              maxLines: maxLines,
+            ));
   }
 
   num? numericTransformer(String? value) {
     return value == null
         ? null
         : value == ''
-            ? 0
-            : num.tryParse(value.toString()) ?? 0;
+        ? 0
+        : num.tryParse(value.toString()) ?? 0;
   }
 }

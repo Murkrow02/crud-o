@@ -13,7 +13,6 @@ TValue> extends StatelessWidget {
   final InputDecoration decoration;
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
-  final Function(TModel? item)? onSelected;
   final String? searchHintText;
   final bool nullable;
   final int minSearchLength;
@@ -25,8 +24,7 @@ TValue> extends StatelessWidget {
     this.nullable = false,
     this.searchHintText,
     this.minSearchLength = 1,
-    this.decoration = const InputDecoration(),
-    this.onSelected});
+    this.decoration = const InputDecoration()});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +33,6 @@ TValue> extends StatelessWidget {
       retry: false,
       itemBuilder: itemBuilder,
       valueBuilder: valueBuilder,
-      onSelected: onSelected,
       nullable: nullable,
       searchHintText: searchHintText,
       minSearchLength: minSearchLength,

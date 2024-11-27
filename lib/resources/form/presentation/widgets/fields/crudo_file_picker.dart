@@ -1,10 +1,14 @@
 import 'dart:typed_data';
 import 'package:crud_o/common/widgets/protected_image.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
+import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:crud_o/resources/form/data/form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
+import 'package:crud_o/resources/resource_context.dart';
+import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -94,62 +98,66 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.config.reactive) {
-      throw Exception('CrudoFilePicker does not yet support reactive fields');
-    }
 
     return SizedBox(
       child: CrudoField(
         config: widget.config,
-        builder: (context, onChanged) => SizedBox(
+        editModeBuilder: (context, onChanged) => SizedBox(
           height: 150,
           child: CrudoFieldWrapper(
-            child: Row(
-                children: [
-                  ..._selectedFiles.asMap().entries.map((entry) {
-                    int index = entry.key;
-                    var file = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Stack(
-                        children: [
-                          ProtectedImage(
-                            imageBytes: file.data,
-                            imageUrl: file.url,
-                          ),
-                          Positioned(
-                            right: 0,
-                            child: GestureDetector(
-                              onTap: () => _removeFile(index),
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.close,
-                                    size: 16, color: Colors.red),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                  if (_selectedFiles.length < widget.maxFilesCount)
-                    Expanded(
-                      child: Center(
-                        child: IconButton(
-                          icon: const Icon(Icons.add),
-                          onPressed: _pickFile,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
+            child: _buildFilesPreview(context),
           ),
         ),
+        viewModeBuilder: (context) => CrudoViewField(config:widget.config, child: _buildFilesPreview(context)),
       ),
+    );
+  }
+
+  Widget _buildFilesPreview(BuildContext context)
+  {
+    return Row(
+      children: [
+        ..._selectedFiles.asMap().entries.map((entry) {
+          int index = entry.key;
+          var file = entry.value;
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Stack(
+              children: [
+                ProtectedImage(
+                  imageBytes: file.data,
+                  imageUrl: file.url,
+                ),
+                if (context.readResourceContext().getCurrentOperationType() != ResourceOperationType.view)
+                Positioned(
+                  right: 0,
+                  child: GestureDetector(
+                    onTap: () => _removeFile(index),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close,
+                          size: 16, color: Colors.red),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+        if (_selectedFiles.length < widget.maxFilesCount && context.readResourceContext().getCurrentOperationType() != ResourceOperationType.view)
+          Expanded(
+            child: Center(
+              child: IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: _pickFile,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

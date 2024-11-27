@@ -23,35 +23,20 @@ class CrudoTableField<TResource extends CrudoResource<TModel>, TModel>
     if(config.reactive)
       throw Exception('CrudoTableField does not yet support reactive fields');
 
-    if (!config.shouldRenderField(context)) {
-      return const SizedBox();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Builder(builder: (context) {
-        // Detect if preview
-        if (config.shouldRenderViewField(context)) {
-          return CrudoViewField(
-              config: config, child: table);
-        }
-
-        return CrudoField(
-          config: config,
-          builder: (context, onChanged) => CrudoLabelize(
-            offset: 8,
-            label: config.label ?? config.name,
-            child: Container(
-                clipBehavior: Clip.antiAlias,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.white,
-                ),
-                child: table
-            ),
+    return CrudoField(
+      config: config,
+      editModeBuilder: (context, onChanged) => Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
           ),
-        );
-      }),
+          child: table
+      ),
+      viewModeBuilder: (context) => CrudoViewField(
+        config: config,
+        child: table,
+      ),
     );
   }
 
