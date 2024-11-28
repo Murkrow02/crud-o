@@ -70,7 +70,6 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   @override
   Widget build(BuildContext context) {
-
     // Ensure that only one of customData and customFuture is provided
     assert(customData == null || customFuture == null,
         'Cannot provide both customData and customFuture');
@@ -78,14 +77,17 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     // Get resource for easier access
     resource = context.read();
 
-    // Create the table bloc
-    return BlocProvider<CrudoTableBloc>(
-      create: (context) => CrudoTableBloc<TResource, TModel>(
-          resource: resource,
-          customFuture: customData != null  
+    /*
+      customFuture: customData != null
               ? (PaginatedRequest request) => Future.value(
                   SinglePageResponse<TModel>(data: customData ?? []))
               : customFuture),
+     */
+
+    // Create the table bloc
+    return BlocProvider<CrudoTableBloc>(
+      create: (context) =>
+          CrudoTableBloc<TResource, TModel>(resource: resource),
       child: Builder(
           builder: (context) => BlocListener<CrudoTableBloc, CrudoTableState>(
               listener: _tableStateEventListener,
@@ -457,7 +459,6 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
               title: Text(filter.label),
               onTap: () {
                 Navigator.pop(context);
-
               },
             ),
           );

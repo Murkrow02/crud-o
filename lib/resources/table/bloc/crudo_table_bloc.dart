@@ -10,8 +10,7 @@ import 'crudo_table_state.dart';
 class CrudoTableBloc<TResource extends CrudoResource<TModel>, TModel> extends Bloc<CrudoTableEvent, CrudoTableState> {
 
   final TResource resource;
-  final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)? customFuture;
-  CrudoTableBloc({required this.resource, this.customFuture}) : super(TableInitialState()){
+  CrudoTableBloc({required this.resource}) : super(TableInitialState()){
     on<LoadTableEvent>(_onLoadItems);
     on<UpdateTableEvent>(_onTableParametersUpdated);
   }
