@@ -22,7 +22,7 @@ class CrudoTableFooter extends StatelessWidget {
                 disabledColor: Colors.grey,
                   onPressed: state.request.page == 1 ? null : () {
                     context.read<CrudoTableBloc>().add(UpdateTableEvent(
-                        state.request.copyWith(page: state.request.page - 1)));
+                        request: state.request.copyWith(page: state.request.page - 1)));
                   },
                   icon: const Icon(Icons.keyboard_arrow_left)),
               Text("Pagina ${state.request.page}"),
@@ -30,7 +30,7 @@ class CrudoTableFooter extends StatelessWidget {
                 disabledColor: Colors.grey,
                   onPressed: !state.response.hasNextPage ? null : () {
                     context.read<CrudoTableBloc>().add(UpdateTableEvent(
-                        state.request.copyWith(page: state.request.page + 1)));
+                        request: state.request.copyWith(page: state.request.page + 1)));
                   },
                   icon: const Icon(Icons.keyboard_arrow_right)),
             ],

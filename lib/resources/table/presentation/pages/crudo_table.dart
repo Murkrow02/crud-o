@@ -1,15 +1,14 @@
 import 'dart:async';
-
 import 'package:animated_search_bar/animated_search_bar.dart';
-import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
-import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
-import 'package:crud_o/resources/form/data/form_result.dart';
+import 'package:crud_o/resources/actions/crudo_action.dart';
+import 'package:crud_o/resources/actions/crudo_action_result.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_bloc.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
 import 'package:crud_o/resources/table/data/controllers/crudo_table_settings_controller.dart';
+import 'package:crud_o/resources/table/data/crudo_table_context.dart';
 import 'package:crud_o/resources/table/data/models/crudo_table_column.dart';
 import 'package:crud_o/resources/table/data/models/crudo_table_filter.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_column_menu.dart';
@@ -20,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futuristic/futuristic.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
@@ -32,7 +32,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       customFuture;
   final List<TModel>? customData;
 
-  // Map of data to pass to the actions,
+  // Map of data to pass to the resources.actions,
   final Map<String, dynamic>? actionData;
   final CrudoTableDisplayType displayType;
   final bool paginated;
@@ -41,7 +41,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   // Called whenever the data in the table changes, bool indicates first load
   final Function(bool firstLoad)? onDataChanged;
 
-  CrudoTable({
+  const CrudoTable({
     required this.columns,
     this.customActions,
     this.searchable = false,
@@ -56,17 +56,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     super.key,
   });
 
-  // Used to control the table
-  PlutoGridStateManager? tableManager;
 
-  // Used to control table settings (CRUDO)
-  CrudoTableSettingsController? settingsController;
-
-  // The resource we are working with
-  late TResource resource;
-
-  // We need to keep track of the first load to avoid calling onDataChanged
-  bool _firstLoad = true;
 
   @override
   Widget build(BuildContext context) {
@@ -74,24 +64,21 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     assert(customData == null || customFuture == null,
         'Cannot provide both customData and customFuture');
 
-    // Get resource for easier access
-    resource = context.read();
-
-    /*
-      customFuture: customData != null
-              ? (PaginatedRequest request) => Future.value(
-                  SinglePageResponse<TModel>(data: customData ?? []))
-              : customFuture),
-     */
+    // Create table context
+    var tableContext = CrudoTableContext<TResource, TModel>(
+        tableFuture: customFuture ?? context.read<TResource>().repository.getPaginated, resource: context.read());
 
     // Create the table bloc
     return BlocProvider<CrudoTableBloc>(
       create: (context) =>
-          CrudoTableBloc<TResource, TModel>(resource: resource),
-      child: Builder(
-          builder: (context) => BlocListener<CrudoTableBloc, CrudoTableState>(
-              listener: _tableStateEventListener,
-              child: _buildTableWrapper(context, _buildTable(context)))),
+          CrudoTableBloc<TResource, TModel>(resource: context.read(), tableContext: tableContext),
+      child: Provider(
+        create: (context) => tableContext,
+        child: Builder(
+            builder: (context) => BlocListener<CrudoTableBloc, CrudoTableState>(
+                listener: _tableStateEventListener,
+                child: _buildTableWrapper(context, _buildTable(context)))),
+      ),
     );
   }
 
@@ -100,26 +87,16 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     return PlutoGrid(
       configuration: _getGridConfiguration(context),
       columnMenuDelegate: CrudoTableColumnMenu(),
-      onSorted: (PlutoGridOnSortedEvent event) {
-        var state = context.read<CrudoTableBloc>().state;
-        if (state is TableLoadedState<TModel>) {
-          context.read<CrudoTableBloc>().add(UpdateTableEvent(state.request
-              .copyWith(
-                  sortBy: SortParameter(
-                      event.column.field,
-                      event.column.sort.isAscending
-                          ? SortDirection.asc
-                          : SortDirection.desc))));
-        }
-      },
+      onSorted: (PlutoGridOnSortedEvent event) => _onTableSorted(event, context),
       noRowsWidget: const Center(
           child: Text('Nessun elemento', style: TextStyle(fontSize: 20))),
       onLoaded: (PlutoGridOnLoadedEvent event) async {
-        tableManager = event.stateManager;
-        tableManager!.setSelectingMode(PlutoGridSelectingMode.row);
-        settingsController = CrudoTableSettingsController(
-            columns: columns, tableManager: tableManager!, resource: resource);
-        await settingsController!.hideColumns();
+        var tableContext = context.readTableContext<TResource, TModel>();
+        tableContext.tableManager = event.stateManager;
+        tableContext.tableManager.setSelectingMode(PlutoGridSelectingMode.row);
+        tableContext.settingsController = CrudoTableSettingsController(
+            columns: columns, tableManager: tableContext.tableManager, resource: tableContext.resource);
+        await tableContext.settingsController.hideColumns();
         context.read<CrudoTableBloc>().add(LoadTableEvent());
       },
       columns: columns.map((col) => col.column).toList()
@@ -203,13 +180,13 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
           height: 50,
           onFieldSubmitted: (value) {
             if (state is TableLoadedState<TModel>) {
-              context.read<CrudoTableBloc>().add(UpdateTableEvent(
+              context.read<CrudoTableBloc>().add(UpdateTableEvent(request:
                   state.request.copyWith(search: value, page: 1)));
             }
           },
           onClose: () {
             if (state is TableLoadedState<TModel>) {
-              context.read<CrudoTableBloc>().add(UpdateTableEvent(
+              context.read<CrudoTableBloc>().add(UpdateTableEvent(request:
                   state.request.copyWith(search: '', page: 1)));
             }
           },
@@ -250,18 +227,18 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       // Row cells for data info
       var dataRow = PlutoRow(cells: _getCells(item));
 
-      // Row cells for actions
-      dataRow.cells['actions'] = PlutoCell(value: item);
+      // Row cells for resources.actions
+      dataRow.cells['resources.actions'] = PlutoCell(value: item);
 
       tableManager?.refRows.add(dataRow);
     }
   }
 
-  /// The last column of the table, a popup menu with actions
+  /// The last column of the table, a popup menu with resources.actions
   PlutoColumn _buildActionsColumn() {
     return PlutoColumn(
       title: '',
-      field: 'actions',
+      field: 'resources.actions',
       frozen: PlutoColumnFrozen.end,
       width: 10,
       enableDropToResize: true,
@@ -305,7 +282,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
                             'model': item,
                           }..addAll(actionData ?? {}))
                       .then((res) {
-                    var actionResult = res as ActionResult;
+                    var actionResult = res as CrudoActionResult;
                     if (actionResult.refreshTable == true) {
                       refreshTable(context);
                     }
@@ -334,14 +311,14 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     var createAction = await resource.createAction();
     if (createAction == null) return;
     createAction.execute(context, data: actionData).then((res) {
-      var actionResult = res as ActionResult;
+      var actionResult = res as CrudoActionResult;
       if (actionResult.refreshTable == true) {
         refreshTable(context);
       }
     });
   }
 
-  /// Create a list of possible actions for the table
+  /// Create a list of possible resources.actions for the table
   Future<List<CrudoAction>> _defaultTableActionsForItem(TModel item) async {
     var actions = <CrudoAction>[];
 
@@ -366,7 +343,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     return actions;
   }
 
-  /// Add the default actions to the custom actions
+  /// Add the default resources.actions to the custom resources.actions
   Future<List<CrudoAction>> _getActionsForItem(TModel item) async {
     var defaultActions = await _defaultTableActionsForItem(item);
     return defaultActions..addAll(customActions ?? []);
@@ -412,7 +389,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     // If the table is already loaded, just reload the data
     if (state is TableLoadedState<TModel>) {
       context.read<CrudoTableBloc>().add(
-          UpdateTableEvent(state.request.copyWith(page: state.request.page)));
+          UpdateTableEvent(request: state.request.copyWith(page: state.request.page)));
       return;
     }
 
@@ -465,6 +442,22 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         }).toList();
       },
     );
+  }
+
+  /// Called whenever a column is sorted
+  void _onTableSorted(PlutoGridOnSortedEvent event, BuildContext context) {
+    var state = context.read<CrudoTableBloc>().state;
+    if (state is TableLoadedState<TModel>) {
+      context.read<CrudoTableBloc>().add(
+
+          UpdateTableEvent(request: state.request
+          .copyWith(
+          sortBy: SortParameter(
+              event.column.field,
+              event.column.sort.isAscending
+                  ? SortDirection.asc
+                  : SortDirection.desc))));
+    }
   }
 }
 

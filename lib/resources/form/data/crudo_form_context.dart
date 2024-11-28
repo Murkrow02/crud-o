@@ -1,11 +1,8 @@
-import 'dart:collection';
-import 'dart:typed_data';
-
+import 'package:crud_o/resources/actions/crudo_action_result.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
-import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/cupertino.dart';
@@ -13,7 +10,7 @@ import 'package:provider/provider.dart';
 
 /// This class is needed to pass the form context to the fields
 /// Fields are not aware of the resource or model type so we pass a generic bloc + other info
-class FormContext {
+class CrudoFormContext {
   /// The current context of the form
   final BuildContext context;
 
@@ -41,9 +38,9 @@ class FormContext {
   Map<String, dynamic> futureResults = {};
 
   /// If the API has been updated since the last time the form was loaded
-  final ActionResult formResult = ActionResult();
+  final CrudoActionResult formResult = CrudoActionResult();
 
-  FormContext(
+  CrudoFormContext(
       {required this.context,
       required this.formBloc,
       this.validationErrors = const {}});
@@ -195,5 +192,5 @@ class FormContext {
 }
 
 extension FormContextExtension on BuildContext {
-  FormContext readFormContext() => read<FormContext>();
+  CrudoFormContext readFormContext() => read<CrudoFormContext>();
 }

@@ -8,7 +8,7 @@ import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/form/data/form_context.dart';
+import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:flutter/material.dart';
@@ -88,7 +88,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         create: (context) =>
             CrudoFormBloc<TResource, TModel>(resource: context.read()),
         child: Provider(
-            create: (context) => FormContext(
+            create: (context) => CrudoFormContext(
                 context: context,
                 formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
             child: Builder(builder: (context) {
@@ -265,7 +265,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     }
   }
 
-  /// Build the save actions like saveAndClose and saveAndCreateAnother
+  /// Build the save resources.actions like saveAndClose and saveAndCreateAnother
   List<Widget> _buildSaveAction(BuildContext context) {
     return [
       IconButton(

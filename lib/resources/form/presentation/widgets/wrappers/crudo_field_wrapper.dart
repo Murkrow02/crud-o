@@ -39,8 +39,8 @@ class CrudoFieldWrapper extends StatelessWidget {
     //             child:
     //             CrudoLabelize(label: config.label ?? config.name, child: child)),
     //       ),
-    //       if (config.actions.isNotEmpty)
-    //         for (var action in config.actions)
+    //       if (config.resources.actions.isNotEmpty)
+    //         for (var action in config.resources.actions)
     //           IconButton(
     //             icon: Icon(action.icon),
     //             onPressed: () => action.execute(context),

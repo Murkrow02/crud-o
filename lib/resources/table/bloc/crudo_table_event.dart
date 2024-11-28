@@ -1,3 +1,4 @@
+import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
 import 'package:equatable/equatable.dart';
 import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 
@@ -10,7 +11,7 @@ class LoadTableEvent extends CrudoTableEvent {}
 
 class UpdateTableEvent extends CrudoTableEvent {
   final PaginatedRequest request;
-  UpdateTableEvent(this.request);
+  UpdateTableEvent({required this.request});
 
   @override
   List<Object?> get props => [request];
