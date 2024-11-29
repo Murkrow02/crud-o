@@ -21,7 +21,7 @@ class CrudoTableBloc<TResource extends CrudoResource<TModel>, TModel> extends Bl
     try {
       emit(TableLoadingState());
       final request = PaginatedRequest(page: 1);  // Define the initial request
-      final response = await tableContext.tableFuture(request);
+      final response = await tableContext.getTableFuture()(request);
       emit(TableLoadedState<TModel>(response: response, request: request));
     } catch (e, s) {
       emit(TableErrorState(tracedError: TracedError(e, s)));
@@ -32,7 +32,7 @@ class CrudoTableBloc<TResource extends CrudoResource<TModel>, TModel> extends Bl
   {
     try {
       emit(TableLoadingState());
-      final response = await tableContext.tableFuture(event.request);
+      final response = await tableContext.getTableFuture()(event.request);
       emit(TableLoadedState<TModel>(response: response, request: event.request));
     } catch (e, s) {
       emit(TableErrorState(tracedError: TracedError(e, s)));
