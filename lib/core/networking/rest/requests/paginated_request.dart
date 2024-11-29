@@ -36,6 +36,15 @@ class PaginatedRequest extends RestRequest
       search: search ?? this.search,
     );
   }
+
+  PaginatedRequest mergeWith(PaginatedRequest other) {
+    return PaginatedRequest(
+      page: other.page,
+      sortBy: other.sortBy,
+      search: other.search,
+      queryParameters: Map.from(queryParameters)..addAll(other.queryParameters),
+    );
+  }
 }
 
 class SortParameter

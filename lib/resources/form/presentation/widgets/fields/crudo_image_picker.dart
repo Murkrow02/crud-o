@@ -1,11 +1,12 @@
 import 'dart:typed_data';
+import 'dart:io' show Platform;
 import 'package:crud_o/common/widgets/protected_image.dart';
+import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'crudo_file_picker.dart';
-import 'crudo_field.dart';
 
 class CrudoImagePicker extends StatelessWidget {
   final CrudoFieldConfiguration config;
@@ -38,33 +39,36 @@ class CrudoImagePicker extends StatelessWidget {
     return CrudoFilePicker(
       config: config,
       maxFilesCount: maxImagesCount,
-      onFilePick: (files, updateFormState) async {
-        final ImagePicker picker = ImagePicker();
-
-        // Request user if they want to pick image from camera or gallery
-        final bool fromGallery = await _requestFileFromCameraOrGallery(context);
-
-        // Act based on user's choice
-        XFile? file;
-        if (fromGallery) {
-          file = await picker.pickImage(source: ImageSource.gallery);
-        } else {
-          file = await picker.pickImage(source: ImageSource.camera);
-        }
-        if (file == null) return;
-
-        // Get bytes, compress and add to final list
-        final Uint8List fileBytes = await file.readAsBytes();
-        final Uint8List compressedFileBytes = await _compressImage(fileBytes);
-        files.add(CrudoFile(
-          source: fromGallery ? FileSource.picker : FileSource.camera,
-          data: compressedFileBytes,
-          type: FileType.image,
-        ));
-
-        updateFormState();
-      },
+      onFilePick:
+          Platform.isAndroid || Platform.isIOS ? (files,updateFieldState) => _pickImage(context, files, updateFieldState) : null,
     );
+  }
+
+  void _pickImage(BuildContext context, List<CrudoFile> files, void Function() updateFieldState) async {
+    final ImagePicker picker = ImagePicker();
+
+    // Request user if they want to pick image from camera or gallery
+    final bool fromGallery = await _requestFileFromCameraOrGallery(context);
+
+    // Act based on user's choice
+    XFile? file;
+    if (fromGallery) {
+      file = await picker.pickImage(source: ImageSource.gallery);
+    } else {
+      file = await picker.pickImage(source: ImageSource.camera);
+    }
+    if (file == null) return;
+
+    // Get bytes, compress and add to final list
+    final Uint8List fileBytes = await file.readAsBytes();
+    final Uint8List compressedFileBytes = await _compressImage(fileBytes);
+    files.add(CrudoFile(
+      source: fromGallery ? FileSource.picker : FileSource.camera,
+      data: compressedFileBytes,
+      type: FileType.image,
+    ));
+
+    updateFieldState();
   }
 
   Future<bool> _requestFileFromCameraOrGallery(BuildContext context) async {

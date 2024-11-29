@@ -1,3 +1,4 @@
+import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
@@ -38,7 +39,7 @@ class CreateFormModelEvent<T> extends CrudoFormEvent {
   CreateFormModelEvent({required this.formData, required this.createData, required this.resourceContext});
 
   @override
-  List<Object?> get props => [formData, resourceContext];
+  List<Object?> get props => [formData, resourceContext, createData];
 }
 
 class UpdateFormModelEvent<T> extends CrudoFormEvent {
@@ -53,20 +54,18 @@ class UpdateFormModelEvent<T> extends CrudoFormEvent {
 
 class CustomCreateEvent<T> extends CrudoFormEvent {
   final Future<T> createFunction;
-  final ResourceContext resourceContext;
   final Map<String, dynamic> formData;
-  CustomCreateEvent({required this.createFunction, required this.resourceContext, required this.formData,});
+  CustomCreateEvent({required this.createFunction, required this.formData});
 
   @override
-  List<Object?> get props => [createFunction, resourceContext, formData];
+  List<Object?> get props => [createFunction, formData];
 }
 
 class CustomUpdateEvent<T> extends CrudoFormEvent {
   final Future<T> updateFunction;
   final Map<String, dynamic> formData;
-  final ResourceContext resourceContext;
-  CustomUpdateEvent({required this.updateFunction, required this.resourceContext, required this.formData});
+  CustomUpdateEvent({required this.updateFunction, required this.formData});
 
   @override
-  List<Object?> get props => [updateFunction, resourceContext, formData];
+  List<Object?> get props => [updateFunction, formData];
 }

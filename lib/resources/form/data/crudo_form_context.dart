@@ -1,21 +1,16 @@
-import 'dart:collection';
-import 'dart:typed_data';
-
+import 'package:crud_o/resources/actions/crudo_action_result.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
-import 'package:crud_o/resources/form/data/form_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:provider/provider.dart';
 
 /// This class is needed to pass the form context to the fields
 /// Fields are not aware of the resource or model type so we pass a generic bloc + other info
-class FormContext {
-
+class CrudoFormContext {
   /// The current context of the form
   final BuildContext context;
 
@@ -27,31 +22,28 @@ class FormContext {
   final Map<String, dynamic> _formData = {};
 
   Map<String, dynamic> getFormData() => Map.unmodifiable(_formData);
+  Map<String, List<String>> getFormErrors() => Map.unmodifiable(validationErrors);
   final Map<String, List<CrudoFile>> formFiles = {};
   final Map<String, dynamic> formDropdownData = {};
-  final Map<String, int> formDropdownFutureSignatures = {
-  }; // Keep track of the future signatures to check weather we need to reload the dropdowns
-
+  final Map<String, int> formDropdownFutureSignatures =
+      {}; // Keep track of the future signatures to check weather we need to reload the dropdowns
 
   /// The internal state of the form, use this to trigger events
   final CrudoFormBloc formBloc;
 
-  /// The actual form key needed to validate or get data from the fields
-  final GlobalKey<FormBuilderState> formKey;
-
-  /// Errors returned by the API validation
-  Map<String, List<dynamic>> validationErrors;
+  /// Errors returned by the validation, either API or local validation
+  Map<String, List<String>> validationErrors;
 
   /// The results of the future operations
   Map<String, dynamic> futureResults = {};
 
   /// If the API has been updated since the last time the form was loaded
-  final ActionResult formResult = ActionResult();
+  final CrudoActionResult formResult = CrudoActionResult();
 
-  FormContext({required this.context,
-    required this.formBloc,
-    required this.formKey,
-    this.validationErrors = const {}});
+  CrudoFormContext(
+      {required this.context,
+      required this.formBloc,
+      this.validationErrors = const {}});
 
   /// Get a specific value from the form
   T get<T>(String key) => _formData[key] as T;
@@ -61,29 +53,45 @@ class FormContext {
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {
-   // formKey.currentState?.fields[key]?.didChange(value?.toString());
     _formData[key] = value;
   }
 
   /// Unset a specific value in the form
   void unset(String key) {
-   // formKey.currentState?.fields[key]?.didChange(null);
     _formData.remove(key);
   }
 
   /// Clear all the form data
   void clear() {
-    // formKey.currentState?.fields.forEach((key, field) {
-    //   field.didChange(null);
-    // });
     _formData.clear();
+  }
+
+  /// Invalidate a field
+  void invalidateField(String key, String error) {
+
+    // Check if the field is already in the list
+    if (validationErrors.containsKey(key)) {
+      // Check if the error is already in the list
+      if (!validationErrors[key]!.contains(error)) {
+        validationErrors[key]!.add(error);
+      }
+    } else {
+      validationErrors[key] = [error];
+    }
+
+    print('Invalidating field $key with error $error');
+  }
+
+  /// Returns true if form has no validation errors, false otherwise
+  bool isValid()
+  {
+    return validationErrors.isEmpty;
   }
 
   /// Replace the form data with the given data
   void replaceFormData(Map<String, dynamic> data) {
     clear();
     data.forEach((key, value) {
-      //formKey.currentState?.fields[key]?.didChange(value?.toString());
       _formData[key] = value;
     });
   }
@@ -101,11 +109,17 @@ class FormContext {
   /// Get a specific dropdown value
   List<T>? getDropdownData<T>(String key) => formDropdownData[key] as List<T>?;
 
-  /// Completely reloads the form by getting the data from the API
-  void reload() =>
-      formBloc.add(LoadFormModelEvent(id: context
-          .readResourceContext()
-          .id));
+  /// Completely reloads the form by getting the data from the API or by starting a new form
+  void init() {
+    var currentOperationType = context.readResourceContext().getCurrentOperationType();
+    if (currentOperationType == ResourceOperationType.create) {
+      clear();
+      formBloc.add(InitFormModelEvent());
+    } else if (currentOperationType == ResourceOperationType.edit ||
+        currentOperationType == ResourceOperationType.view) {
+      formBloc.add(LoadFormModelEvent(id: context.readResourceContext().id));
+    }
+  }
 
   /// Builds the form with the given data to re-paint UI with new data
   void rebuild() {
@@ -113,25 +127,14 @@ class FormContext {
     //syncFormDataFromFields();
 
     // Rebuild the form by passing a new map
-    formBloc.state is FormReadyState || formBloc.state is FormNotValidState
-        ? formBloc.add(
-        RebuildFormEvent(formData: Map.from(_formData), force: true))
+    formBloc.state is FormReadyState
+        ? formBloc
+            .add(RebuildFormEvent(formData: Map.from(_formData), force: true))
         : null;
   }
 
   /// Returns the result of a registered future operation
   T? getFutureResult<T>(String key) => futureResults[key] as T?;
-
-  // /// Syncs the form and internal values
-  // void syncFormDataFromFields() {
-  //   //formData.clear(); with this we loose data that is not inside a specific field
-  //   formKey.currentState?.fields.forEach((key, field) {
-  //     // Check first if the previous value was removed from internal data
-  //     if (_formData.containsKey(key)) {
-  //       _formData[key] = field.value;
-  //     }
-  //   });
-  // }
 
   Map<String, dynamic> exportFormData() {
     var exportedData = <String, dynamic>{};
@@ -184,13 +187,10 @@ class FormContext {
     return exportedData;
   }
 
-
-
-
   /// Returns true if all the future operations have been loaded
   bool futuresLoaded() => futureResults.isNotEmpty;
 }
 
 extension FormContextExtension on BuildContext {
-  FormContext readFormContext() => read<FormContext>();
+  CrudoFormContext readFormContext() => read<CrudoFormContext>();
 }

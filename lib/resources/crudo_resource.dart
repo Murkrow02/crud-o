@@ -1,7 +1,7 @@
-import 'package:crud_o/actions/crudo_action.dart';
 import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
-import 'package:crud_o/resources/form/data/form_result.dart';
+import 'package:crud_o/resources/actions/crudo_action.dart';
+import 'package:crud_o/resources/actions/crudo_action_result.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_factory.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -121,7 +121,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
               message: 'Sei sicuro di voler procedere?');
 
           if (!confirmed) {
-            return ActionResult();
+            return CrudoActionResult();
           }
 
           // Actually delete the resource
@@ -129,17 +129,19 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
             await repository.delete(getId(model));
           } catch (e) {
             Toaster.error('Errore durante l\'eliminazione');
-            return ActionResult();
+            return CrudoActionResult();
           }
 
-          // Get table state and reload
-          var tableState = context.read<CrudoTableBloc>().state;
-          if (tableState is TableLoadedState) {
-            context
-                .read<CrudoTableBloc>()
-                .add(UpdateTableEvent(tableState.request));
-          }
-          return ActionResult(refreshTable: true);
+          // // Get table state and reload
+          // var tableState = context.read<CrudoTableBloc>().state;
+          // if (tableState is TableLoadedState) {
+          //   context
+          //       .read<CrudoTableBloc>()
+          //       .add(UpdateTableEvent(
+          //
+          //       tableState.request));
+          // }
+          return CrudoActionResult(refreshTable: true);
         });
   }
 
