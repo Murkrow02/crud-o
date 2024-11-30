@@ -64,11 +64,19 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
     // Create table context
     var resource = context.read<TResource>();
-    var defaultFuture = (PaginatedRequest request) async {
+    defaultFuture(PaginatedRequest request) async {
       return await resource.getRepository().getPaginated(request: request);
-    };
+    }
+
+    // Create the table context
     var tableContext = CrudoTableContext<TResource, TModel>(
-        resource: resource, initialTableFuture: customFuture ?? defaultFuture);
+        resource: resource,
+
+        // First check for custom data and create a future from that, then check for custom future finally default future
+        initialTableFuture: customData != null
+            ? (PaginatedRequest request) =>
+                Future.value(SinglePageResponse<TModel>(data: customData ?? []))
+            : customFuture ?? defaultFuture);
 
     // Create the table bloc
     return BlocProvider<CrudoTableBloc>(
@@ -85,7 +93,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         child: BlocListener<CrudoTableBloc, CrudoTableState>(
           listener: _tableStateEventListener,
           child: Builder(builder: (context) {
-            return _buildTableWrapper(context, _buildTable(context));
+            return _buildTableWrapper(
+                context, _buildTable(context), tableContext);
           }),
         ),
       ),
@@ -122,24 +131,27 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   /// Create full page or simple widget table wrapper
-  Widget _buildTableWrapper(BuildContext context, Widget table) {
+  Widget _buildTableWrapper(BuildContext context, Widget table,
+      CrudoTableContext<TResource, TModel> tableContext) {
     switch (displayType) {
       case CrudoTableDisplayType.widget:
-        return _buildWidgetWrapper(context, table);
+        return _buildWidgetWrapper(context, table, tableContext);
       case CrudoTableDisplayType.fullPage:
-        return _buildFullPageWrapper(context);
+        return _buildFullPageWrapper(context, tableContext);
     }
   }
 
   /// Wrapper when table is displayed as a widget
-  Widget _buildWidgetWrapper(BuildContext context, Widget table) {
+  Widget _buildWidgetWrapper(BuildContext context, Widget table,
+      CrudoTableContext<TResource, TModel> tableContext) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            if (enableColumnHiding) _buildColumnHidingButton(context),
+            if (enableColumnHiding)
+              _buildColumnHidingButton(context, tableContext),
             _buildCreateActionButton(context),
           ],
         ),
@@ -153,14 +165,16 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   /// Wrapper when table is displayed as a full page
-  Widget _buildFullPageWrapper(BuildContext context) {
+  Widget _buildFullPageWrapper(
+      BuildContext context, CrudoTableContext<TResource, TModel> tableContext) {
     return Scaffold(
       appBar: AppBar(
           title: searchable
               ? _buildSearchBar(context)
               : Text(context.read<TResource>().pluralName()),
           actions: [
-            if (enableColumnHiding) _buildColumnHidingButton(context),
+            if (enableColumnHiding)
+              _buildColumnHidingButton(context, tableContext),
             if (filters != null) _buildFiltersPopMenuButton(context),
             _buildCreateActionButton(context)
           ]),
@@ -423,16 +437,15 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     context.read<CrudoTableBloc>().add(LoadTableEvent());
   }
 
-  Widget _buildColumnHidingButton(BuildContext context) {
+  Widget _buildColumnHidingButton(
+      BuildContext context, CrudoTableContext<TResource, TModel> tableContext) {
     return IconButton(
       icon: const Icon(Icons.visibility),
       onPressed: () {
         showDialog(
           context: context,
           builder: (context) => CrudoTableSettingsPopup(
-            settingsController: context
-                .readTableContext<TResource, TModel>()
-                .settingsController,
+            settingsController: tableContext.settingsController,
           ),
         );
       },
@@ -457,6 +470,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     // Button with dropdown
     return PopupMenuButton(
       icon: const Icon(Icons.filter_alt_outlined),
+      tooltip: 'Filtri',
       itemBuilder: (context) {
         return filters!.map((filter) {
           return PopupMenuItem(

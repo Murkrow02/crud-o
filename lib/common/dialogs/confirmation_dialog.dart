@@ -6,6 +6,8 @@ class ConfirmationDialog {
     required BuildContext context,
     required String title,
     required String message,
+    String? okText,
+    String? cancelText,
   }) async {
     return await showDialog(
         context: context,
@@ -18,14 +20,14 @@ class ConfirmationDialog {
               // Cancel button
               TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: Text("Annulla",
+                  child: Text(cancelText ?? 'Annulla',
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.error))),
 
               // Ok button
               TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: Text("Ok",
+                  child: Text(okText ?? 'Ok',
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.primary))),
             ],

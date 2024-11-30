@@ -37,17 +37,29 @@ class CrudoField extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
-      child: (context.readResourceContext().getCurrentOperationType() ==
-              ResourceOperationType.view)
-          ? viewModeBuilder == null
-              ? _defaultViewModeBuilder(context)
-              : viewModeBuilder!(context)
-          : CrudoErrorize(
-              config: config,
-              child: CrudoLabelize(
-                  label: config.label ?? config.name,
-                  child: editModeBuilder(context, _onChanged)),
-            ),
+      child: Row(
+        children: [
+          Expanded(
+            child: (context.readResourceContext().getCurrentOperationType() ==
+                    ResourceOperationType.view)
+                ? viewModeBuilder == null
+                    ? _defaultViewModeBuilder(context)
+                    : viewModeBuilder!(context)
+                : CrudoErrorize(
+                    config: config,
+                    child: CrudoLabelize(
+                        label: config.label ?? config.name,
+                        child: editModeBuilder(context, _onChanged)),
+                  ),
+          ),
+          if (config.actions.isNotEmpty)
+            for (var action in config.actions)
+              IconButton(
+                icon: Icon(action.icon),
+                onPressed: () => action.execute(context),
+              ),
+        ],
+      ),
     );
   }
 
