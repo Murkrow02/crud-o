@@ -65,9 +65,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Show a popup to create a new item after saving
   /// This is obviously disabled if saveBehaviour is by default saveAndCreateAnother
-  final bool createAnotherAfterSave;
+  final CreateAnotherConfiguration? createAnother;
 
-  CrudoForm(
+  const CrudoForm(
       {super.key,
       required this.formBuilder,
       required this.toFormData,
@@ -79,7 +79,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       this.registerFutures,
       this.saveBehaviour = CrudoFormSaveBehaviour.saveAndClose,
       this.afterSave,
-      this.createAnotherAfterSave = false,
+      this.createAnother,
       this.displayType = CrudoFormDisplayType.widget});
 
   @override
@@ -378,14 +378,16 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     }
 
     // Check if create another is enabled and is not the default saveAndCreateAnother
-    if (createAnotherAfterSave &&
+    if (createAnother != null &&
         oldOperation == ResourceOperationType.create &&
         saveBehaviour != CrudoFormSaveBehaviour.saveAndCreateAnother) {
-      var createAnother = await ConfirmationDialog.ask(
+      var needToCreateAnother = await ConfirmationDialog.ask(
           context: context,
-          title: "Crea nuovo",
-          message: "Vuoi creare un altro elemento di questo tipo?");
-      if (createAnother == true) {
+          title: createAnother!.title,
+          message: createAnother!.message,
+          okText: createAnother!.okText,
+          cancelText: createAnother!.cancelText);
+      if (needToCreateAnother == true) {
         context
             .readResourceContext()
             .setOperationType(ResourceOperationType.create);
@@ -444,3 +446,16 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 enum CrudoFormDisplayType { fullPage, dialog, widget }
 
 enum CrudoFormSaveBehaviour { saveAndCreateAnother, saveAndEdit, saveAndClose }
+
+class CreateAnotherConfiguration {
+  final String title;
+  final String message;
+  final String? okText;
+  final String? cancelText;
+
+  CreateAnotherConfiguration(
+      {required this.title,
+      required this.message,
+      this.okText,
+      this.cancelText});
+}
