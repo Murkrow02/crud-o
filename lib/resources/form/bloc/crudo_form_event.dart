@@ -24,7 +24,7 @@ class RebuildFormEvent extends CrudoFormEvent {
   RebuildFormEvent({required this.formData, this.force = false});
 
   @override
-  List<Object?> get props => [formData, force];
+  List<Object?> get props => [formData, force ? DateTime.now().millisecondsSinceEpoch : null];
 }
 
 class InitFormModelEvent extends CrudoFormEvent {

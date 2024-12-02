@@ -36,6 +36,7 @@ class CrudoField extends StatelessWidget {
         'You can provide either viewModeBuilder or viewModeValue, not both');
 
     return Padding(
+      key: config.getFieldKey(context),
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
