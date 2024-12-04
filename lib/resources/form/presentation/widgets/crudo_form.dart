@@ -278,6 +278,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
+
+    // Validate form fields TODO
+
+
     // Get data from fields
     // context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
@@ -288,7 +292,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       saveData = beforeValidate!(context, saveData);
     }
 
-    // Validate form fields TODO
 
     // Call before save callback
     if (beforeSave != null) {
@@ -355,6 +358,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Called whenever a new resource is created or updated and API returned the updated model
   void _afterSave(BuildContext context, TModel model) async {
+
     // Set the new id
     context.readResourceContext().id = context.read<TResource>().getId(model);
 
