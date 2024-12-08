@@ -156,10 +156,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
           ],
         ),
         Container(
-          height: 500,
+          height: MediaQuery.of(context).size.height * 0.5,
           margin: const EdgeInsets.all(10),
           child: _buildTable(context),
-        ),
+        )
       ],
     );
   }
