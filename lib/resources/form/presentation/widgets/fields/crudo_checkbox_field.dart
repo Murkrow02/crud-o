@@ -31,9 +31,11 @@ class CrudoCheckboxField extends StatelessWidget {
                   ),
                   if (config.placeholder != null) ...[
                     const SizedBox(width: 10),
-                    Text(config.placeholder!)]
+                    Expanded(child: Text(config.placeholder!))
+                    //  (child: Text(config.placeholder!))]
+                  ],
                 ],
-              ),
+              )
             ),
           );
         });
