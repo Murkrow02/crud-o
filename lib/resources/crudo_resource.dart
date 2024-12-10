@@ -2,6 +2,7 @@ import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/actions/crudo_action.dart';
 import 'package:crud_o/resources/actions/crudo_action_result.dart';
+import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:crud_o/resources/resource_factory.dart';
 import 'package:crud_o/resources/resource_operation_type.dart';
@@ -17,6 +18,7 @@ import 'table/bloc/crudo_table_bloc.dart';
 abstract class CrudoResource<TModel extends dynamic> extends Object {
   final ResourceRepository<TModel> repository;
   final ResourcePolicy<TModel>? policy;
+
   CrudoResource({required this.repository, this.policy});
 
   /// **************************************************************************************************
@@ -42,30 +44,44 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// **************************************************************************************************
   /// ACTIONS
   /// **************************************************************************************************
-  Future<CrudoAction?> createAction() async {
+  Future<CrudoAction?> createAction(
+      {CrudoFormDisplayType displayType =
+          CrudoFormDisplayType.fullPage}) async {
     if (formPage == null) return null;
-    if(policy != null && !(await policy!.create())) return null;
+    if (policy != null && !(await policy!.create())) return null;
+
     return CrudoAction(
         label: 'Crea',
         icon: Icons.add,
         action: (context, data) async {
+          // Create destination target
+          var target = RepositoryProvider(
+            create: (context) => ResourceContext(
+                id: "",
+                data: data ?? {},
+                originalOperationType: ResourceOperationType.create),
+            child: formPage,
+          );
+
+          // Check if need to display as dialog or full page
+          if (displayType == CrudoFormDisplayType.dialog) {
+            return await showDialog(
+              context: context,
+              builder: (context) => target,
+            );
+          }
+
+          // Display as full page
           return await Navigator.push(
             context,
-            MaterialPageRoute(
-                builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(
-                          id: "",
-                          data: data ?? {},
-                          operationType: ResourceOperationType.create),
-                      child: formPage,
-                    )),
+            MaterialPageRoute(builder: (context) => target),
           );
         });
   }
 
   Future<CrudoAction?> editAction(TModel model) async {
     if (formPage == null) return null;
-    if(policy != null && !(await policy!.update(model))) return null;
+    if (policy != null && !(await policy!.update(model))) return null;
     return CrudoAction(
         label: 'Modifica',
         icon: Icons.edit,
@@ -78,7 +94,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                           id: getId(model).toString(),
                           data: data ?? {},
                           model: model,
-                          operationType: ResourceOperationType.edit),
+                          originalOperationType: ResourceOperationType.edit),
                       child: formPage,
                     )),
           );
@@ -87,12 +103,12 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   Future<CrudoAction?> viewAction(TModel model) async {
     if (formPage == null) return null;
-    if(policy != null && !(await policy!.view(model))) return null;
+    if (policy != null && !(await policy!.view(model))) return null;
     return CrudoAction(
         label: 'Visualizza',
         icon: Icons.remove_red_eye,
         action: (context, data) async {
-         return await Navigator.push(
+          return await Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (context) => RepositoryProvider(
@@ -100,7 +116,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
                           id: getId(model).toString(),
                           data: data ?? {},
                           model: model,
-                          operationType: ResourceOperationType.view),
+                          originalOperationType: ResourceOperationType.view),
                       child: formPage,
                     )),
           );
@@ -108,7 +124,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   }
 
   Future<CrudoAction?> deleteAction(TModel model) async {
-    if(policy != null && !(await policy!.delete(model))) return null;
+    if (policy != null && !(await policy!.delete(model))) return null;
     return CrudoAction(
         label: 'Elimina',
         icon: Icons.delete,
@@ -155,5 +171,7 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   /// SHORTCUTS
   /// **************************************************************************************************
   ResourceFactory<TModel> get factory => repository.factory;
-  TRepository getRepository<TRepository extends ResourceRepository<TModel>>() => repository as TRepository;
+
+  TRepository getRepository<TRepository extends ResourceRepository<TModel>>() =>
+      repository as TRepository;
 }

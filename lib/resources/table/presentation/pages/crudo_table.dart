@@ -4,6 +4,7 @@ import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
 import 'package:crud_o/resources/actions/crudo_action.dart';
 import 'package:crud_o/resources/actions/crudo_action_result.dart';
+import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_bloc.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
@@ -156,10 +157,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
           ],
         ),
         Container(
-          height: 500,
+          height: MediaQuery.of(context).size.height * 0.5,
           margin: const EdgeInsets.all(10),
           child: _buildTable(context),
-        ),
+        )
       ],
     );
   }

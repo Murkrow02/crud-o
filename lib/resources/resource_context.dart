@@ -20,7 +20,7 @@ class ResourceContext {
 
   /// The original operation type of the resource
   /// This can't change through the lifecycle of the context
-  final ResourceOperationType operationType;
+  final ResourceOperationType originalOperationType;
 
   /// If the operation type is edit or view, here is the model of the resource
   /// Usually this is pre-loaded when context is fired from the table
@@ -31,9 +31,9 @@ class ResourceContext {
   final Map<String, dynamic> data;
 
   ResourceContext(
-      {required this.id, required this.operationType, this.data = const {}, this.model})
+      {required this.id, required this.originalOperationType, this.data = const {}, this.model})
   {
-    _currentOperationType = operationType;
+    _currentOperationType = originalOperationType;
   }
 
   ResourceContext copyWith(
@@ -42,7 +42,7 @@ class ResourceContext {
       Map<String, dynamic>? data}) {
     return ResourceContext(
       id: id ?? this.id,
-      operationType: operationType ?? this.operationType,
+      originalOperationType: operationType ?? this.originalOperationType,
       data: data ?? this.data,
     );
   }
