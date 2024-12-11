@@ -79,46 +79,68 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  Future<CrudoAction?> editAction(TModel model) async {
+  Future<CrudoAction?> editAction(TModel model, {CrudoFormDisplayType displayType = CrudoFormDisplayType.fullPage}) async {
     if (formPage == null) return null;
     if (policy != null && !(await policy!.update(model))) return null;
     return CrudoAction(
         label: 'Modifica',
         icon: Icons.edit,
         action: (context, data) async {
+
+          var target = RepositoryProvider(
+            create: (context) => ResourceContext(
+                id: getId(model).toString(),
+                data: data ?? {},
+                model: model,
+                originalOperationType: ResourceOperationType.edit),
+            child: formPage,
+          );
+
+          // Check if need to display as dialog or full page
+          if (displayType == CrudoFormDisplayType.dialog) {
+            return await showDialog(
+              context: context,
+              builder: (context) => target,
+            );
+          }
+
           return await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(
-                          id: getId(model).toString(),
-                          data: data ?? {},
-                          model: model,
-                          originalOperationType: ResourceOperationType.edit),
-                      child: formPage,
-                    )),
+                builder: (context) => target),
           );
         });
   }
 
-  Future<CrudoAction?> viewAction(TModel model) async {
+  Future<CrudoAction?> viewAction(TModel model, {CrudoFormDisplayType displayType = CrudoFormDisplayType.fullPage}) async {
     if (formPage == null) return null;
     if (policy != null && !(await policy!.view(model))) return null;
     return CrudoAction(
         label: 'Visualizza',
         icon: Icons.remove_red_eye,
         action: (context, data) async {
+
+          var target = RepositoryProvider(
+            create: (context) => ResourceContext(
+                id: getId(model).toString(),
+                data: data ?? {},
+                model: model,
+                originalOperationType: ResourceOperationType.view),
+            child: formPage,
+          );
+
+          // Check if need to display as dialog or full page
+          if (displayType == CrudoFormDisplayType.dialog) {
+            return await showDialog(
+              context: context,
+              builder: (context) => target,
+            );
+          }
+
           return await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => RepositoryProvider(
-                      create: (context) => ResourceContext(
-                          id: getId(model).toString(),
-                          data: data ?? {},
-                          model: model,
-                          originalOperationType: ResourceOperationType.view),
-                      child: formPage,
-                    )),
+                builder: (context) => target),
           );
         });
   }
