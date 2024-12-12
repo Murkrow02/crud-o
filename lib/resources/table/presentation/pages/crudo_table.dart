@@ -39,6 +39,9 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   final bool paginated;
   final List<CrudoTableFilter<TModel>>? filters;
 
+  // Useful when need to get the table context
+  final Function(CrudoTableContext<TResource, TModel> tableContext)? onTableCreated;
+
   // Called whenever the data in the table changes, bool indicates first load
   final Function(bool firstLoad)? onDataChanged;
 
@@ -54,6 +57,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     this.actionData,
     this.customData,
     this.filters,
+    this.onTableCreated,
     super.key,
   });
 
@@ -94,6 +98,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         child: BlocListener<CrudoTableBloc, CrudoTableState>(
           listener: _tableStateEventListener,
           child: Builder(builder: (context) {
+            onTableCreated?.call(tableContext);
             return _buildTableWrapper(
                 context, _buildTable(context), tableContext);
           }),

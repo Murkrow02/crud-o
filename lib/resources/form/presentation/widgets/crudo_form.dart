@@ -148,57 +148,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       case CrudoFormDisplayType.dialog:
         return _buildDialogFormWrapper(context, form);
       case CrudoFormDisplayType.widget:
-        return form;
+        return _buildWidgetWrapper(context, form);
     }
   }
 
   /// Build the form wrapper for a full page
   Widget _buildFullPageFormWrapper(BuildContext context, Widget form) {
-    return BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
-      builder: (context, state) {
-        return PopScope(
-            canPop: false,
-            onPopInvokedWithResult: (didPop, __) {
-              if (didPop) {
-                return;
-              }
-              Navigator.pop(context, context
-                  .readFormContext()
-                  .formResult);
-            },
-            child: Scaffold(
-                appBar: AppBar(
-                    title: Text(_getFormTitle(context)),
-                    actions: [
-                    if (state is FormSavingState)
-                const CircularProgressIndicator.adaptive()
-            else
-            if (state is FormReadyState) ...[
-        if (context
-            .readResourceContext()
-            .getCurrentOperationType() ==
-        ResourceOperationType.view)
-        IconButton(
-        icon: const Icon(Icons.edit),
-        style: ButtonStyle(
-        padding: WidgetStateProperty.all(
-        const EdgeInsets.all(2))),
-        onPressed: () => _enterEditMode(context)),
-        ..._buildSaveAction(context)
-        ]
-        ],
-        ),
-        body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: form,
-        )),
-        );
-      },
-    );
-  }
-
-  /// Form wrapped to be displayed in a dialog
-  Widget _buildDialogFormWrapper(BuildContext context, Widget form) {
     return BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
       builder: (context, state) {
         return PopScope(
@@ -211,24 +166,78 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                 .readFormContext()
                 .formResult);
           },
-          child: SimpleDialog(
-            title:
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(_getFormTitle(context)),
-                if (state is FormSavingState)
-                  const CircularProgressIndicator.adaptive()
-                else
-                  if (state is FormReadyState)
-                    ..._buildSaveAction(context)
-              ],
-            ), children: [
-              form,
-            ],
-          ),
+          child: Scaffold(
+              appBar: AppBar(
+                title: Text(_getFormTitle(context)),
+                actions: [
+                  if (state is FormSavingState)
+                    const CircularProgressIndicator.adaptive()
+                  else
+                    if (state is FormReadyState) ...[
+                      if (context
+                          .readResourceContext()
+                          .getCurrentOperationType() ==
+                          ResourceOperationType.view)
+                        IconButton(
+                            icon: const Icon(Icons.edit),
+                            style: ButtonStyle(
+                                padding: WidgetStateProperty.all(
+                                    const EdgeInsets.all(2))),
+                            onPressed: () => _enterEditMode(context)),
+                      ..._buildSaveAction(context)
+                    ]
+                ],
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: form,
+              )),
         );
       },
+    );
+  }
+
+  /// Form wrapped to be displayed in a dialog
+  Widget _buildDialogFormWrapper(BuildContext context, Widget form) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, __) {
+        if (didPop) {
+          return;
+        }
+        Navigator.pop(context, context
+            .readFormContext()
+            .formResult);
+      },
+      child: Dialog(child: _buildWidgetWrapper(context, form)),
+    );
+  }
+
+  Widget _buildWidgetWrapper(BuildContext context, Widget form) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
+          builder: (context, state) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(_getFormTitle(context), style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold)),
+                    if (state is FormSavingState)
+                      const CircularProgressIndicator.adaptive()
+                    else
+                      if (state is FormReadyState)
+                        ..._buildSaveAction(context)
+                  ],
+                ),
+                form
+              ],
+            );
+          }),
     );
   }
 
@@ -292,7 +301,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   void _onSave(BuildContext context) {
     // Validate form fields TODO
 
-
     // Get data from fields
     // context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
@@ -305,16 +313,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       saveData = beforeValidate!(context, saveData);
     }
 
-
     // Call before save callback
     if (beforeSave != null) {
       saveData = beforeSave!.call(context, saveData);
     }
 
     // Edit
-    if (context
-        .readResourceContext()
-        .getCurrentOperationType() ==
+    if (context.readResourceContext().getCurrentOperationType() ==
         ResourceOperationType.edit) {
       if (onUpdate != null) {
         context
@@ -336,9 +341,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     }
 
     // Create
-    if (context
-        .readResourceContext()
-        .getCurrentOperationType() ==
+    if (context.readResourceContext().getCurrentOperationType() ==
         ResourceOperationType.create) {
       if (onCreate != null) {
         context
@@ -414,7 +417,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Call user provided callback and wait for its completion
     if (afterSave != null) {
-      await afterSave!(context, model);
+      await afterSave!.call(context, model);
     }
 
     // Check if create another is enabled and is not the default saveAndCreateAnother

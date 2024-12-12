@@ -22,11 +22,17 @@ class CrudoFormContext {
   final Map<String, dynamic> _formData = {};
 
   Map<String, dynamic> getFormData() => Map.unmodifiable(_formData);
-  Map<String, List<String>> getFormErrors() => Map.unmodifiable(validationErrors);
+
+  Map<String, List<String>> getFormErrors() =>
+      Map.unmodifiable(validationErrors);
   final Map<String, List<CrudoFile>> formFiles = {};
   final Map<String, dynamic> formDropdownData = {};
-  final Map<String, int> formDropdownFutureSignatures =
-      {}; // Keep track of the future signatures to check weather we need to reload the dropdowns
+
+  /// Keep track of the future signatures to check weather we need to reload the dropdowns
+  final Map<String, int> formDropdownFutureSignatures = {};
+
+  /// Save additional data to be retrieved later, not used by crud-o
+  final Map<String, dynamic> _extraData = {};
 
   /// The internal state of the form, use this to trigger events
   final CrudoFormBloc formBloc;
@@ -40,13 +46,15 @@ class CrudoFormContext {
   /// If the API has been updated since the last time the form was loaded
   final CrudoActionResult formResult = CrudoActionResult();
 
-  CrudoFormContext(
-      {required this.context,
-      required this.formBloc,
-      this.validationErrors = const {}});
+  CrudoFormContext({required this.context,
+    required this.formBloc,
+    this.validationErrors = const {}});
 
   /// Get a specific value from the form
   T get<T>(String key) => _formData[key] as T;
+
+  /// Get a specific value for state management
+  T getExtra<T>(String key) => _extraData[key] as T;
 
   /// Get files from the form
   List<CrudoFile>? getFiles(String key) => formFiles[key];
@@ -56,9 +64,19 @@ class CrudoFormContext {
     _formData[key] = value;
   }
 
+  /// Set a specific value for state management
+  void setExtra(String key, dynamic value) {
+    _extraData[key] = value;
+  }
+
   /// Unset a specific value in the form
   void unset(String key) {
     _formData.remove(key);
+  }
+
+  /// Unset a specific value for state management
+  void unsetExtra(String key) {
+    _extraData.remove(key);
   }
 
   /// Clear all the form data
@@ -66,9 +84,13 @@ class CrudoFormContext {
     _formData.clear();
   }
 
+  /// Clear all the extra data
+  void clearExtra() {
+    _extraData.clear();
+  }
+
   /// Invalidate a field
   void invalidateField(String key, String error) {
-
     // Check if the field is already in the list
     if (validationErrors.containsKey(key)) {
       // Check if the error is already in the list
@@ -83,8 +105,7 @@ class CrudoFormContext {
   }
 
   /// Returns true if form has no validation errors, false otherwise
-  bool isValid()
-  {
+  bool isValid() {
     return validationErrors.isEmpty;
   }
 
@@ -111,13 +132,16 @@ class CrudoFormContext {
 
   /// Completely reloads the form by getting the data from the API or by starting a new form
   void init() {
-    var currentOperationType = context.readResourceContext().getCurrentOperationType();
+    var currentOperationType = context.readResourceContext()
+        .getCurrentOperationType();
     if (currentOperationType == ResourceOperationType.create) {
       clear();
       formBloc.add(InitFormModelEvent());
     } else if (currentOperationType == ResourceOperationType.edit ||
         currentOperationType == ResourceOperationType.view) {
-      formBloc.add(LoadFormModelEvent(id: context.readResourceContext().id));
+      formBloc.add(LoadFormModelEvent(id: context
+          .readResourceContext()
+          .id));
     }
   }
 
@@ -129,7 +153,7 @@ class CrudoFormContext {
     // Rebuild the form by passing a new map
     formBloc.state is FormReadyState
         ? formBloc
-            .add(RebuildFormEvent(formData: Map.from(_formData), force: true))
+        .add(RebuildFormEvent(formData: Map.from(_formData), force: true))
         : null;
   }
 
