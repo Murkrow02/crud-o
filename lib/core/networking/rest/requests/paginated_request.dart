@@ -29,11 +29,13 @@ class PaginatedRequest extends RestRequest
     int? page,
     String? search,
     SortParameter? sortBy,
+    Map<String, String>? queryParameters,
   }) {
     return PaginatedRequest(
       page: page ?? this.page,
       sortBy: sortBy ?? this.sortBy,
       search: search ?? this.search,
+      queryParameters: queryParameters ?? this.queryParameters,
     );
   }
 
