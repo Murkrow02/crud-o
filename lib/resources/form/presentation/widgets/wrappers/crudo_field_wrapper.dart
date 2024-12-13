@@ -10,43 +10,13 @@ class CrudoFieldWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.only(left: 10, right: 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: child),
+    return Container(
+      padding: const EdgeInsets.only(left: 10, right: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: child,
     );
-
-    // // Do not render
-    // if (!config.shouldRenderField(context)) {
-    //   return const SizedBox();
-    // }
-    // //
-
-    //
-    // // Render form component
-    // return Padding(
-    //   key: config.getFieldKey(context),
-    //   padding: const EdgeInsets.symmetric(vertical: 10.0),
-    //   child: Row(
-    //     children: [
-    //       Expanded(
-    //         child: CrudoErrorize(
-    //             error: errorize ? config.getValidationError(context) : null,
-    //             child:
-    //             CrudoLabelize(label: config.label ?? config.name, child: child)),
-    //       ),
-    //       if (config.resources.actions.isNotEmpty)
-    //         for (var action in config.resources.actions)
-    //           IconButton(
-    //             icon: Icon(action.icon),
-    //             onPressed: () => action.execute(context),
-    //           ),
-    //     ],
-    //   ),
-    // );
   }
 }
