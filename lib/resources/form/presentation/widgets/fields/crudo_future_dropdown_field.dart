@@ -23,6 +23,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final String? searchHintText;
   final int minSearchLength;
   final bool retry;
+  final CustomDropdownDecoration decoration;
 
   const CrudoFutureDropdownField(
       {super.key,
@@ -36,6 +37,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       this.multiple = false,
       this.nullable = false,
       this.retry = true,
+      this.decoration = const CustomDropdownDecoration(),
       this.errorText = 'Errore nel caricamento dei dati'});
 
   @override
@@ -66,8 +68,9 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
         var initialItem = getInitialItem(context, data ?? []);
         return CrudoViewField(
           config: config,
-          child:
-              initialItem != null ? itemBuilder(initialItem) : const Text('N/A'),
+          child: initialItem != null
+              ? itemBuilder(initialItem)
+              : const Text('N/A'),
         );
       },
     );
@@ -177,6 +180,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
             builder: (context) {
               if (searchFuture != null) {
                 return CustomDropdown<TModel>.searchRequest(
+                  decoration: decoration,
                   minSearchLength: minSearchLength,
                   searchHintText: searchHintText ?? 'Cerca...',
                   initialItem: initialItem,
@@ -200,6 +204,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                   enabled: config.enabled,
                   hintText: config.label,
                   items: items,
+                  decoration: decoration,
                   listItemBuilder: (context, item, isSelected, onItemSelect) =>
                       itemBuilder(item),
                   headerBuilder: (context, selectedItem, enabled) =>
