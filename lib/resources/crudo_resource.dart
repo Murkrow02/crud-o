@@ -22,6 +22,17 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
   CrudoResource({required this.repository, this.policy});
 
   /// **************************************************************************************************
+  /// RESOURCE PAGES
+  /// **************************************************************************************************
+
+  /// Form to edit/create/view the resource
+  Widget? formPage;
+
+  /// Table to show the resource
+  Widget? tablePage;
+
+
+  /// **************************************************************************************************
   /// RESOURCE INFO
   /// **************************************************************************************************
 
@@ -145,6 +156,21 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
+  Future<CrudoAction?> listAction() async {
+    if (tablePage == null) return null;
+    if (policy != null && !(await policy!.viewAny())) return null;
+    return CrudoAction(
+        label: 'Lista',
+        icon: Icons.list,
+        action: (context, data) async {
+          return await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => tablePage!),
+          );
+        });
+  }
+
   Future<CrudoAction?> deleteAction(TModel model) async {
     if (policy != null && !(await policy!.delete(model))) return null;
     return CrudoAction(
@@ -183,11 +209,44 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
         });
   }
 
-  /// Form to edit/create/view the resource
-  Widget? formPage;
+  /// All the actions owned by this resource that can be executed against a model
+  Future<List<CrudoAction>> availableModelActions(TModel model) async {
+    var actions = <CrudoAction>[];
 
-  /// Table to show the resource
-  Widget? tablePage;
+    var editAction = await this.editAction(model);
+    if (editAction != null) {
+      actions.add(editAction);
+    }
+
+    var viewAction = await this.viewAction(model);
+    if (viewAction != null) {
+      actions.add(viewAction);
+    }
+
+    var deleteAction = await this.deleteAction(model);
+    if (deleteAction != null) {
+      actions.add(deleteAction);
+    }
+
+    return actions;
+  }
+
+  /// All the actions owned by this resource that can be executed against the resource
+  Future<List<CrudoAction>> availableResourceActions() async {
+    var actions = <CrudoAction>[];
+
+    var createAction = await this.createAction();
+    if (createAction != null) {
+      actions.add(createAction);
+    }
+
+    var listAction = await this.listAction();
+    if (listAction != null) {
+      actions.add(listAction);
+    }
+
+    return actions;
+  }
 
   /// **************************************************************************************************
   /// SHORTCUTS

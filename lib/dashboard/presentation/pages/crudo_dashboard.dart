@@ -179,6 +179,7 @@ class CrudoDashboard extends StatelessWidget {
   /// If the resource has a policy, it will only be shown if the user can view it
   Future<Map<String, List<MapEntry<CrudoResource, Widget>>>>
       _getAvailableResources(BuildContext context) async {
+
     // Get table and resources
     var tables = context.read<RegisteredResources>().tables;
     var resourcesWithTables = context
