@@ -15,6 +15,7 @@ TValue> extends StatelessWidget {
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
   final String? searchHintText;
+  final RestRequest? customRequest;
   final bool nullable;
   final int minSearchLength;
 
@@ -25,6 +26,7 @@ TValue> extends StatelessWidget {
     this.nullable = false,
     this.searchHintText,
     this.minSearchLength = 1,
+    this.customRequest,
     this.decoration = const CustomDropdownDecoration()});
 
   @override
@@ -44,7 +46,7 @@ TValue> extends StatelessWidget {
         return context
             .read<TResource>()
             .repository
-            .getAll()
+            .getAll(parameters: customRequest)
             .then((value) async {
           if (alreadySelectedId == null) {
             return value;

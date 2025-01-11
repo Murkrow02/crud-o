@@ -25,20 +25,19 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final bool retry;
   final CustomDropdownDecoration decoration;
 
-  const CrudoFutureDropdownField(
-      {super.key,
-      required this.config,
-      required this.itemBuilder,
-      required this.valueBuilder,
-      required this.futureProvider,
-      this.searchFuture,
-      this.searchHintText,
-      this.minSearchLength = 1,
-      this.multiple = false,
-      this.nullable = false,
-      this.retry = true,
-      this.decoration = const CustomDropdownDecoration(),
-      this.errorText = 'Errore nel caricamento dei dati'});
+  const CrudoFutureDropdownField({super.key,
+    required this.config,
+    required this.itemBuilder,
+    required this.valueBuilder,
+    required this.futureProvider,
+    this.searchFuture,
+    this.searchHintText,
+    this.minSearchLength = 1,
+    this.multiple = false,
+    this.nullable = false,
+    this.retry = true,
+    this.decoration = const CustomDropdownDecoration(),
+    this.errorText = 'Errore nel caricamento dei dati'});
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +94,11 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       width: double.infinity,
-      color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+      color: Theme
+          .of(context)
+          .colorScheme
+          .error
+          .withOpacity(0.4),
       child: Column(
         children: [
           Text(errorText),
@@ -112,12 +115,12 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
 
   TModel? getInitialItem(BuildContext context, List<TModel> items) {
     var value = context.readFormContext().get(config.name)
-        as TValue?; // Get the value from the form
+    as TValue?; // Get the value from the form
     if (value == null || items.isEmpty) {
       return null;
     }
     var item = items.firstWhereOrNull(
-        (el) => valueBuilder(el).toString() == value.toString());
+            (el) => valueBuilder(el).toString() == value.toString());
     return item;
   }
 
@@ -154,15 +157,18 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       config: config,
       initialItem: getInitialItem(context, items),
       itemBuilder: itemBuilder,
-      enabled: config.enabled,
+      enabled: config.shouldEnableField(context)
     );
   }
 
-  void _handleDropdownChange(
-      BuildContext context, CrudoFieldConfiguration config, TModel? value) {
+  void _handleDropdownChange(BuildContext context,
+      CrudoFieldConfiguration config, TModel? value, {skipRebuild = false}) {
     var valueToSet = value != null ? valueBuilder(value) : null;
     context.readFormContext().set(config.name, valueToSet);
-    context.readFormContext().rebuild();
+    config.onChanged?.call(context, valueToSet);
+    if (!skipRebuild) {
+      context.readFormContext().rebuild();
+    }
   }
 
   Widget _buildCustomDropdown({
@@ -173,6 +179,8 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     required Widget Function(TModel) itemBuilder,
     bool enabled = true,
   }) {
+    // Fire handleDropdownChange if the value is not in the items list
+    _handleDropdownChange(context, config, initialItem, skipRebuild: true);
     return Row(
       children: [
         Expanded(
@@ -184,15 +192,15 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                   minSearchLength: minSearchLength,
                   searchHintText: searchHintText ?? 'Cerca...',
                   initialItem: initialItem,
-                  enabled: config.enabled,
+                  enabled: config.shouldEnableField(context),
                   hintText: config.label,
                   items: items,
                   listItemBuilder: (context, item, isSelected, onItemSelect) =>
                       itemBuilder(item),
                   headerBuilder: (context, selectedItem, enabled) =>
-                      initialItem != null
-                          ? itemBuilder(initialItem)
-                          : Text(config.label ?? config.name),
+                  initialItem != null
+                      ? itemBuilder(initialItem)
+                      : Text(config.label ?? config.name),
                   onChanged: (value) =>
                       _handleDropdownChange(context, config, value),
                   futureRequest: (String searchText) =>
@@ -201,16 +209,16 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
               } else {
                 return CustomDropdown<TModel>(
                   initialItem: initialItem,
-                  enabled: config.enabled,
+                  enabled: config.shouldEnableField(context),
                   hintText: config.label,
                   items: items,
                   decoration: decoration,
                   listItemBuilder: (context, item, isSelected, onItemSelect) =>
                       itemBuilder(item),
                   headerBuilder: (context, selectedItem, enabled) =>
-                      initialItem != null
-                          ? itemBuilder(initialItem)
-                          : Text(config.label ?? config.name),
+                  initialItem != null
+                      ? itemBuilder(initialItem)
+                      : Text(config.label ?? config.name),
                   onChanged: (value) =>
                       _handleDropdownChange(context, config, value),
                 );
@@ -239,10 +247,16 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   /// This is needed since user can manually change the dropdown data so we cant always rely on the future
   /// We take data from the future only the first time or if the future provider changes
   void _clearDataIfNewFuture(BuildContext context) {
-    if (context.readFormContext().formDropdownFutureSignatures[config.name] !=
+    if (context
+        .readFormContext()
+        .formDropdownFutureSignatures[config.name] !=
         futureProvider.hashCode) {
-      context.readFormContext().formDropdownData.remove(config.name);
-      context.readFormContext().formDropdownFutureSignatures[config.name] =
+      context
+          .readFormContext()
+          .removeDropdownData(config.name);
+      context
+          .readFormContext()
+          .formDropdownFutureSignatures[config.name] =
           futureProvider.hashCode;
     }
   }

@@ -94,7 +94,7 @@ class CrudoDashboard extends StatelessWidget {
       child: ListTile(
         title: Row(
           children: [
-            Icon(resource.icon()),
+            Icon(resource.icon(), color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 10),
             Text(resource.pluralName()),
           ],
@@ -179,6 +179,7 @@ class CrudoDashboard extends StatelessWidget {
   /// If the resource has a policy, it will only be shown if the user can view it
   Future<Map<String, List<MapEntry<CrudoResource, Widget>>>>
       _getAvailableResources(BuildContext context) async {
+
     // Get table and resources
     var tables = context.read<RegisteredResources>().tables;
     var resourcesWithTables = context

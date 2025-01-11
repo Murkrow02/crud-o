@@ -88,6 +88,7 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
 
     // Filter applied
     else {
+      _activeFilters.clear();
       _activeFilters.add(filter.name);
 
       // Provided with a whole custom function

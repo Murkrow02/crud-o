@@ -7,16 +7,16 @@ class CrudoCounterWidget extends StatelessWidget {
   final int value;
   final CrudoDashboardWidgetSize size;
 
-  CrudoCounterWidget(
-      {required this.value, required this.title, required this.size});
+  const CrudoCounterWidget(
+      {super.key, required this.value, required this.title, required this.size});
 
-  CrudoCounterWidget.half({required this.value, required this.title})
+  const CrudoCounterWidget.half({super.key, required this.value, required this.title})
       : size = CrudoDashboardWidgetSize.half;
 
-  CrudoCounterWidget.full({required this.value, required this.title})
+  const CrudoCounterWidget.full({super.key, required this.value, required this.title})
       : size = CrudoDashboardWidgetSize.full;
 
-  CrudoCounterWidget.third({required this.value, required this.title})
+  const CrudoCounterWidget.third({super.key, required this.value, required this.title})
       : size = CrudoDashboardWidgetSize.third;
 
   @override
@@ -27,12 +27,15 @@ class CrudoCounterWidget extends StatelessWidget {
             child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(title),
+            Text(title,
+                style: TextStyle(
+                    fontSize: 25,
+                    color: Theme.of(context).colorScheme.primary)),
             SmoothCounter(
               count: value,
               textStyle: TextStyle(
                   fontSize: 50, color: Theme.of(context).colorScheme.tertiary),
-              duration: Duration(milliseconds: 2000),
+              duration: const Duration(milliseconds: 2000),
             ),
           ],
         )));
