@@ -243,7 +243,7 @@ class ${titleCaseResource}FormPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return CrudoForm<${titleCaseResource}Resource, $titleCaseResource>(
       displayType: CrudoFormDisplayType.fullPage,
-      formBuilder: (context, formData, futureResult, formController) => Column(children: [
+      formBuilder: (context) => Column(children: [
          CrudoTextField(
             config: CrudoFieldConfiguration(
               name: 'name',
@@ -253,7 +253,7 @@ class ${titleCaseResource}FormPage extends StatelessWidget {
           ),
           // Add more fields here
       ]),
-      toFormData: (model, extraData) => {
+      toFormData: (context, model) => {
         'id': model.id,
         'name': model.name,
       },

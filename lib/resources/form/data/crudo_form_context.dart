@@ -25,8 +25,10 @@ class CrudoFormContext {
 
   Map<String, List<String>> getFormErrors() =>
       Map.unmodifiable(validationErrors);
-  final Map<String, List<CrudoFile>> formFiles = {};
-  final Map<String, dynamic> formDropdownData = {};
+  final Map<String, List<CrudoFile>> _formFiles = {};
+
+  /// Save all the dropdown data of the form
+  final Map<String, dynamic> _formDropdownData = {};
 
   /// Keep track of the future signatures to check weather we need to reload the dropdowns
   final Map<String, int> formDropdownFutureSignatures = {};
@@ -57,7 +59,7 @@ class CrudoFormContext {
   T getExtra<T>(String key) => _extraData[key] as T;
 
   /// Get files from the form
-  List<CrudoFile>? getFiles(String key) => formFiles[key];
+  List<CrudoFile>? getFiles(String key) => _formFiles[key];
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {
@@ -119,16 +121,21 @@ class CrudoFormContext {
 
   /// Set a specific file group
   void setFiles(String key, List<CrudoFile> files) {
-    formFiles[key] = files;
+    _formFiles[key] = files;
   }
 
-  /// Set a specific dropdown value
+  /// Set a specific dropdown values
   void setDropdownData(String key, List<dynamic> data) {
-    formDropdownData[key] = data;
+    _formDropdownData[key] = data;
   }
 
-  /// Get a specific dropdown value
-  List<T>? getDropdownData<T>(String key) => formDropdownData[key] as List<T>?;
+  /// Remove a specific dropdown values
+  void removeDropdownData(String key) {
+    _formDropdownData.remove(key);
+  }
+
+  /// Get a specific dropdown values
+  List<T>? getDropdownData<T>(String key) => _formDropdownData[key] as List<T>?;
 
   /// Completely reloads the form by getting the data from the API or by starting a new form
   void init() {

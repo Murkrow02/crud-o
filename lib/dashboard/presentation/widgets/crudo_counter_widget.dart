@@ -27,7 +27,10 @@ class CrudoCounterWidget extends StatelessWidget {
             child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(title),
+            Text(title,
+                style: TextStyle(
+                    fontSize: 25,
+                    color: Theme.of(context).colorScheme.primary)),
             SmoothCounter(
               count: value,
               textStyle: TextStyle(

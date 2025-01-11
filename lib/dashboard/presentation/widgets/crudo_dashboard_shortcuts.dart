@@ -101,7 +101,7 @@ class CrudoDashboardShortcuts extends StatelessWidget {
     }).toList();
 
     return AlertDialog(
-      title: const Text('Seleziona azioni rapide WIP'),
+      title: const Text('Modifica azioni rapide WIP'),
       content: SingleChildScrollView(
         child: Column(children: resourceWidgets),
       ),
@@ -145,12 +145,30 @@ class CrudoDashboardShortcut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 30,
-      child: ListTile(
-        leading: icon,
-        title: Text(name),
-        onTap: onTap,
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero, // No border radius
+        ),
+        margin: EdgeInsets.zero,
+        child: Container(
+          decoration: BoxDecoration(
+            // Add a border on the left side of the container
+            border: Border(
+              left: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 5,
+              ),
+            ),
+          ),
+          height: 30,
+          child: ListTile(
+            leading: icon,
+            title: Text(name),
+            onTap: onTap,
+          ),
+        ),
       ),
     );
   }

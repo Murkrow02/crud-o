@@ -94,7 +94,7 @@ class CrudoDashboard extends StatelessWidget {
       child: ListTile(
         title: Row(
           children: [
-            Icon(resource.icon()),
+            Icon(resource.icon(), color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 10),
             Text(resource.pluralName()),
           ],
