@@ -99,6 +99,11 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
   /// Get the filters that are currently active
   Map<String, dynamic> getFiltersData() => _activeFiltersData;
 
+  /// Get a specific filter value
+  T getFilterValue<T>(String filterName) {
+    return _activeFiltersData[filterName] as T;
+  }
+
 // /// Check if a filter is active
 // bool isFilterActive(CrudoTableFilter<TModel> filter) {
 //   return _activeFilters.contains(filter.name);

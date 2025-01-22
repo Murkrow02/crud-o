@@ -8,11 +8,12 @@ import 'package:crud_o/resources/resource_provider.dart';
 import 'package:crud_o/resources/resource_repository.dart';
 import 'package:crud_o/resources/table/data/crudo_table_context.dart';
 import 'package:flutter/material.dart';
+import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 import 'package:provider/provider.dart';
 
-class CrudoTableFiltersPopup extends StatelessWidget {
-  final Function(BuildContext) filtersBuilder;
-  final CrudoTableContext tableContext;
+class CrudoTableFiltersPopup<TResource extends CrudoResource<TModel>, TModel> extends StatelessWidget {
+  final Function(BuildContext context,CrudoTableContext<TResource,TModel> tableContext)? filtersBuilder;
+  final CrudoTableContext<TResource,TModel> tableContext;
 
   const CrudoTableFiltersPopup(
       {super.key, required this.tableContext, required this.filtersBuilder});
@@ -69,7 +70,7 @@ class CrudoTableFiltersPopup extends StatelessWidget {
                                   style: const TextStyle(color: Colors.red)))
                         ];
                       },
-                      formBuilder: filtersBuilder,
+                      formBuilder: (context) => filtersBuilder!.call(context,tableContext),
                       customSaveAction: (context) async {
                         tableContext.setFilters(context.readFormContext().getFormData());
                         Navigator.pop(context);

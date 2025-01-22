@@ -30,6 +30,9 @@ class _ToggleColumnVisibilityPopupState
           ),
           itemCount: widget.settingsController.columns.length,
           itemBuilder: (context, index) {
+            if (!widget.settingsController.columns[index].canBeManuallyHidden) {
+              return const SizedBox.shrink();
+            }
             final column = widget.settingsController.columns[index];
             return Row(
               children: [
