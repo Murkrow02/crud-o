@@ -63,6 +63,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Save behavior
   final CrudoFormSaveBehaviour saveBehaviour;
 
+  /// Save icon
+  final Widget? customSaveIcon;
+
+  /// Custom save action
+  final Function(BuildContext context)? customSaveAction;
+
   /// Custom actions builder
   final List<Widget> Function(BuildContext context)? actionsBuilder;
 
@@ -79,6 +85,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       this.beforeSave,
       this.onCreate,
       this.onUpdate,
+      this.customSaveIcon,
+      this.customSaveAction,
       this.registerFutures,
       this.saveBehaviour = CrudoFormSaveBehaviour.saveAndClose,
       this.afterSave,
@@ -283,10 +291,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
       // Save action
       IconButton(
-          icon: const Icon(Icons.save),
+          icon: customSaveIcon ?? const Icon(Icons.save),
           style: ButtonStyle(
               padding: WidgetStateProperty.all(const EdgeInsets.all(2))),
-          onPressed: () => _onSave(context)),
+          onPressed: () => customSaveAction != null
+              ? customSaveAction!(context)
+              : _onSave(context)),
     ];
   }
 

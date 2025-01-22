@@ -11,8 +11,8 @@ import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
 import 'package:crud_o/resources/table/data/controllers/crudo_table_settings_controller.dart';
 import 'package:crud_o/resources/table/data/crudo_table_context.dart';
 import 'package:crud_o/resources/table/data/models/crudo_table_column.dart';
-import 'package:crud_o/resources/table/data/models/crudo_table_filter.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_column_menu.dart';
+import 'package:crud_o/resources/table/presentation/widgets/crudo_table_filters_popup.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_footer.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_settings_popup.dart';
@@ -37,7 +37,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   final Map<String, dynamic>? actionData;
   final CrudoTableDisplayType displayType;
   final bool paginated;
-  final List<CrudoTableFilter<TModel>>? filters;
+  final Function(BuildContext context)? filtersBuilder;
 
   // Useful when need to get the table context
   final Function(CrudoTableContext<TResource, TModel> tableContext)? onTableCreated;
@@ -56,7 +56,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     this.onDataChanged,
     this.actionData,
     this.customData,
-    this.filters,
+    this.filtersBuilder,
     this.onTableCreated,
     super.key,
   });
@@ -181,7 +181,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
           actions: [
             if (enableColumnHiding)
               _buildColumnHidingButton(context, tableContext),
-            if (filters != null) _buildFiltersPopMenuButton(context),
+            _buildFiltersPopMenuButton(context),
             _buildCreateActionButton(context)
           ]),
       body: Container(
@@ -472,30 +472,48 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   Widget _buildFiltersPopMenuButton(BuildContext context) {
+    if(filtersBuilder == null) return const SizedBox();
     var tableContext = context.readTableContext<TResource, TModel>();
-    // Button with dropdown
-    return PopupMenuButton(
-      icon: const Icon(Icons.filter_alt_outlined),
-      tooltip: 'Filtri',
-      itemBuilder: (context) {
-        return filters!.map((filter) {
-          return PopupMenuItem(
-            child: ListTile(
-              leading: filter.icon == null ? null : Icon(filter.icon),
-              title: Text(filter.label),
-              trailing: Icon(tableContext.isFilterActive(filter)
-                  ? Icons.check
-                  : Icons.check_box_outline_blank),
-              onTap: () {
-                Navigator.pop(context);
-                tableContext.toggleFilter(filter);
-                // context.readTableContext().setFuture(filter.future);
-              },
-            ),
-          );
-        }).toList();
-      },
-    );
+    return CrudoTableFiltersPopup(tableContext: tableContext, filtersBuilder: filtersBuilder!);
+
+    // // Open a tooltip from here to include a custom widget inside
+    // return Tooltip(
+    //   message: 'Filtri',
+    //   child: IconButton(
+    //     icon: const Icon(Icons.filter_alt_outlined),
+    //     onPressed: () {
+    //       showDialog(
+    //         context: context,
+    //         builder: (context) => Text("ASD")
+    //       );
+    //     },
+    //   ),
+    // );
+    //
+    //
+    // // Button with dropdown
+    // return PopupMenuButton(
+    //   icon: const Icon(Icons.filter_alt_outlined),
+    //   tooltip: 'Filtri',
+    //   itemBuilder: (context) {
+    //     return filters!.map((filter) {
+    //       return PopupMenuItem(
+    //         child: ListTile(
+    //           leading: filter.icon == null ? null : Icon(filter.icon),
+    //           title: Text(filter.label),
+    //           trailing: Icon(tableContext.isFilterActive(filter)
+    //               ? Icons.check
+    //               : Icons.check_box_outline_blank),
+    //           onTap: () {
+    //             Navigator.pop(context);
+    //             tableContext.toggleFilter(filter);
+    //             // context.readTableContext().setFuture(filter.future);
+    //           },
+    //         ),
+    //       );
+    //     }).toList();
+    //   },
+    // );
   }
 
   /// Called whenever a column is sorted

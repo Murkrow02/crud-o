@@ -7,11 +7,11 @@ import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';
 import 'package:crud_o/resources/table/data/controllers/crudo_table_settings_controller.dart';
 import 'package:crud_o/resources/table/data/models/crudo_table_filter.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 import 'package:provider/provider.dart';
 
 class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
-
   /// The future used at first when table is loaded
   /// It is a function that receives a [PaginatedRequest] and produces a [PaginatedResponse]
   final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)
@@ -20,7 +20,7 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
   /// Like [initialTableFuture] but can be changed through the lifecycle of the table
   /// For example if a filter is applied
   late Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)
-  _currentTableFuture;
+      _currentTableFuture;
 
   // Used to control the table
   late PlutoGridStateManager tableManager;
@@ -38,13 +38,15 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
   late final CrudoTableBloc<TResource, TModel> bloc;
 
   /// The filters that are currently active
-  List<String> _activeFilters = [];
+  Map<String, dynamic> _activeFiltersData = {};
 
-  CrudoTableContext({required this.initialTableFuture, required this.resource}){
+  CrudoTableContext(
+      {required this.initialTableFuture, required this.resource}) {
     _currentTableFuture = initialTableFuture;
   }
 
-  Future<PaginatedResponse<TModel>> Function(PaginatedRequest request) getTableFuture() => _currentTableFuture;
+  Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)
+      getTableFuture() => _currentTableFuture;
 
   /// Reload the table by resetting any filters, sorting and pagination
   /// This is like user navigating to the page for the first time
@@ -55,8 +57,9 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
   /// Refresh the table by keeping the current filters, sorting and pagination
   /// This just requests the same data again to the server
   void refreshTable() {
-    if(bloc.state is TableLoadedState) {
-      bloc.add(UpdateTableEvent(request: (bloc.state as TableLoadedState).request));
+    if (bloc.state is TableLoadedState) {
+      bloc.add(
+          UpdateTableEvent(request: (bloc.state as TableLoadedState).request));
     }
   }
 
@@ -65,53 +68,45 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
     bloc.add(UpdateTableEvent(request: request));
   }
 
-  /// Toggle a filter
-  void toggleFilter(CrudoTableFilter<TModel> filter) {
+  /// Set the filters of the table from the popup
+  void setFilters(Map<String, dynamic> filtersData) {
+    // Save the filters
+    _activeFiltersData = filtersData;
 
-    // Reset original future
-    _currentTableFuture = initialTableFuture;
+    // Format from <String,dynamic> to <String,String>
+    Map<String, String> formattedFilters = {};
+    for (var key in filtersData.keys) {
 
-    // Filter needs to be removed
-    if(_activeFilters.contains(filter.name)) {
+      // Skip if null
+      if (filtersData[key] == null) continue;
 
-      _activeFilters.remove(filter.name);
-
-      // TODO for now just resets the table but should fallback with other filters
-      if(filter.filterFunction != null) {
-        bloc.add(LoadTableEvent());
-      } else {
-        bloc.add(LoadTableEvent());
+      // If datetime and time is 00:00:00, remove it
+      if (filtersData[key] is DateTime) {
+        var date = filtersData[key] as DateTime;
+        if (date.hour == 0 && date.minute == 0 && date.second == 0) {
+          formattedFilters[key] = DateFormat('yyyy-MM-DD').format(date);
+          continue;
+        }
       }
 
-
+      formattedFilters[key] = filtersData[key].toString();
     }
 
-    // Filter applied
-    else {
-      _activeFilters.clear();
-      _activeFilters.add(filter.name);
-
-      // Provided with a whole custom function
-      if(filter.filterFunction != null) {
-        _currentTableFuture = filter.filterFunction!;
-        bloc.add(LoadTableEvent());
-      }
-      // Provided with just a request
-      else {
-        // Call the table with the new request
-        bloc.add(UpdateTableEvent(request: filter.filterRequest!));
-      }
-    }
-
-
+    bloc.add(UpdateTableEvent(
+        request: PaginatedRequest(queryParameters: formattedFilters, page: 1)));
   }
 
-  /// Check if a filter is active
-  bool isFilterActive(CrudoTableFilter<TModel> filter) {
-    return _activeFilters.contains(filter.name);
-  }
+  /// Get the filters that are currently active
+  Map<String, dynamic> getFiltersData() => _activeFiltersData;
+
+// /// Check if a filter is active
+// bool isFilterActive(CrudoTableFilter<TModel> filter) {
+//   return _activeFilters.contains(filter.name);
+// }
 }
 
 extension TableContextExtension on BuildContext {
-  CrudoTableContext<TResource,TModel> readTableContext<TResource extends CrudoResource<TModel>, TModel>() => read<CrudoTableContext<TResource,TModel>>();
+  CrudoTableContext<TResource, TModel>
+      readTableContext<TResource extends CrudoResource<TModel>, TModel>() =>
+          read<CrudoTableContext<TResource, TModel>>();
 }

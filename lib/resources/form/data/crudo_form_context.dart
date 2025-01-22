@@ -137,6 +137,14 @@ class CrudoFormContext {
   /// Get a specific dropdown values
   List<T>? getDropdownData<T>(String key) => _formDropdownData[key] as List<T>?;
 
+  /// Get the selected value of a dropdown
+  /// TODO: Maybe save this in another list of values, cannot do like this
+  // T? getDropdownSelectedModel<T>(String key) {
+  //   var dropdownData = context.readFormContext().getDropdownData(key) as Iterable<T>;
+  //   var selectedValue = context.readFormContext().get(key);
+  //
+  // }
+
   /// Completely reloads the form by getting the data from the API or by starting a new form
   void init() {
     var currentOperationType = context.readResourceContext()
