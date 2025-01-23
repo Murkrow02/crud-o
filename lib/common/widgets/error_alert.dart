@@ -1,3 +1,4 @@
+import 'package:crud_o/core/configuration/crudo_configuration.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
@@ -5,9 +6,8 @@ import 'package:crud_o/core/models/traced_error.dart';
 
 class ErrorAlert extends StatelessWidget {
   final TracedError tracedError;
-  final Logger logger = Logger(
-    printer: PrettyPrinter(),
-  );
+  final Logger logger = CrudoConfiguration.logger();
+
 
   ErrorAlert(this.tracedError, {super.key});
 

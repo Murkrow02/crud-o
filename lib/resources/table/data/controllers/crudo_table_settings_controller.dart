@@ -30,7 +30,7 @@ class CrudoTableSettingsController {
   }
 
   /// Handle visibility change for a column
-  Future<void> handleColumnVisibilityChange(int index, bool visible) async {
+  Future<void> handleColumnVisibilityChange(int index, bool visible,{bool persist = true}) async {
     final column = columns[index];
     column.visible = visible;
     tableManager.hideColumn(column.column, !visible);
@@ -44,14 +44,16 @@ class CrudoTableSettingsController {
     }
 
     // Save updated list
-    await _saveHiddenColumns(hiddenColumns);
+    if(persist) {
+      await _saveHiddenColumns(hiddenColumns);
+    }
   }
 
   /// Apply hidden columns preferences to the table
   Future<void> hideColumns() async {
     var hiddenColumns = await _getHiddenColumns();
     for (var col in columns) {
-      col.visible = !hiddenColumns.contains(col.column.field);
+      col.visible = col.visible == false ? false : !hiddenColumns.contains(col.column.field);
       if (!col.visible) {
         tableManager.hideColumn(col.column, true);
       }
