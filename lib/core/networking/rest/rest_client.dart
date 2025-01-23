@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crud_o/core/bus/events/unauthorized_bus_event.dart';
+import 'package:crud_o/core/configuration/crudo_configuration.dart';
 import 'package:crud_o/core/exceptions/api_validation_exception.dart';
 import 'package:crud_o/core/exceptions/rest_exception.dart';
 import 'package:crud_o/core/exceptions/unauthorized_exception.dart';
 import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
-import 'package:crud_o/core/networking/rest/rest_client_configuration.dart';
+import 'package:crud_o/core/configuration/rest_client_configuration.dart';
 import 'package:crud_o/core/bus/crudo_bus.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:logger/logger.dart';
@@ -13,29 +14,13 @@ import 'package:http/http.dart' as http;
 
 class RestClient {
   // Logger instance
-  final logger = Logger(printer: PrettyPrinter());
-
-  // Configuration
-  static RestClientConfiguration? _configuration;
-
-  static void configure(RestClientConfiguration configuration) =>
-      _configuration = configuration;
-
-  RestClientConfiguration get configuration {
-    if (_configuration == null) {
-      throw Exception(
-          'RestClient not configured, call RestClient.configure() first');
-    }
-    return _configuration!;
-  }
+  final logger = CrudoConfiguration.logger();
 
   // Build final uri with parameters
   Uri _buildUri(String endpoint, RestRequest? request) {
-    String url = configuration.baseUrl;
+    String url = CrudoConfiguration.rest().baseUrl;
     return Uri.parse(
-        '$url/$endpoint${request != null
-            ? '?${request.toQueryString()}'
-            : ''}');
+        '$url/$endpoint${request != null ? '?${request.toQueryString()}' : ''}');
   }
 
   // Function to perform a GET request
@@ -44,10 +29,10 @@ class RestClient {
     logger.d("GET: $uri");
     final response = await http
         .get(
-      uri,
-      headers: await configuration.getHeaders!(),
-    )
-        .timeout(Duration(seconds: configuration.timeoutSeconds));
+          uri,
+          headers: await CrudoConfiguration.rest().getHeaders!(),
+        )
+        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
 
@@ -59,11 +44,11 @@ class RestClient {
     logger.d("PUT: $uri");
     final response = await http
         .put(
-      uri,
-      body: jsonEncode(validatedData),
-      headers: await configuration.getHeaders!(),
-    )
-        .timeout(Duration(seconds: configuration.timeoutSeconds));
+          uri,
+          body: jsonEncode(validatedData),
+          headers: await CrudoConfiguration.rest().getHeaders!(),
+        )
+        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
 
@@ -75,14 +60,13 @@ class RestClient {
     var validatedData = validateJson(data);
     final response = await http
         .post(
-      uri,
-      body: jsonEncode(validatedData),
-      headers: await configuration.getHeaders!(),
-    )
-        .timeout(Duration(seconds: configuration.timeoutSeconds));
+          uri,
+          body: jsonEncode(validatedData),
+          headers: await CrudoConfiguration.rest().getHeaders!(),
+        )
+        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
-
 
   // Function to perform a DELETE request
   Future<dynamic> delete(String endpoint, {RestRequest? request}) async {
@@ -90,10 +74,10 @@ class RestClient {
     logger.d("DELETE: $uri");
     final response = await http
         .delete(
-      uri,
-      headers: await configuration.getHeaders!(),
-    )
-        .timeout(Duration(seconds: configuration.timeoutSeconds));
+          uri,
+          headers: await CrudoConfiguration.rest().getHeaders!(),
+        )
+        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
     return handleResponseAndDecodeBody(response);
   }
 
@@ -101,7 +85,7 @@ class RestClient {
     logger.d("Downloading file: $url");
     final response = await http.get(
       Uri.parse(url),
-      headers: await configuration.getHeaders!(),
+      headers: await CrudoConfiguration.rest().getHeaders!(),
     );
 
     if (response.statusCode == 200) {
@@ -111,8 +95,8 @@ class RestClient {
     }
   }
 
-
-  Future<http.Response> uploadFile(String endpoint, Uint8List data, String fieldName, String fileName,
+  Future<http.Response> uploadFile(
+      String endpoint, Uint8List data, String fieldName, String fileName,
       {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
     logger.d("Uploading file: $uri");
@@ -121,7 +105,7 @@ class RestClient {
     final multipartRequest = http.MultipartRequest('POST', uri);
 
     // Add headers except Content-Type (automatically handled by MultipartRequest)
-    final headers = await configuration.getHeaders!();
+    final headers = await CrudoConfiguration.rest().getHeaders!();
     headers.remove(
         'Content-Type'); // Remove Content-Type if set in configuration headers
     multipartRequest.headers.addAll(headers);
@@ -147,7 +131,6 @@ class RestClient {
       throw Exception('Failed to upload file: ${response.body}');
     }
   }
-
 
   // Generic response handler, returns response as dynamic after decoding and handling errors
   Future<dynamic> handleResponseAndDecodeBody(http.Response response) async {
