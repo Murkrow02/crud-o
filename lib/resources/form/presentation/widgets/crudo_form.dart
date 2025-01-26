@@ -25,7 +25,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   */
 
   /// Build the form fields
-  final Function(BuildContext context) formBuilder;
+  final Widget Function(BuildContext context) formBuilder;
+
+  /// Build the form fields (optional for view mode only)
+  final Widget Function(BuildContext context)? viewFormBuilder;
 
   /// Custom title on top of the form
   final String? customTitle;
@@ -79,6 +82,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   const CrudoForm(
       {super.key,
       required this.formBuilder,
+      this.viewFormBuilder,
       required this.toFormData,
       this.beforeValidate,
       this.customTitle,
@@ -123,11 +127,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                         context
                             .readFormContext()
                             .replaceFormData(state.formData);
-                        return formBuilder(context);
+                        return _buildForm(context);
                       }
 
                       if (state is FormSavingState) {
-                        return formBuilder(context);
+                        return _buildLoading();
                       }
 
                       // Form error, display the error
@@ -150,6 +154,14 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     },
                   ));
             })));
+  }
+
+  /// Build form based on the operation type
+  Widget _buildForm(BuildContext context) {
+    return context.readResourceContext().getCurrentOperationType() ==
+            ResourceOperationType.view && viewFormBuilder != null
+        ? viewFormBuilder!(context)
+        : formBuilder(context);
   }
 
   /// Detect display type and build the form wrapper accordingly
