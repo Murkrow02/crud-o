@@ -280,7 +280,7 @@ class ${titleCaseResource}TablePage extends StatelessWidget {
     return CrudoTable<${titleCaseResource}Resource, $titleCaseResource>(
       displayType: CrudoTableDisplayType.fullPage,
       paginated: true,
-      columns: [
+      columnBuilder: (context) => [
         CrudoTableColumn(
           column: PlutoColumn(
             title: 'Name', field: 'name', type: PlutoColumnType.text(),

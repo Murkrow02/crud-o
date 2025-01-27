@@ -99,22 +99,33 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
   @override
   Widget build(BuildContext context) {
 
-    return SizedBox(
-      child: CrudoField(
-        config: widget.config,
-        editModeBuilder: (context, onChanged) => SizedBox(
-          height: 150,
-          child: CrudoFieldWrapper(
-            child: _buildFilesPreview(context),
-          ),
-        ),
-        viewModeBuilder: (context) => CrudoViewField(config:widget.config, child: _buildFilesPreview(context)),
+    return CrudoField(
+      config: widget.config,
+      editModeBuilder: (context, onChanged) => CrudoFieldWrapper(
+        child: _buildFilesPreview(context),
       ),
+      viewModeBuilder: (context) => CrudoViewField(config:widget.config, child: _buildFilesPreview(context)),
     );
   }
 
   Widget _buildFilesPreview(BuildContext context)
   {
+    // Check for empty files
+    if (_selectedFiles.isEmpty && context.readResourceContext().getCurrentOperationType() == ResourceOperationType.view) {
+      return  Center(
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: [
+              const Icon(Icons.image_not_supported, size: 50, color: Colors.grey),
+              const SizedBox(height: 10),
+              Text('Nessun file selezionato'),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Row(
       children: [
         ..._selectedFiles.asMap().entries.map((entry) {
