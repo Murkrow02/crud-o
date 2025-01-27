@@ -101,6 +101,8 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
         itemCount: _itemsCount,
         itemBuilder: (context, index) {
           return ListTile(
+            contentPadding: EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
+            dense: true,
             title: widget.itemBuilder(context, index),
             trailing: SizedBox(
               width: 25,

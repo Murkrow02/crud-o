@@ -13,32 +13,34 @@ class CrudoViewField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Card(
-        elevation: 2.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(
+          color: Colors.grey[100]!,
+          width: 1,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                config.label ?? config.name,
-                textAlign: TextAlign.start,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                 // color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 20.0,
-                ),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      width: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              config.label ?? config.name,
+              textAlign: TextAlign.start,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+               // color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 20.0,
               ),
-              const SizedBox(height: 5),
-              child,
-            ],
-          ),
+            ),
+            const SizedBox(height: 5),
+            child,
+          ],
         ),
       ),
     );

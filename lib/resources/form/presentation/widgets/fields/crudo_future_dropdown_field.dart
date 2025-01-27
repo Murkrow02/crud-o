@@ -44,47 +44,51 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     // Clear data if we got a new future
     _clearDataIfNewFuture(context);
 
-    // // Detect if edit or create
-    // if (config.shouldRenderViewField(context)) {
-    //   return _buildPreviewField(context);
-    // }
-
     return CrudoField(
-        viewModeBuilder: (context) => _buildPreviewField(context),
-        editModeBuilder: (context, onChanged) {
-          return _buildEditField(context);
-        },
-        config: config);
+      viewModeBuilder: (context) => _buildField(context, isEditMode: false),
+      editModeBuilder: (context, onChanged) =>
+          _buildField(context, isEditMode: true),
+      config: config,
+    );
   }
 
-  Widget _buildPreviewField(BuildContext context) {
+
+  Widget _buildField(BuildContext context, {required bool isEditMode}) {
     return Futuristic<List<TModel>>(
       autoStart: true,
       futureBuilder: () => futureProvider(),
+      busyBuilder: isEditMode
+          ? (context) => _buildDropdown([], context, loading: true)
+          : null,
       errorBuilder: (context, error, retry) =>
           _buildError(context, error, retry),
       dataBuilder: (context, data) {
-        var initialItem = getInitialItem(context, data ?? []);
-        return CrudoViewField(
-          config: config,
-          child: initialItem != null
-              ? itemBuilder(initialItem)
-              : const Text('N/A'),
-        );
+
+        // At first use the data from the future, then use the data from the form in case devs wants to dynamically change the items
+        // It is important to set dropdown data also in the view mode if dev wants to take data from the form in the view mode
+        if (context.readFormContext().getDropdownData(config.name) == null &&
+            data!.isNotEmpty) {
+          context.readFormContext().setDropdownData(config.name, data);
+        } else if (context.readFormContext().getDropdownData(config.name) != null) {
+          data =
+              context.readFormContext().getDropdownData<TModel>(config.name) ?? [];
+        }
+
+        if (isEditMode) {
+          return _buildDropdown(data ?? [], context);
+        } else {
+          var initialItem = getInitialItem(context, data ?? []);
+          return CrudoViewField(
+            config: config,
+            child: initialItem != null
+                ? itemBuilder(initialItem)
+                : const Text('N/A'),
+          );
+        }
       },
     );
   }
 
-  Widget _buildEditField(BuildContext context) {
-    return Futuristic<List<TModel>>(
-      autoStart: true,
-      futureBuilder: () => futureProvider(),
-      busyBuilder: (context) => _buildDropdown([], context, loading: true),
-      errorBuilder: (context, error, retry) =>
-          _buildError(context, error, retry),
-      dataBuilder: (context, data) => _buildDropdown(data ?? [], context),
-    );
-  }
 
   Widget _buildError(BuildContext context, dynamic error, VoidCallback retry) {
     if (kDebugMode) {
@@ -114,8 +118,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   TModel? getInitialItem(BuildContext context, List<TModel> items) {
-    var value = context.readFormContext().get(config.name)
-    as TValue?; // Get the value from the form
+    var value = context.readFormContext().get<TValue?>(config.name);
     if (value == null || items.isEmpty) {
       return null;
     }
@@ -128,15 +131,6 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       {bool loading = false}) {
     if (multiple) {
       throw UnimplementedError('Multiple selection not implemented yet');
-    }
-
-    // At first use the data from the future, then use the data from the form in case devs wants to dynamically change the items
-    if (context.readFormContext().getDropdownData(config.name) == null &&
-        items.isNotEmpty) {
-      context.readFormContext().setDropdownData(config.name, items);
-    } else if (context.readFormContext().getDropdownData(config.name) != null) {
-      items =
-          context.readFormContext().getDropdownData<TModel>(config.name) ?? [];
     }
 
     // Little placeholder for lazy loading display

@@ -37,7 +37,7 @@ class CrudoField extends StatelessWidget {
 
     return Padding(
       key: config.getFieldKey(context),
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: config.padding ?? const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
           Expanded(
@@ -102,6 +102,7 @@ class CrudoFieldConfiguration {
   final bool visible;
   final bool enabled;
   final bool reactive;
+  final EdgeInsets? padding;
   final List<ResourceOperationType>? visibleOn;
   final List<ResourceOperationType>? enabledOn;
   final List<String>? dependsOn;
@@ -120,6 +121,7 @@ class CrudoFieldConfiguration {
     this.visibleOn,
     this.enabledOn,
     this.actions = const [],
+    this.padding,
     this.onChanged,
   });
 
