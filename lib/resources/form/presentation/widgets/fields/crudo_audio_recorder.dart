@@ -1,4 +1,6 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:crud_o/resources/form/data/crudo_file.dart';
+import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:waveform_recorder/waveform_recorder.dart';
@@ -63,19 +65,66 @@ class _CrudoAudioRecorderState extends State<CrudoAudioRecorder> {
     super.dispose();
   }
 
-  void _loadExistingAudio() {
-    setState(() {});
+  void _loadExistingAudio() async {
+    final audioUrl = context.readFormContext().get(widget.config.name);
+
+    if (audioUrl == null || audioUrl.isEmpty) {
+      setState(() {
+        _audioPath = null;
+        _totalDuration = Duration.zero;
+      });
+      return;
+    }
+
+    try {
+      setState(() {
+        _audioPath = audioUrl;
+      });
+
+      // Set the audio source and wait for completion
+      await _audioPlayer.setSourceUrl(audioUrl, mimeType: 'audio/mpeg');
+
+      // Wait for duration to be updated via the stream
+      _audioPlayer.onDurationChanged.first.then((duration) {
+        setState(() {
+          _totalDuration = duration;
+        });
+      });
+    } catch (e) {
+      debugPrint('Error loading audio: $e');
+      setState(() {
+        _audioPath = null;
+        _totalDuration = Duration.zero;
+      });
+    }
   }
 
+
+
   Future<void> _toggleRecording() async {
+
+    // Recording -> STOP
     if (_recorderController.isRecording) {
       await _recorderController.stopRecording();
       final audioFile = _recorderController.file;
       if (audioFile != null) {
         _audioPath = audioFile.path;
+
+        var fileBytes = await audioFile.readAsBytes();
+
+        // Add file to form context
+        context.readFormContext().setFiles(
+          widget.config.name,
+          [CrudoFile(data: fileBytes, source: FileSource.picker, type: FileType.audio)],
+        );
+
+        // Call user provided callback
         widget.onAudioRecorded?.call(_audioPath, _updateFieldState);
       }
-    } else {
+    }
+
+    // STOP -> RECORDING
+    else {
       await _recorderController.startRecording();
     }
     setState(() {});
