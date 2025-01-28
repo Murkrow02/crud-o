@@ -26,7 +26,7 @@ dependencies:
   flutter_bloc: ^8.1.6
   flutter_image_compress: ^2.3.0
   futuristic: ^0.2.0
-  haptic_feedback: ^0.5.1+1
+  haptic_feedback: ^0.4.2
   http: ^1.2.2
   image_picker: ^1.1.2
   interact_cli: ^2.4.0
