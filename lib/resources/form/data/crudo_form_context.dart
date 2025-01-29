@@ -59,7 +59,9 @@ class CrudoFormContext {
   T getExtra<T>(String key) => _extraData[key] as T;
 
   /// Get files from the form
-  List<CrudoFile>? getFiles(String key) => _formFiles[key];
+  List<CrudoFile>? getFiles(String key) => _formFiles.containsKey(key)
+      ? _formFiles[key]
+      : null;
 
   /// Set a specific value in the form
   void set(String key, dynamic value) {

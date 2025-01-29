@@ -302,6 +302,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             onPressed: () => _enterEditMode(context)),
 
       // Save action
+      if (context.readResourceContext().getCurrentOperationType() !=
+          ResourceOperationType.view)
       IconButton(
           icon: customSaveIcon ?? const Icon(Icons.save),
           style: ButtonStyle(
