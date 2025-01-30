@@ -37,7 +37,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   final Map<String, dynamic>? actionData;
   final CrudoTableDisplayType displayType;
   final bool paginated;
-  final Function(BuildContext context,CrudoTableContext<TResource, TModel> tableContext)? filtersBuilder;
+  final Function(BuildContext context,CrudoTableContext<TResource, TModel> tableContext)? filtersFormBuilder;
 
   // Useful when need to get the table context
   final Function(CrudoTableContext<TResource, TModel> tableContext)? onTableCreated;
@@ -56,7 +56,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     this.onDataChanged,
     this.actionData,
     this.customData,
-    this.filtersBuilder,
+    this.filtersFormBuilder,
     this.onTableCreated,
     super.key,
   });
@@ -473,9 +473,9 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   Widget _buildFiltersPopMenuButton(BuildContext context) {
-    if(filtersBuilder == null) return const SizedBox();
+    if(filtersFormBuilder == null) return const SizedBox();
     var tableContext = context.readTableContext<TResource, TModel>();
-    return CrudoTableFiltersPopup<TResource,TModel>(tableContext: tableContext, filtersBuilder: filtersBuilder!);
+    return CrudoTableFiltersPopup<TResource,TModel>(tableContext: tableContext, filtersFormBuilder: filtersFormBuilder!);
 
     // // Open a tooltip from here to include a custom widget inside
     // return Tooltip(

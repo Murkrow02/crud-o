@@ -1,3 +1,4 @@
+import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
@@ -11,12 +12,18 @@ import 'package:flutter/material.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 import 'package:provider/provider.dart';
 
+/*
+* This one is a bit tricky
+* We treat the filters as a form, so we need a resource to handle it
+* This is useful as user can simply create filters using the same components as the form
+* Later, all the form values are used to filter out the table using filter_name => value
+*/
 class CrudoTableFiltersPopup<TResource extends CrudoResource<TModel>, TModel> extends StatelessWidget {
-  final Function(BuildContext context,CrudoTableContext<TResource,TModel> tableContext)? filtersBuilder;
+  final Function(BuildContext context,CrudoTableContext<TResource,TModel> tableContext)? filtersFormBuilder;
   final CrudoTableContext<TResource,TModel> tableContext;
 
   const CrudoTableFiltersPopup(
-      {super.key, required this.tableContext, required this.filtersBuilder});
+      {super.key, required this.tableContext, required this.filtersFormBuilder});
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +77,7 @@ class CrudoTableFiltersPopup<TResource extends CrudoResource<TModel>, TModel> ex
                                   style: const TextStyle(color: Colors.red)))
                         ];
                       },
-                      formBuilder: (context) => filtersBuilder!.call(context,tableContext),
+                      formBuilder: (context) => filtersFormBuilder!.call(context,tableContext),
                       customSaveAction: (context) async {
                         tableContext.setFilters(context.readFormContext().getFormData());
                         Navigator.pop(context);

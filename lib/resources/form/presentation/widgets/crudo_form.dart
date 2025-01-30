@@ -41,7 +41,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Map<String, Future> Function(BuildContext context)? registerFutures;
 
   /*
-  * Callbacks
+  ** Callbacks
   */
 
   /// Called before validating the form, should return the final form data to validate
@@ -63,6 +63,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Future<TModel> Function(
       BuildContext context, Map<String, dynamic> data)? onUpdate;
 
+  /// Called whenever a field is changed
+  final void Function(BuildContext context, String key, dynamic value)? onFieldChange;
+
+  /*
+  **  Actions
+  */
   /// Save behavior
   final CrudoFormSaveBehaviour saveBehaviour;
 
@@ -92,6 +98,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       this.customSaveIcon,
       this.customSaveAction,
       this.registerFutures,
+      this.onFieldChange,
       this.saveBehaviour = CrudoFormSaveBehaviour.saveAndClose,
       this.afterSave,
       this.createAnother,
@@ -106,6 +113,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         child: Provider(
             create: (context) => CrudoFormContext(
                 context: context,
+                save: _onSave,
                 formBloc: context.read<CrudoFormBloc<TResource, TModel>>()),
             child: Builder(builder: (context) {
               // TODO: a possible optimization here is that if the ResourceContext().model is not null and
@@ -114,6 +122,11 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
               // Init or enter editing mode
               context.readFormContext().init();
+
+              // Listen for field changes
+              context.readFormContext().onFieldChange = (key, value) {
+                onFieldChange?.call(context, key, value);
+              };
 
               // Build form
               return _buildFormWrapper(
@@ -308,14 +321,18 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           icon: customSaveIcon ?? const Icon(Icons.save),
           style: ButtonStyle(
               padding: WidgetStateProperty.all(const EdgeInsets.all(2))),
-          onPressed: () => customSaveAction != null
-              ? customSaveAction!(context)
-              : _onSave(context)),
+          onPressed: () => _onSave(context)),
     ];
   }
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
+
+    if (customSaveAction != null) {
+      customSaveAction!(context);
+      return;
+    }
+
     // Validate form fields TODO
 
     // Get data from fields
