@@ -107,6 +107,7 @@ class CrudoFieldConfiguration {
   final List<ResourceOperationType>? enabledOn;
   final List<String>? dependsOn;
   final List<CrudoAction> actions;
+  final CrudoFilterConfiguration? filterConfiguration;
   final void Function(BuildContext context, dynamic value)? onChanged;
 
   CrudoFieldConfiguration({
@@ -122,6 +123,7 @@ class CrudoFieldConfiguration {
     this.enabledOn,
     this.actions = const [],
     this.padding,
+    this.filterConfiguration,
     this.onChanged,
   });
 
@@ -170,4 +172,15 @@ class CrudoFieldConfiguration {
       dependsOn: dependsOn ?? this.dependsOn,
     );
   }
+}
+
+/// TODO: implement
+/// You can use the onFieldChanged on the form to immediately save and edit the set(k,v) to set(k,v, {notify: true}) to handle bug when called inside fields onChanged
+class CrudoFilterConfiguration
+{
+  final bool deferred;
+
+  CrudoFilterConfiguration({
+    this.deferred = true,
+  });
 }

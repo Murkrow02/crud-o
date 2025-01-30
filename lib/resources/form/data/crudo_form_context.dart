@@ -48,8 +48,15 @@ class CrudoFormContext {
   /// If the API has been updated since the last time the form was loaded
   final CrudoActionResult formResult = CrudoActionResult();
 
+  /// Listener to invoke when a field changes its value
+  Function(String key, dynamic value)? onFieldChange;
+
+  /// Invoke to save the form
+  final Function(BuildContext context) save;
+
   CrudoFormContext({required this.context,
     required this.formBloc,
+    required this.save,
     this.validationErrors = const {}});
 
   /// Get a specific value from the form
@@ -66,6 +73,7 @@ class CrudoFormContext {
   /// Set a specific value in the form
   void set(String key, dynamic value) {
     _formData[key] = value;
+    onFieldChange?.call(key, value);
   }
 
   /// Set a specific value for state management
@@ -176,6 +184,8 @@ class CrudoFormContext {
 
   /// Returns the result of a registered future operation
   T? getFutureResult<T>(String key) => futureResults[key] as T?;
+
+
 
   Map<String, dynamic> exportFormData() {
     var exportedData = <String, dynamic>{};
