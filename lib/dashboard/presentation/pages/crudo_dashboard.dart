@@ -131,9 +131,6 @@ class CrudoDashboard extends StatelessWidget {
                         // If group is not empty, show expansion tile
                         if (group != '')
                           ExpansionTile(
-                            shape: Border(
-                                bottom: BorderSide(
-                                    color: Theme.of(context).dividerColor)),
                             initiallyExpanded: true,
                             title: Text(group),
                             children: [
@@ -191,9 +188,7 @@ class CrudoDashboard extends StatelessWidget {
     // Group resources by group
     var groupedResources = <String, List<MapEntry<CrudoResource, Widget>>>{};
 
-    // Create a list of futures for each resource's viewAny() check
-    List<Future<void>> tasks = [];
-
+    // Cycle on each resource
     for (int i = 0; i < resourcesWithTables.length; i++) {
       var resource = resourcesWithTables[i];
       var table = tables[i];
@@ -214,6 +209,15 @@ class CrudoDashboard extends StatelessWidget {
         groupedResources[group]!.add(MapEntry(resource, table));
       }
     }
+
+    // Sort groups alphabetically
+    groupedResources = Map.fromEntries(groupedResources.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key)));
+
+    // Sort each resource inside group based on navigationSort
+    groupedResources.forEach((key, value) {
+      value.sort((a, b) => a.key.navigationSort().compareTo(b.key.navigationSort()));
+    });
 
     return groupedResources;
   }

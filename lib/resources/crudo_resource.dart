@@ -50,6 +50,8 @@ abstract class CrudoResource<TModel extends dynamic> extends Object {
 
   String group() => '';
 
+  int navigationSort() => 0;
+
   Map<String, dynamic> toMap(TModel model) => throw UnimplementedError();
 
   /// **************************************************************************************************
