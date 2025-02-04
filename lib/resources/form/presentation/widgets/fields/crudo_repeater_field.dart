@@ -18,6 +18,8 @@ class CrudoRepeaterField extends StatefulWidget {
   final Widget Function(BuildContext context, int index) itemBuilder;
   final int initialItemCount;
   final bool autoFlattenData;
+  final bool showAddButton;
+  final Decoration? containerDecoration;
   final CrudoRepeaterController? controller;
 
   const CrudoRepeaterField({
@@ -26,6 +28,8 @@ class CrudoRepeaterField extends StatefulWidget {
     required this.itemBuilder,
     this.initialItemCount = 1,
     this.autoFlattenData = true,
+    this.showAddButton = true,
+    this.containerDecoration,
     this.controller,
   });
 
@@ -45,15 +49,16 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
     // Initialize the repeater with the initial item count
     _itemsCount = context.readResourceContext().getCurrentOperationType() ==
-        ResourceOperationType.view
+            ResourceOperationType.view
         ? 0
         : widget.initialItemCount;
   }
 
   @override
   Widget build(BuildContext context) {
-    var alreadyFlattened = context.readFormContext().get(
-        '${widget.config.name}_flattened'); // Temp logic to flatten data
+    var alreadyFlattened = context
+        .readFormContext()
+        .get('${widget.config.name}_flattened'); // Temp logic to flatten data
 
     if ((widget.autoFlattenData && alreadyFlattened == null) ||
         !alreadyFlattened) {
@@ -66,13 +71,13 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
     return CrudoField(
       config: widget.config.copyWith(name: '${widget.config.name}_count'),
-      viewModeBuilder: (context) =>
-          CrudoViewField(config: widget.config, child: _buildRepeaterItems(context)),
+      viewModeBuilder: (context) => CrudoViewField(
+          config: widget.config, child: _buildRepeaterItems(context)),
       editModeBuilder: (context, onChanged) => Padding(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
         child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          decoration: widget.containerDecoration ?? BoxDecoration(
             border: Border.all(
               color: Colors.grey.withOpacity(0.5),
               width: 1,
@@ -82,16 +87,18 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
           child: Column(
             children: [
               _buildRepeaterItems(context),
-              const SizedBox(height: 8),
-              IconButton(
-                style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all(
-                      Theme.of(context).colorScheme.primary),
+              if (widget.showAddButton) ...[
+                const SizedBox(height: 8),
+                IconButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(
+                        Theme.of(context).colorScheme.primary),
+                  ),
+                  onPressed: () => _addRepeaterItem(),
+                  icon: Icon(Icons.add,
+                      color: Theme.of(context).colorScheme.onPrimary),
                 ),
-                onPressed: () => _addRepeaterItem(),
-                icon: Icon(Icons.add,
-                    color: Theme.of(context).colorScheme.onPrimary),
-              ),
+              ]
             ],
           ),
         ),
@@ -100,30 +107,46 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   }
 
   Widget _buildRepeaterItems(BuildContext context) {
+
+    // Render placeholder if 0 items
+    if (_itemsCount == 0 && widget.config.placeholder != null) {
+      return Center(
+        child: Text(
+          widget.config.placeholder!,
+          style: const TextStyle(
+            color: Colors.grey,
+          ),
+        ),
+      );
+    }
+
+
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _itemsCount,
       itemBuilder: (context, index) {
         return ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
           dense: true,
           title: widget.itemBuilder(context, index),
           trailing: SizedBox(
-            width: 25,
-            height: 25,
+            width: 20,
+            height: 20,
             child: Visibility(
               visible:
-              context.readResourceContext().getCurrentOperationType() !=
-                  ResourceOperationType.view,
+                  context.readResourceContext().getCurrentOperationType() !=
+                      ResourceOperationType.view,
               child: IconButton(
                 style: ButtonStyle(
+                  padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
                   backgroundColor: MaterialStateProperty.all(
                       Theme.of(context).colorScheme.error),
                 ),
                 onPressed: () => _removeRepeaterItem(index),
                 icon: Icon(Icons.remove,
-                    size: 10, color: Theme.of(context).colorScheme.onError),
+                    size: 14, color: Theme.of(context).colorScheme.onError),
               ),
             ),
           ),
@@ -135,6 +158,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   void _addRepeaterItem() {
     setState(() {
       _itemsCount++;
+      widget.config.onChanged?.call(context, _itemsCount);
     });
   }
 
@@ -172,6 +196,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
     setState(() {
       _itemsCount--;
+      widget.config.onChanged?.call(context, _itemsCount);
     });
   }
 
@@ -219,8 +244,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   }
 }
 
-
-
 class CrudoRepeaterController {
   _CrudoRepeaterFieldState? _state;
 
@@ -242,5 +265,3 @@ class CrudoRepeaterController {
   /// Retrieves the current count of items
   int get itemCount => _state?._itemsCount ?? 0;
 }
-
-
