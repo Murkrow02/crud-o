@@ -131,7 +131,7 @@ class CrudoDashboard extends StatelessWidget {
                         // If group is not empty, show expansion tile
                         if (group != '')
                           ExpansionTile(
-                            initiallyExpanded: true,
+                            initiallyExpanded: false,
                             title: Text(group),
                             children: [
                               for (var entry in groupedResources[group]!)
