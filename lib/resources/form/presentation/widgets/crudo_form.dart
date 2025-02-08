@@ -37,6 +37,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final Map<String, dynamic> Function(BuildContext context, TModel model)
       toFormData;
 
+  /// Extra data to be passed to the form
+  final Map<String, dynamic> Function(BuildContext context)? extraData;
+
   /// Register futures to be executed
   final Map<String, Future> Function(BuildContext context)? registerFutures;
 
@@ -64,11 +67,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       BuildContext context, Map<String, dynamic> data)? onUpdate;
 
   /// Called whenever a field is changed
-  final void Function(BuildContext context, String key, dynamic value)? onFieldChange;
+  final void Function(BuildContext context, String key, dynamic value)?
+      onFieldChange;
 
   /*
   **  Actions
   */
+
   /// Save behavior
   final CrudoFormSaveBehaviour saveBehaviour;
 
@@ -90,6 +95,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       required this.formBuilder,
       this.viewFormBuilder,
       required this.toFormData,
+      this.extraData,
       this.beforeValidate,
       this.customTitle,
       this.beforeSave,
@@ -127,6 +133,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
               context.readFormContext().onFieldChange = (key, value) {
                 onFieldChange?.call(context, key, value);
               };
+
+              // Set form extra data if provided
+              if (extraData != null) {
+                for (var key in extraData!(context).keys) {
+                  context.readFormContext().setExtra(key, extraData!(context)[key]);
+                }
+              }
 
               // Build form
               return _buildFormWrapper(
@@ -172,7 +185,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Build form based on the operation type
   Widget _buildForm(BuildContext context) {
     return context.readResourceContext().getCurrentOperationType() ==
-            ResourceOperationType.view && viewFormBuilder != null
+                ResourceOperationType.view &&
+            viewFormBuilder != null
         ? viewFormBuilder!(context)
         : formBuilder(context);
   }
@@ -317,17 +331,16 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       // Save action
       if (context.readResourceContext().getCurrentOperationType() !=
           ResourceOperationType.view)
-      IconButton(
-          icon: customSaveIcon ?? const Icon(Icons.save),
-          style: ButtonStyle(
-              padding: WidgetStateProperty.all(const EdgeInsets.all(2))),
-          onPressed: () => _onSave(context)),
+        IconButton(
+            icon: customSaveIcon ?? const Icon(Icons.save),
+            style: ButtonStyle(
+                padding: WidgetStateProperty.all(const EdgeInsets.all(2))),
+            onPressed: () => _onSave(context)),
     ];
   }
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
-
     if (customSaveAction != null) {
       customSaveAction!(context);
       return;
