@@ -6,6 +6,6 @@ class RestException implements Exception {
 
   @override
   String toString() {
-    return message;
+    return "Rest request failed with code $code: $message";
   }
 }
