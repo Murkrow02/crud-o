@@ -13,6 +13,7 @@ class CrudoTextField extends StatelessWidget {
   final FormFieldValidator<String>? validator;
   final bool numeric;
   final int maxLines;
+  final bool obscureText;
 
   const CrudoTextField({
     super.key,
@@ -21,6 +22,7 @@ class CrudoTextField extends StatelessWidget {
     this.validator,
     this.numeric = false,
     this.maxLines = 1,
+    this.obscureText = false,
   });
 
   @override
@@ -38,6 +40,7 @@ class CrudoTextField extends StatelessWidget {
               decoration: defaultDecoration,
               keyboardType: numeric ? TextInputType.number : keyboardType,
               maxLines: maxLines,
+              obscureText: obscureText,
             ));
   }
 
