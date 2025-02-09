@@ -12,6 +12,8 @@ import 'package:flutter/material.dart';
 *   A field that repeats n times a child form
 *   The value of this field is how many items are added
 *   The value is null if no items are added
+*
+*   This is really convoluted shit, fix when spare time ;)
 */
 class CrudoRepeaterField extends StatefulWidget {
   final CrudoFieldConfiguration config;
@@ -50,15 +52,17 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     // Initialize the repeater with the initial item count
     _itemsCount = context.readResourceContext().getCurrentOperationType() ==
             ResourceOperationType.view
-        ? 0
-        : widget.initialItemCount;
+        ? 0 // WHY?
+        : (context.readFormContext().get('${widget.config.name}_count')
+                as int? ??
+            widget
+                .initialItemCount); // When form gets rebuilt this gets reset so make sure to use itemsCount from the form context to keep it persistent across rebuilds
   }
 
   @override
   Widget build(BuildContext context) {
-    var alreadyFlattened = context
-        .readFormContext()
-        .get('${widget.config.name}_flattened'); // Temp logic to flatten data
+    var alreadyFlattened = context.readFormContext().getExtra(
+        '${widget.config.name}_flattened'); // Temp logic to flatten data
 
     if ((widget.autoFlattenData && alreadyFlattened == null) ||
         !alreadyFlattened) {
@@ -66,7 +70,9 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
       flattenedData.forEach((key, value) {
         context.readFormContext().set(key, value);
       });
-      context.readFormContext().set('${widget.config.name}_flattened', true);
+      context
+          .readFormContext()
+          .setExtra('${widget.config.name}_flattened', true);
     }
 
     return CrudoField(
@@ -77,13 +83,14 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-          decoration: widget.containerDecoration ?? BoxDecoration(
-            border: Border.all(
-              color: Colors.grey.withOpacity(0.5),
-              width: 1,
-            ),
-            borderRadius: BorderRadius.circular(5),
-          ),
+          decoration: widget.containerDecoration ??
+              BoxDecoration(
+                border: Border.all(
+                  color: Colors.grey.withOpacity(0.5),
+                  width: 1,
+                ),
+                borderRadius: BorderRadius.circular(5),
+              ),
           child: Column(
             children: [
               _buildRepeaterItems(context),
@@ -107,7 +114,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   }
 
   Widget _buildRepeaterItems(BuildContext context) {
-
     // Render placeholder if 0 items
     if (_itemsCount == 0 && widget.config.placeholder != null) {
       return Center(
@@ -119,7 +125,6 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
         ),
       );
     }
-
 
     return ListView.builder(
       shrinkWrap: true,
@@ -158,6 +163,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   void _addRepeaterItem() {
     setState(() {
       _itemsCount++;
+      context.readFormContext().set('${widget.config.name}_count', _itemsCount);
       widget.config.onChanged?.call(context, _itemsCount);
     });
   }
@@ -196,6 +202,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
 
     setState(() {
       _itemsCount--;
+      context.readFormContext().set('${widget.config.name}_count', _itemsCount);
       widget.config.onChanged?.call(context, _itemsCount);
     });
   }
