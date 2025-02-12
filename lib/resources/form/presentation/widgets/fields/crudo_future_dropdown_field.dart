@@ -118,12 +118,25 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   TModel? getInitialItem(BuildContext context, List<TModel> items) {
+
+    // Check if actually something is selected
     var value = context.readFormContext().get<TValue?>(config.name);
     if (value == null || items.isEmpty) {
       return null;
     }
+
+    // First check if the value is already in the items list
     var item = items.firstWhereOrNull(
             (el) => valueBuilder(el).toString() == value.toString());
+
+    // Then maybe is the selected value that can also not be present in the list (accessed through search)
+    if (item == null) {
+      var selectedItem = context.readFormContext().getDropdownSelectedValue<TModel?>(config.name);
+      if (selectedItem != null && valueBuilder(selectedItem).toString() == value.toString()) {
+        item = selectedItem;
+      }
+    }
+
     return item;
   }
 
@@ -156,10 +169,26 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }
 
   void _handleDropdownChange(BuildContext context,
-      CrudoFieldConfiguration config, TModel? value, {skipRebuild = false}) {
-    var valueToSet = value != null ? valueBuilder(value) : null;
+      CrudoFieldConfiguration config, TModel? selectedModel, {skipRebuild = false, notifyValueChanged = false}) {
+
+    // Return if null
+    if(selectedModel == null) {
+      return;
+    }
+
+    // Add selected item in the form context extra
+    context.readFormContext().setDropdownSelectedValue(config.name, selectedModel);
+
+    // Create value from the selected model
+    var valueToSet = selectedModel != null ? valueBuilder(selectedModel) : null;
     context.readFormContext().set(config.name, valueToSet);
-    config.onChanged?.call(context, valueToSet);
+
+    // Only notify when manually changing the value
+    if (notifyValueChanged) {
+      config.onChanged?.call(context, valueToSet);
+    }
+
+    // Rebuild the form if needed
     if (!skipRebuild) {
       context.readFormContext().rebuild();
     }
@@ -196,7 +225,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                       ? itemBuilder(initialItem)
                       : Text(config.label ?? config.name),
                   onChanged: (value) =>
-                      _handleDropdownChange(context, config, value),
+                      _handleDropdownChange(context, config, value, notifyValueChanged: true),
                   futureRequest: (String searchText) =>
                       searchFuture!(searchText),
                 );
@@ -214,7 +243,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                       ? itemBuilder(initialItem)
                       : Text(config.label ?? config.name),
                   onChanged: (value) =>
-                      _handleDropdownChange(context, config, value),
+                      _handleDropdownChange(context, config, value, notifyValueChanged: true),
                 );
               }
             },

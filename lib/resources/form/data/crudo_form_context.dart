@@ -30,6 +30,9 @@ class CrudoFormContext {
   /// Save all the dropdown data of the form
   final Map<String, dynamic> _formDropdownData = {};
 
+  /// Save all the dropdown selected values
+  final Map<String, dynamic> _formDropdownSelectedValues = {};
+
   /// Keep track of the future signatures to check weather we need to reload the dropdowns
   final Map<String, int> formDropdownFutureSignatures = {};
 
@@ -112,8 +115,6 @@ class CrudoFormContext {
     } else {
       validationErrors[key] = [error];
     }
-
-    print('Invalidating field $key with error $error');
   }
 
   /// Returns true if form has no validation errors, false otherwise
@@ -146,6 +147,14 @@ class CrudoFormContext {
 
   /// Get a specific dropdown values
   List<T>? getDropdownData<T>(String key) => _formDropdownData[key] as List<T>?;
+
+  /// Save selected dropdown value
+  void setDropdownSelectedValue(String key, dynamic value) {
+    _formDropdownSelectedValues[key] = value;
+  }
+
+  /// Get selected dropdown value
+  T getDropdownSelectedValue<T>(String key) => _formDropdownSelectedValues[key] as T;
 
   /// Get the selected value of a dropdown
   /// TODO: Maybe save this in another list of values, cannot do like this
