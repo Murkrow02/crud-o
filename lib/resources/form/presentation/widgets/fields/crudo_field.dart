@@ -35,6 +35,11 @@ class CrudoField extends StatelessWidget {
     assert(viewModeBuilder == null || viewModeValue == null,
         'You can provide either viewModeBuilder or viewModeValue, not both');
 
+    // Set default value if no value is provided
+    if(config.defaultValue != null && context.readFormContext().get(config.name) == null) {
+      context.readFormContext().set(config.name, config.defaultValue);
+    }
+
     return Padding(
       key: config.getFieldKey(context),
       padding: config.padding ?? const EdgeInsets.symmetric(vertical: 10),
@@ -102,6 +107,7 @@ class CrudoFieldConfiguration {
   final bool visible;
   final bool enabled;
   final bool reactive;
+  final dynamic defaultValue;
   final EdgeInsets? padding;
   final List<ResourceOperationType>? visibleOn;
   final List<ResourceOperationType>? enabledOn;
@@ -113,6 +119,7 @@ class CrudoFieldConfiguration {
   CrudoFieldConfiguration({
     required this.name,
     this.label,
+    this.defaultValue,
     this.required = false,
     this.enabled = true,
     this.visible = true,
