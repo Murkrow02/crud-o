@@ -172,6 +172,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                         (BuildContext context, CrudoFormState state) async {
                       if (state is FormSavedState<TModel>) {
                         _afterSave(context, state.model);
+                        // Clear extra data
                       }
 
                       if (state is FormModelLoadedState<TModel>) {
@@ -444,6 +445,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     if (afterSave != null) {
       await afterSave!.call(context, model);
     }
+
+    // Clear extra data since we are now dealing with another resource
+    // This is critical and used in mainly in crudo_repeater_field to re-flatten data after a new form is rendered
+    context.readFormContext().clearExtra();
 
     // Check if create another is enabled and is not the default saveAndCreateAnother
     if (createAnother != null &&
