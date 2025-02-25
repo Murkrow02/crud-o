@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:crud_o/common/widgets/protected_image.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
+import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
@@ -51,6 +52,7 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
       var file = CrudoFile(url: url, source: FileSource.network);
       _selectedFiles.add(file);
     }
+    context.readFormContext().setFiles(widget.config.name, _selectedFiles);
   }
 
   Future<void> _pickFile() async {
@@ -91,7 +93,7 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
   void _updateFieldState() {
     context.readFormContext().setFiles(
       widget.config.name,
-      _selectedFiles.where((file) => file.source != FileSource.network).toList(),
+      _selectedFiles.toList(),
     );
     setState(() {});
   }

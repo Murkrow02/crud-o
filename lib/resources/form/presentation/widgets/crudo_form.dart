@@ -349,6 +349,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Validate form fields TODO
 
+
     // Get data from fields
     // context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
@@ -461,6 +462,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           okText: createAnother!.okText,
           cancelText: createAnother!.cancelText);
       if (needToCreateAnother == true) {
+        // This is needed again i don't know why
+        context.readFormContext().clearExtra();
         context
             .readResourceContext()
             .setOperationType(ResourceOperationType.create);
