@@ -17,12 +17,13 @@ import 'package:provider/provider.dart';
 
 class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     extends StatelessWidget {
+
   /// The type of display for the form
   final CrudoFormDisplayType displayType;
 
-  /*
-  * Configurations
-  */
+  //══════════════════════════════════════════════
+  // Configurations
+  //══════════════════════════════════════════════
 
   /// Build the form fields
   final Widget Function(BuildContext context) formBuilder;
@@ -43,9 +44,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Register futures to be executed
   final Map<String, Future> Function(BuildContext context)? registerFutures;
 
-  /*
-  ** Callbacks
-  */
+  //══════════════════════════════════════════════
+  // Callbacks
+  //══════════════════════════════════════════════
 
   /// Called before validating the form, should return the final form data to validate
   final Map<String, dynamic> Function(
@@ -70,9 +71,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   final void Function(BuildContext context, String key, dynamic value)?
       onFieldChange;
 
-  /*
-  **  Actions
-  */
+  //══════════════════════════════════════════════
+  // Actions
+  //══════════════════════════════════════════════
 
   /// Save behavior
   final CrudoFormSaveBehaviour saveBehaviour;
@@ -349,6 +350,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Validate form fields TODO
 
+
     // Get data from fields
     // context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
@@ -407,6 +409,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Converts TModel into a form representation and rebuilds the form
   /// This is useful when loading the form for editing or when we saved the form and want to reload it
   void _deserializeModelAndRebuildForm(BuildContext context, TModel model) {
+
     // Set model in resource context
     context.readResourceContext().model = model;
 
@@ -461,6 +464,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           okText: createAnother!.okText,
           cancelText: createAnother!.cancelText);
       if (needToCreateAnother == true) {
+        // This is needed again i don't know why
+        context.readFormContext().clearExtra();
         context
             .readResourceContext()
             .setOperationType(ResourceOperationType.create);
