@@ -17,7 +17,6 @@ import 'package:provider/provider.dart';
 
 class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     extends StatelessWidget {
-
   /// The type of display for the form
   final CrudoFormDisplayType displayType;
 
@@ -89,7 +88,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Show a popup to create a new item after saving
   /// This is obviously disabled if saveBehaviour is by default saveAndCreateAnother
-  final CreateAnotherConfiguration? createAnother;
+  final CreateAnotherConfiguration? createAnotherConfiguration;
 
   const CrudoForm(
       {super.key,
@@ -108,7 +107,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       this.onFieldChange,
       this.saveBehaviour = CrudoFormSaveBehaviour.saveAndClose,
       this.afterSave,
-      this.createAnother,
+      this.createAnotherConfiguration,
       this.actionsBuilder,
       this.displayType = CrudoFormDisplayType.widget});
 
@@ -138,7 +137,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
               // Set form extra data if provided
               if (extraData != null) {
                 for (var key in extraData!(context).keys) {
-                  context.readFormContext().setExtra(key, extraData!(context)[key]);
+                  context
+                      .readFormContext()
+                      .setExtra(key, extraData!(context)[key]);
                 }
               }
 
@@ -350,7 +351,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
     // Validate form fields TODO
 
-
     // Get data from fields
     // context.readFormContext().syncFormDataFromFields();
     var saveData = context.readFormContext().exportFormData();
@@ -409,7 +409,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Converts TModel into a form representation and rebuilds the form
   /// This is useful when loading the form for editing or when we saved the form and want to reload it
   void _deserializeModelAndRebuildForm(BuildContext context, TModel model) {
-
     // Set model in resource context
     context.readResourceContext().model = model;
 
@@ -453,16 +452,17 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     // This is critical and used in mainly in crudo_repeater_field to re-flatten data after a new form is rendered
     context.readFormContext().clearExtra();
 
-    // Check if create another is enabled and is not the default saveAndCreateAnother
-    if (createAnother != null &&
-        oldOperation == ResourceOperationType.create &&
-        saveBehaviour != CrudoFormSaveBehaviour.saveAndCreateAnother) {
-      var needToCreateAnother = await ConfirmationDialog.ask(
-          context: context,
-          title: createAnother!.title,
-          message: createAnother!.message,
-          okText: createAnother!.okText,
-          cancelText: createAnother!.cancelText);
+    // Check if need to create another resource
+    if (oldOperation == ResourceOperationType.create &&
+        saveBehaviour == CrudoFormSaveBehaviour.saveAndCreateAnother) {
+      var needToCreateAnother = createAnotherConfiguration == null
+          ? true
+          : await ConfirmationDialog.ask(
+              context: context,
+              title: createAnotherConfiguration!.title,
+              message: createAnotherConfiguration!.message,
+              okText: createAnotherConfiguration!.okText,
+              cancelText: createAnotherConfiguration!.cancelText);
       if (needToCreateAnother == true) {
         // This is needed again i don't know why
         context.readFormContext().clearExtra();
@@ -475,12 +475,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     }
 
     // Check save action provided by user
-    if (saveBehaviour == CrudoFormSaveBehaviour.saveAndCreateAnother) {
-      context
-          .readResourceContext()
-          .setOperationType(ResourceOperationType.create);
-      context.readFormContext().init();
-    } else if (saveBehaviour == CrudoFormSaveBehaviour.saveAndEdit) {
+    if (saveBehaviour == CrudoFormSaveBehaviour.saveAndEdit) {
       // Nothing to do
     } else if (saveBehaviour == CrudoFormSaveBehaviour.saveAndClose) {
       Navigator.pop(context, context.readFormContext().formResult);
