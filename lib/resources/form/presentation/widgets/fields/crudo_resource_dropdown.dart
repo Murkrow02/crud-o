@@ -83,8 +83,6 @@ class CrudoResourceDropdown<TResource extends CrudoResource<TModel>, TModel,
       dropdownItemsFuture =
           resourceRepository.getAll(parameters: customRequest);
       formContext.setFutureCache(listCacheKey, dropdownItemsFuture);
-    } else {
-      print('Using cached future for $listCacheKey');
     }
 
     // Await the cached Future to get the actual result
@@ -122,8 +120,6 @@ class CrudoResourceDropdown<TResource extends CrudoResource<TModel>, TModel,
       individualFuture =
           resourceRepository.getById(alreadySelectedId.toString());
       formContext.setFutureCache(individualCacheKey, individualFuture);
-    } else {
-      print('Using cached future for individual item: $individualCacheKey');
     }
 
     // Await the cached Future for the individual item
