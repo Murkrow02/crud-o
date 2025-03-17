@@ -3,6 +3,7 @@ import 'package:crud_o/common/widgets/error_alert.dart';
 import 'package:crud_o/common/widgets/save_and_close_icon.dart';
 import 'package:crud_o/common/widgets/save_and_create_another_icon.dart';
 import 'package:crud_o/common/widgets/save_and_edit_icon.dart';
+import 'package:crud_o/core/configuration/crudo_configuration.dart';
 import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
@@ -13,12 +14,15 @@ import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
 class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     extends StatelessWidget {
+
   /// The type of display for the form
   final CrudoFormDisplayType displayType;
+
 
   //══════════════════════════════════════════════
   // Configurations
@@ -344,60 +348,77 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
-    if (customSaveAction != null) {
-      customSaveAction!(context);
-      return;
-    }
 
-    // Validate form fields TODO
+    try {
+      if (customSaveAction != null) {
+        customSaveAction!(context);
+        return;
+      }
 
-    // Get data from fields
-    // context.readFormContext().syncFormDataFromFields();
-    var saveData = context.readFormContext().exportFormData();
-    context.readFormContext().validationErrors = {};
+      // Validate form fields TODO
 
-    // Call before validate callback
-    if (beforeValidate != null) {
-      saveData = beforeValidate!(context, saveData);
-    }
+      // Get data from fields
+      // context.readFormContext().syncFormDataFromFields();
+      var saveData = context.readFormContext().exportFormData();
+      context
+          .readFormContext()
+          .validationErrors = {};
 
-    // Call before save callback
-    if (beforeSave != null) {
-      saveData = beforeSave!.call(context, saveData);
-    }
+      // Call before validate callback
+      if (beforeValidate != null) {
+        saveData = beforeValidate!(context, saveData);
+      }
 
-    // Edit
-    if (context.readResourceContext().getCurrentOperationType() ==
-        ResourceOperationType.edit) {
-      if (onUpdate != null) {
-        context.readFormContext().formBloc.add(CustomUpdateEvent<TModel>(
-            formData: context.readFormContext().getFormData(),
-            updateFunction: onUpdate!(context, saveData)));
-      } else {
-        context.read<CrudoFormBloc<TResource, TModel>>().add(
-              UpdateFormModelEvent(
-                  updateData: saveData,
-                  formData: context.readFormContext().getFormData(),
-                  id: context.readResourceContext().id),
-            );
+      // Call before save callback
+      if (beforeSave != null) {
+        saveData = beforeSave!.call(context, saveData);
+      }
+
+      // Edit
+      if (context.readResourceContext().getCurrentOperationType() ==
+          ResourceOperationType.edit) {
+        if (onUpdate != null) {
+          context
+              .readFormContext()
+              .formBloc
+              .add(CustomUpdateEvent<TModel>(
+              formData: context.readFormContext().getFormData(),
+              updateFunction: onUpdate!(context, saveData)));
+        } else {
+          context.read<CrudoFormBloc<TResource, TModel>>().add(
+            UpdateFormModelEvent(
+                updateData: saveData,
+                formData: context.readFormContext().getFormData(),
+                id: context
+                    .readResourceContext()
+                    .id),
+          );
+        }
+      }
+
+      // Create
+      if (context.readResourceContext().getCurrentOperationType() ==
+          ResourceOperationType.create) {
+        if (onCreate != null) {
+          context
+              .readFormContext()
+              .formBloc
+              .add(CustomCreateEvent<TModel>(
+              formData: context.readFormContext().getFormData(),
+              createFunction: onCreate!(context, saveData)));
+        } else {
+          context.read<CrudoFormBloc<TResource, TModel>>().add(
+            CreateFormModelEvent(
+                formData: context.readFormContext().getFormData(),
+                createData: saveData,
+                resourceContext: context.read()),
+          );
+        }
       }
     }
-
-    // Create
-    if (context.readResourceContext().getCurrentOperationType() ==
-        ResourceOperationType.create) {
-      if (onCreate != null) {
-        context.readFormContext().formBloc.add(CustomCreateEvent<TModel>(
-            formData: context.readFormContext().getFormData(),
-            createFunction: onCreate!(context, saveData)));
-      } else {
-        context.read<CrudoFormBloc<TResource, TModel>>().add(
-              CreateFormModelEvent(
-                  formData: context.readFormContext().getFormData(),
-                  createData: saveData,
-                  resourceContext: context.read()),
-            );
-      }
+    catch(e, s) {
+      Toaster.error("Errore durante il salvataggio");
+      CrudoConfiguration.logger().e("Error during save", time: DateTime.now(), error: e, stackTrace: s);
     }
   }
 
