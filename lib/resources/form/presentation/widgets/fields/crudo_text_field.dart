@@ -32,27 +32,28 @@ class CrudoTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return CrudoField(
         config: config,
-        editModeBuilder: (context, onChanged) =>
-        TextField(
-          inputFormatters: decimal ? [DecimalInputFormatter()] : [],
-          controller: TextEditingController(
-              text: context.readFormContext().get(config.name)?.toString()),
-          enabled: config.shouldEnableField(context),
-          onChanged: (value) =>
-              onChanged(context, (numeric||decimal) ? numericTransformer(value) : value),
-          decoration: defaultDecoration,
-          keyboardType: (numeric || decimal) ? const TextInputType.numberWithOptions(decimal: true) : keyboardType,
-          maxLines: maxLines,
-          obscureText: obscureText,
-        ));
+        editModeBuilder: (context, onChanged) => TextField(
+              inputFormatters: decimal ? [DecimalInputFormatter()] : [],
+              controller: TextEditingController(
+                  text: context.readFormContext().get(config.name)?.toString()),
+              enabled: config.shouldEnableField(context),
+              onChanged: (value) => onChanged(context,
+                  (numeric || decimal) ? numericTransformer(value) : value),
+              decoration: defaultDecoration,
+              keyboardType: (numeric || decimal)
+                  ? const TextInputType.numberWithOptions(decimal: true)
+                  : keyboardType,
+              maxLines: maxLines,
+              obscureText: obscureText,
+            ));
   }
 
   num? numericTransformer(String? value) {
     return value == null
         ? null
         : value == ''
-        ? 0
-        : num.tryParse(value.toString()) ?? 0;
+            ? null
+            : num.tryParse(value.toString()) ?? 0;
   }
 }
 
