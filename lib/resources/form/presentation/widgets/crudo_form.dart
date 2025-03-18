@@ -417,7 +417,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       }
     }
     catch(e, s) {
-      Toaster.error("Errore durante il salvataggio");
+      //Toaster.error("Errore durante il salvataggio");
+      Toaster.error(e.toString() + "\n" + s.toString());
       CrudoConfiguration.logger().e("Error during save", time: DateTime.now(), error: e, stackTrace: s);
     }
   }
