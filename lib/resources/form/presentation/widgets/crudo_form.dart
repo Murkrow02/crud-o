@@ -14,15 +14,14 @@ import 'package:crud_o/resources/resource_operation_type.dart';
 import 'package:crud_o/resources/resource_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:futuristic/futuristic.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
 class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     extends StatelessWidget {
-
   /// The type of display for the form
   final CrudoFormDisplayType displayType;
-
 
   //══════════════════════════════════════════════
   // Configurations
@@ -326,14 +325,29 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       // Custom user actions
       if (actionsBuilder != null) ...actionsBuilder!(context),
 
-      // Enter edit mode action
+      // Enter edit mode action (only if able to edit)
       if (context.readResourceContext().getCurrentOperationType() ==
           ResourceOperationType.view)
-        IconButton(
-            icon: const Icon(Icons.edit),
-            style: ButtonStyle(
-                padding: WidgetStateProperty.all(const EdgeInsets.all(2))),
-            onPressed: () => _enterEditMode(context)),
+        Futuristic<bool>(
+            futureBuilder: () =>
+                context
+                    .read<TResource>()
+                    .policy
+                    ?.update(context.readResourceContext().model) ??
+                Future.value(false),
+            autoStart: true,
+            busyBuilder: (_) => const CircularProgressIndicator.adaptive(),
+            dataBuilder: (context, canEdit) {
+              if(canEdit == null || canEdit == false) {
+                return const SizedBox();
+              }
+              return IconButton(
+                  icon: const Icon(Icons.edit),
+                  style: ButtonStyle(
+                      padding:
+                          WidgetStateProperty.all(const EdgeInsets.all(2))),
+                  onPressed: () => _enterEditMode(context));
+            }),
 
       // Save action
       if (context.readResourceContext().getCurrentOperationType() !=
@@ -348,7 +362,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
-
     try {
       if (customSaveAction != null) {
         customSaveAction!(context);
@@ -360,9 +373,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       // Get data from fields
       // context.readFormContext().syncFormDataFromFields();
       var saveData = context.readFormContext().exportFormData();
-      context
-          .readFormContext()
-          .validationErrors = {};
+      context.readFormContext().validationErrors = {};
 
       // Call before validate callback
       if (beforeValidate != null) {
@@ -378,21 +389,16 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       if (context.readResourceContext().getCurrentOperationType() ==
           ResourceOperationType.edit) {
         if (onUpdate != null) {
-          context
-              .readFormContext()
-              .formBloc
-              .add(CustomUpdateEvent<TModel>(
+          context.readFormContext().formBloc.add(CustomUpdateEvent<TModel>(
               formData: context.readFormContext().getFormData(),
               updateFunction: onUpdate!(context, saveData)));
         } else {
           context.read<CrudoFormBloc<TResource, TModel>>().add(
-            UpdateFormModelEvent(
-                updateData: saveData,
-                formData: context.readFormContext().getFormData(),
-                id: context
-                    .readResourceContext()
-                    .id),
-          );
+                UpdateFormModelEvent(
+                    updateData: saveData,
+                    formData: context.readFormContext().getFormData(),
+                    id: context.readResourceContext().id),
+              );
         }
       }
 
@@ -400,26 +406,23 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       if (context.readResourceContext().getCurrentOperationType() ==
           ResourceOperationType.create) {
         if (onCreate != null) {
-          context
-              .readFormContext()
-              .formBloc
-              .add(CustomCreateEvent<TModel>(
+          context.readFormContext().formBloc.add(CustomCreateEvent<TModel>(
               formData: context.readFormContext().getFormData(),
               createFunction: onCreate!(context, saveData)));
         } else {
           context.read<CrudoFormBloc<TResource, TModel>>().add(
-            CreateFormModelEvent(
-                formData: context.readFormContext().getFormData(),
-                createData: saveData,
-                resourceContext: context.read()),
-          );
+                CreateFormModelEvent(
+                    formData: context.readFormContext().getFormData(),
+                    createData: saveData,
+                    resourceContext: context.read()),
+              );
         }
       }
-    }
-    catch(e, s) {
-      //Toaster.error("Errore durante il salvataggio");
-      Toaster.error(e.toString() + "\n" + s.toString());
-      CrudoConfiguration.logger().e("Error during save", time: DateTime.now(), error: e, stackTrace: s);
+    } catch (e, s) {
+      Toaster.error("Errore durante il salvataggio");
+      //Toaster.error(e.toString() + "\n" + s.toString());
+      CrudoConfiguration.logger().e("Error during save",
+          time: DateTime.now(), error: e, stackTrace: s);
     }
   }
 
