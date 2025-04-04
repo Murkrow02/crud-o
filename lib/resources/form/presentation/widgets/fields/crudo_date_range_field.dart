@@ -46,6 +46,17 @@ class CrudoDateRangeField extends StatelessWidget {
       dialogSize: const Size(325, 400),
       borderRadius: BorderRadius.circular(15),
     ).then((List<DateTime?>? values) {
+
+      // Check if the user has selected a date range
+      if (values == null || values.isEmpty) {
+        return;
+      }
+
+      // Check if selected only one date, automatically set the second date to the same value
+      if (values.length == 1) {
+        values.add(values[0]);
+      }
+
       context.readFormContext().set(
             config.name,
             values,
