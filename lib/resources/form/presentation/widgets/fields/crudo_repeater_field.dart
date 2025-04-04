@@ -94,7 +94,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
           child: Column(
             children: [
               _buildRepeaterItems(context),
-              if (widget.showAddButton) ...[
+              if (widget.showAddButton && widget.config.shouldEnableField(context)) ...[
                 const SizedBox(height: 8),
                 IconButton(
                   style: ButtonStyle(
@@ -142,7 +142,7 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
             child: Visibility(
               visible:
                   context.readResourceContext().getCurrentOperationType() !=
-                      ResourceOperationType.view,
+                      ResourceOperationType.view && widget.config.shouldEnableField(context),
               child: IconButton(
                 style: ButtonStyle(
                   padding: MaterialStateProperty.all(const EdgeInsets.all(0)),

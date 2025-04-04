@@ -25,7 +25,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     extends StatelessWidget {
-  final List<CrudoTableColumn<TModel>> Function(BuildContext context) columnBuilder;
+  final List<CrudoTableColumn<TModel>> Function(BuildContext context)
+      columnBuilder;
   final List<CrudoAction>? customActions;
   final bool searchable;
   final bool enableColumnHiding;
@@ -33,14 +34,22 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       customFuture;
   final List<TModel>? customData;
 
+  // Customize before and after the table
+  // Useful when using full page display
+  final Widget Function(
+          Widget table, CrudoTableContext<TResource, TModel> tableContext)?
+      tableWrapperBuilder;
+
   // Map of data to pass to the resources.actions,
   final Map<String, dynamic>? actionData;
   final CrudoTableDisplayType displayType;
   final bool paginated;
-  final Function(BuildContext context,CrudoTableContext<TResource, TModel> tableContext)? filtersFormBuilder;
+  final Function(BuildContext context,
+      CrudoTableContext<TResource, TModel> tableContext)? filtersFormBuilder;
 
   // Useful when need to get the table context
-  final Function(CrudoTableContext<TResource, TModel> tableContext)? onTableCreated;
+  final Function(CrudoTableContext<TResource, TModel> tableContext)?
+      onTableCreated;
 
   // Called whenever the data in the table changes, bool indicates first load
   final Function(bool firstLoad)? onDataChanged;
@@ -53,6 +62,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     this.customFuture,
     this.displayType = CrudoTableDisplayType.widget,
     this.paginated = false,
+    this.tableWrapperBuilder,
     this.onDataChanged,
     this.actionData,
     this.customData,
@@ -95,12 +105,12 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       },
       child: Provider(
         create: (context) => tableContext,
-        child: BlocListener<CrudoTableBloc, CrudoTableState>(
+        child: BlocConsumer<CrudoTableBloc, CrudoTableState>(
           listener: _tableStateEventListener,
-          child: Builder(builder: (context) {
+          builder: (context, state) {
             return _buildTableWrapper(
                 context, _buildTable(context), tableContext);
-          }),
+          }
         ),
       ),
     );
@@ -186,9 +196,11 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
             _buildCreateActionButton(context)
           ]),
       body: Container(
-        margin: const EdgeInsets.all(10),
-        child: _buildTable(context),
-      ),
+          margin: const EdgeInsets.all(10),
+          child: tableWrapperBuilder != null
+              ? tableWrapperBuilder!(_buildTable(context), context.readTableContext<
+                  TResource, TModel>())
+              : _buildTable(context)),
     );
   }
 
@@ -473,9 +485,10 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   }
 
   Widget _buildFiltersPopMenuButton(BuildContext context) {
-    if(filtersFormBuilder == null) return const SizedBox();
+    if (filtersFormBuilder == null) return const SizedBox();
     var tableContext = context.readTableContext<TResource, TModel>();
-    return CrudoTableFiltersPopup<TResource,TModel>(tableContext: tableContext, filtersFormBuilder: filtersFormBuilder!);
+    return CrudoTableFiltersPopup<TResource, TModel>(
+        tableContext: tableContext, filtersFormBuilder: filtersFormBuilder!);
 
     // // Open a tooltip from here to include a custom widget inside
     // return Tooltip(

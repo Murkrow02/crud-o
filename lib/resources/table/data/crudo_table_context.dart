@@ -68,11 +68,8 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
     bloc.add(UpdateTableEvent(request: request));
   }
 
-  /// Set the filters of the table from the popup
-  void setFilters(Map<String, dynamic> filtersData) {
-    // Save the filters
-    _activeFiltersData = filtersData;
-
+  /// Format filters for query parameters
+  Map<String,String> formatFiltersForQuery(Map<String, dynamic> filtersData) {
     // Format from <String,dynamic> to <String,String>
     Map<String, String> formattedFilters = {};
     for (var key in filtersData.keys) {
@@ -91,9 +88,16 @@ class CrudoTableContext<TResource extends CrudoResource<TModel>, TModel> {
 
       formattedFilters[key] = filtersData[key].toString();
     }
+    return formattedFilters;
+  }
+
+  /// Set the filters of the table from the popup
+  void setFilters(Map<String, dynamic> filtersData) {
+    // Save the filters
+    _activeFiltersData = filtersData;
 
     bloc.add(UpdateTableEvent(
-        request: PaginatedRequest(queryParameters: formattedFilters, page: 1)));
+        request: PaginatedRequest(queryParameters: formatFiltersForQuery(filtersData), page: 1)));
   }
 
   /// Get the filters that are currently active
