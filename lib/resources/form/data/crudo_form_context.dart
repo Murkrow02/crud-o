@@ -1,3 +1,4 @@
+import 'package:crud_o/core/configuration/crudo_configuration.dart';
 import 'package:crud_o/resources/actions/crudo_action_result.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
@@ -291,7 +292,8 @@ class CrudoFormContext {
           (list[index] as Map<String, dynamic>)[childKey] = value;
         }
       } catch (e) {
-        debugPrint('Error exporting form data with key $key: $e');
+        CrudoConfiguration.logger().e(
+            "Error exporting form data for key '$key'", error: e, stackTrace: StackTrace.current);
         continue;
       }
     }

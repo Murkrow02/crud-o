@@ -363,10 +363,16 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
     try {
+
+      // WHEN YOU DELETE HERE THE LOGGER DELETE ALSO FROM CRUDO FORM BLOC AND APP!!!!! ON BEFORE SAVE
+      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 1");
+
       if (customSaveAction != null) {
         customSaveAction!(context);
         return;
       }
+
+      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 2");
 
       // Validate form fields TODO
 
@@ -375,24 +381,37 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       var saveData = context.readFormContext().exportFormData();
       context.readFormContext().validationErrors = {};
 
+      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 3");
+
+
       // Call before validate callback
       if (beforeValidate != null) {
         saveData = beforeValidate!(context, saveData);
       }
+
+      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 4");
 
       // Call before save callback
       if (beforeSave != null) {
         saveData = beforeSave!.call(context, saveData);
       }
 
+      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 5");
+
       // Edit
       if (context.readResourceContext().getCurrentOperationType() ==
           ResourceOperationType.edit) {
         if (onUpdate != null) {
+          CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 6");
+
           context.readFormContext().formBloc.add(CustomUpdateEvent<TModel>(
               formData: context.readFormContext().getFormData(),
               updateFunction: onUpdate!(context, saveData)));
+
+          CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 7");
         } else {
+          CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 8");
+
           context.read<CrudoFormBloc<TResource, TModel>>().add(
                 UpdateFormModelEvent(
                     updateData: saveData,
@@ -400,27 +419,39 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     id: context.readResourceContext().id),
               );
         }
+        CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 9");
+
       }
 
       // Create
       if (context.readResourceContext().getCurrentOperationType() ==
           ResourceOperationType.create) {
         if (onCreate != null) {
+
+          CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 10");
+
           context.readFormContext().formBloc.add(CustomCreateEvent<TModel>(
               formData: context.readFormContext().getFormData(),
               createFunction: onCreate!(context, saveData)));
+
+          CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 11");
+
         } else {
+          CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 12");
+
           context.read<CrudoFormBloc<TResource, TModel>>().add(
                 CreateFormModelEvent(
                     formData: context.readFormContext().getFormData(),
                     createData: saveData,
                     resourceContext: context.read()),
               );
+
+          // WHEN YOU DELETE HERE THE LOGGER DELETE ALSO FROM CRUDO FORM BLOC AND APP!!!!! ON BEFORE SAVE
+          CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 13");
+
         }
       }
     } catch (e, s) {
-      Toaster.error("Errore durante il salvataggio");
-      //Toaster.error(e.toString() + "\n" + s.toString());
       CrudoConfiguration.logger().e("Error during save",
           time: DateTime.now(), error: e, stackTrace: s);
     }
