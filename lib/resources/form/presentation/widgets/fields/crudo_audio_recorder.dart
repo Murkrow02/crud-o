@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:crud_o/core/configuration/rest_client_configuration.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
@@ -160,7 +161,7 @@ Widget _buildAudioControls() {
       final audioUrl = formContext.get(widget.config.name);
       if (audioUrl != null && audioUrl.isNotEmpty) {
         try {
-          _audioBytes = await RestClient().downloadFileBytes(audioUrl);
+          _audioBytes = await RestClient().downloadFileBytesFromUri(Uri.parse(audioUrl));
         } catch (e) {
           debugPrint('Error loading audio: $e');
           _audioBytes = null;

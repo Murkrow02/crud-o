@@ -32,7 +32,7 @@ class CrudoDashboardWidget extends StatelessWidget {
   double _getWidth(BoxConstraints constraints) {
     switch (size) {
       case CrudoDashboardWidgetSize.half:
-        final width = constraints.maxWidth / 2;
+        return constraints.maxWidth / 2;
       case CrudoDashboardWidgetSize.full:
         return constraints.maxWidth;
       case CrudoDashboardWidgetSize.third:

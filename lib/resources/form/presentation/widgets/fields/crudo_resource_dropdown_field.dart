@@ -9,7 +9,7 @@ import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_future_d
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class CrudoResourceDropdown<TResource extends CrudoResource<TModel>, TModel,
+class CrudoResourceDropdownField<TResource extends CrudoResource<TModel>, TModel,
     TValue> extends StatelessWidget {
 
   /// Standard crud_o field configuration
@@ -29,7 +29,7 @@ class CrudoResourceDropdown<TResource extends CrudoResource<TModel>, TModel,
   final bool nullable;
   final int minSearchLength;
 
-  const CrudoResourceDropdown(
+  const CrudoResourceDropdownField(
       {super.key,
       required this.config,
       required this.itemBuilder,

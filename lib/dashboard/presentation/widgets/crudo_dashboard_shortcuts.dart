@@ -1,3 +1,4 @@
+import 'package:crud_o/dashboard/presentation/widgets/crudo_dashboard_shortcut.dart';
 import 'package:crud_o/resources/actions/crudo_action.dart';
 import 'package:crud_o/resources/crudo_resource.dart';
 import 'package:crud_o/resources/resource_provider.dart';
@@ -15,8 +16,11 @@ class CrudoDashboardShortcuts extends StatelessWidget {
   /// The key is used to identify the shortcut in the preferences
   final Map<String, Widget>? defaultShortcuts;
 
-  const CrudoDashboardShortcuts(
-      {super.key, this.alwaysPresentShortcuts, this.defaultShortcuts});
+  const CrudoDashboardShortcuts({
+    super.key,
+    this.alwaysPresentShortcuts,
+    this.defaultShortcuts,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +30,11 @@ class CrudoDashboardShortcuts extends StatelessWidget {
       busyBuilder: (context) => const CircularProgressIndicator(),
       dataBuilder: (context, resourceActions) {
         return Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildShortcutsHeader(context),
-            _buildShortcutsGrid(context, resourceActions!),
+            const SizedBox(height: 16),
+            _buildShortcutsWrap(context, resourceActions!),
           ],
         );
       },
@@ -41,42 +46,43 @@ class CrudoDashboardShortcuts extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text('Azioni rapide',
-            style: TextStyle(
-                fontSize: 20, color: Theme.of(context).colorScheme.primary)),
+        Text(
+          'Azioni rapide',
+          style: TextStyle(
+            fontSize: 20,
+            color: Theme
+                .of(context)
+                .colorScheme
+                .primary,
+          ),
+        ),
         IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () async {
-              var shortcutsActionDialog =
-                  await _buildShortcutsEditDialog(context);
-              return showDialog(
-                  context: context,
-                  builder: (context) => shortcutsActionDialog);
-            })
+          icon: const Icon(Icons.edit),
+          onPressed: () async {
+            var shortcutsActionDialog = await _buildShortcutsEditDialog(
+                context);
+            return showDialog(
+              context: context,
+              builder: (context) => shortcutsActionDialog,
+            );
+          },
+        ),
       ],
     );
   }
 
-  /// The actual grid where shortcuts are displayed
-  Widget _buildShortcutsGrid(
-      BuildContext context, List<Widget> userSelectedShortcuts) {
-    // Calculate the number of columns based on screen width and item width
-    final screenWidth = MediaQuery.of(context).size.width;
-    const itemWidth = 350;
-    final crossAxisCount = (screenWidth / itemWidth).floor();
-
-    // Combine additionalShortcuts and userSelectedShortcuts into a new list
+  /// Uses Wrap instead of GridView to display shortcuts without scroll
+  Widget _buildShortcutsWrap(BuildContext context,
+      List<Widget> userSelectedShortcuts) {
     final shortcuts = [
       ...?alwaysPresentShortcuts,
       ...userSelectedShortcuts,
     ];
 
-    return Expanded(
-      child: GridView.count(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: 6,
-        children: shortcuts,
-      ),
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      children: shortcuts,
     );
   }
 
@@ -103,7 +109,9 @@ class CrudoDashboardShortcuts extends StatelessWidget {
     return AlertDialog(
       title: const Text('Modifica azioni rapide WIP'),
       content: SingleChildScrollView(
-        child: Column(children: resourceWidgets),
+        child: Column(
+          children: resourceWidgets,
+        ),
       ),
       actions: [
         TextButton(
@@ -118,12 +126,10 @@ class CrudoDashboardShortcuts extends StatelessWidget {
 
   Future<List<ResourceActionPair>> _getAllAvailableResourceActions(
       BuildContext context) async {
-    // Get all registeredResources
     var registeredResources = context.read<RegisteredResources>();
     var resources = registeredResources.resources;
     var actions = <ResourceActionPair>[];
 
-    // Get actions for each resource
     for (var resource in resources) {
       var resourceActions = await resource.availableResourceActions();
       for (var action in resourceActions) {
@@ -133,69 +139,4 @@ class CrudoDashboardShortcuts extends StatelessWidget {
 
     return actions;
   }
-}
-
-class CrudoDashboardShortcut extends StatelessWidget {
-  final Widget icon;
-  final String name;
-  final VoidCallback onTap;
-
-  const CrudoDashboardShortcut(
-      {super.key, required this.icon, required this.name, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.zero, // No border radius
-        ),
-        margin: EdgeInsets.zero,
-        child: Container(
-          decoration: BoxDecoration(
-            // Add a border on the left side of the container
-            border: Border(
-              left: BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 5,
-              ),
-            ),
-          ),
-          height: 30,
-          child: ListTile(
-            leading: icon,
-            title: Text(name),
-            onTap: onTap,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class CrudoResourceActionDashboardShortcut extends StatelessWidget {
-  final CrudoResource resource;
-  final CrudoAction action;
-
-  const CrudoResourceActionDashboardShortcut(
-      {super.key, required this.resource, required this.action});
-
-  @override
-  Widget build(BuildContext context) {
-    return CrudoDashboardShortcut(
-      icon: Icon(resource.icon()),
-      name: '${action.label} ${resource.singularName()}',
-      onTap: () {
-        action.execute(context);
-      },
-    );
-  }
-}
-
-class ResourceActionPair {
-  CrudoResource resource;
-  CrudoAction action;
-
-  ResourceActionPair(this.resource, this.action);
 }
