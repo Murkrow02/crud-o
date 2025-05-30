@@ -40,7 +40,7 @@ class CrudoField extends StatelessWidget {
       context.readFormContext().set(config.name, config.defaultValue);
     }
 
-    return Padding(
+    return Container(
       key: config.getFieldKey(context),
       padding: config.padding ?? const EdgeInsets.symmetric(vertical: 10),
       child: Row(
