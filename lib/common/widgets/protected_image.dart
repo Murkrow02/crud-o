@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
+import 'package:crud_o/core/configuration/rest_client_configuration.dart';
 import 'package:crud_o/core/networking/rest/rest_client.dart';
 import 'package:flutter/material.dart';
 import 'package:futuristic/futuristic.dart';
 
 class ProtectedImage extends StatelessWidget {
-  final RestClient restClient = RestClient();
   final String? imageUrl;
   final Uint8List? imageBytes;
 
@@ -27,7 +27,7 @@ class ProtectedImage extends StatelessWidget {
       autoStart: true,
       futureBuilder: () async {
         try {
-          return await restClient.downloadFileBytes(imageUrl!);
+          return await RestClient().downloadFileBytesFromUri(Uri.parse(imageUrl!));
         } catch (e) {
           print("Failed to download image: $imageUrl");
           return null;

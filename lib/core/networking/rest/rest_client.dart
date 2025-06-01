@@ -13,14 +13,19 @@ import 'package:logger/logger.dart';
 import 'package:http/http.dart' as http;
 
 class RestClient {
+
   // Logger instance
   final logger = CrudoConfiguration.logger();
 
-  // Build final uri with parameters
-  Uri _buildUri(String endpoint, RestRequest? request) {
-    String url = CrudoConfiguration.rest().baseUrl;
-    return Uri.parse(
-        '$url/$endpoint${request != null ? '?${request.toQueryString()}' : ''}');
+  // Rest client configuration
+  RestClientConfiguration _configuration = CrudoConfiguration.rest();
+
+  RestClient({
+    RestClientConfiguration? configuration,
+  }) {
+    if (configuration != null) {
+      _configuration = configuration;
+    }
   }
 
   // Function to perform a GET request
@@ -30,26 +35,26 @@ class RestClient {
     final response = await http
         .get(
           uri,
-          headers: await CrudoConfiguration.rest().getHeaders!(),
+          headers: await _configuration.getHeaders!(),
         )
-        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
-    return handleResponseAndDecodeBody(response);
+        .timeout(Duration(seconds: _configuration.timeoutSeconds));
+    return _handleResponseAndDecodeBody(response);
   }
 
   // Function to perform a PUT request
   Future<dynamic> put(String endpoint, Map<String, dynamic> data,
       {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
-    var validatedData = validateJson(data);
+    var validatedData = _validateJson(data);
     logger.d("PUT: $uri");
     final response = await http
         .put(
           uri,
           body: jsonEncode(validatedData),
-          headers: await CrudoConfiguration.rest().getHeaders!(),
+          headers: await _configuration.getHeaders!(),
         )
-        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
-    return handleResponseAndDecodeBody(response);
+        .timeout(Duration(seconds: _configuration.timeoutSeconds));
+    return _handleResponseAndDecodeBody(response);
   }
 
   // Function to perform a POST request
@@ -57,15 +62,15 @@ class RestClient {
       {RestRequest? request}) async {
     Uri uri = _buildUri(endpoint, request);
     logger.d("POST: $uri");
-    var validatedData = validateJson(data);
+    var validatedData = _validateJson(data);
     final response = await http
         .post(
           uri,
           body: jsonEncode(validatedData),
-          headers: await CrudoConfiguration.rest().getHeaders!(),
+          headers: await _configuration.getHeaders!(),
         )
-        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
-    return handleResponseAndDecodeBody(response);
+        .timeout(Duration(seconds: _configuration.timeoutSeconds));
+    return _handleResponseAndDecodeBody(response);
   }
 
   // Function to perform a DELETE request
@@ -75,17 +80,22 @@ class RestClient {
     final response = await http
         .delete(
           uri,
-          headers: await CrudoConfiguration.rest().getHeaders!(),
+          headers: await _configuration.getHeaders!(),
         )
-        .timeout(Duration(seconds: CrudoConfiguration.rest().timeoutSeconds));
-    return handleResponseAndDecodeBody(response);
+        .timeout(Duration(seconds: _configuration.timeoutSeconds));
+    return _handleResponseAndDecodeBody(response);
   }
 
-  Future<Uint8List?> downloadFileBytes(String url) async {
-    logger.d("Downloading file: $url");
+  Future<Uint8List?> downloadFileBytes(String endpoint, {RestRequest? request}) async {
+    Uri uri = _buildUri(endpoint, request);
+    return downloadFileBytesFromUri(uri, request: request);
+  }
+
+  Future<Uint8List?> downloadFileBytesFromUri(Uri uri, {RestRequest? request}) async {
+    logger.d("Downloading file: $uri");
     final response = await http.get(
-      Uri.parse(url),
-      headers: await CrudoConfiguration.rest().getHeaders!(),
+      uri,
+      headers: await _configuration.getHeaders!(),
     );
 
     if (response.statusCode == 200) {
@@ -105,7 +115,7 @@ class RestClient {
     final multipartRequest = http.MultipartRequest('POST', uri);
 
     // Add headers except Content-Type (automatically handled by MultipartRequest)
-    final headers = await CrudoConfiguration.rest().getHeaders!();
+    final headers = await _configuration.getHeaders!();
     headers.remove(
         'Content-Type'); // Remove Content-Type if set in configuration headers
     multipartRequest.headers.addAll(headers);
@@ -133,7 +143,7 @@ class RestClient {
   }
 
   // Generic response handler, returns response as dynamic after decoding and handling errors
-  Future<dynamic> handleResponseAndDecodeBody(http.Response response) async {
+  Future<dynamic> _handleResponseAndDecodeBody(http.Response response) async {
     // Internal server error
     if (response.statusCode == 500) {
       logger.e("Request: ${response.request?.url} failed. \n ${response.body}");
@@ -190,7 +200,7 @@ class RestClient {
     return decodedBody;
   }
 
-  Map<String, dynamic> validateJson(Map<String, dynamic> json) {
+  Map<String, dynamic> _validateJson(Map<String, dynamic> json) {
     Map<String, dynamic> validatedJson = {};
     json.forEach((key, value) {
       if (value is DateTime) {
@@ -200,5 +210,12 @@ class RestClient {
       }
     });
     return validatedJson;
+  }
+
+  // Build final uri with parameters
+  Uri _buildUri(String endpoint, RestRequest? request) {
+    String url = _configuration.baseUrl;
+    return Uri.parse(
+        '$url/$endpoint${request != null ? '?${request.toQueryString()}' : ''}');
   }
 }

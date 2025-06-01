@@ -13,7 +13,7 @@ dependencies:
 #  animated_custom_dropdown:
 #    path: ../flutter-custom-dropdown
   animated_search_bar: ^2.7.2
-  audioplayers: ^6.1.0
+  audioplayers: ^6.4.0
   bot_toast: ^4.1.3
   calendar_date_picker2: ^2.0.0
   collection: ^1.18.0

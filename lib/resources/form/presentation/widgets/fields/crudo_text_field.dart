@@ -41,7 +41,7 @@ class CrudoTextField extends StatelessWidget {
                   (numeric || decimal) ? numericTransformer(value) : value),
               decoration: defaultDecoration,
               keyboardType: (numeric || decimal)
-                  ? const TextInputType.numberWithOptions(decimal: true)
+                  ?  TextInputType.numberWithOptions(decimal: decimal)
                   : keyboardType,
               maxLines: maxLines,
               obscureText: obscureText,
