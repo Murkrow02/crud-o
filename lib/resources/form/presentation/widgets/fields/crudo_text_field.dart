@@ -32,20 +32,29 @@ class CrudoTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return CrudoField(
         config: config,
-        editModeBuilder: (context, onChanged) => TextField(
+        editModeBuilder: (context, onChanged) {
+          return TextField(
               inputFormatters: decimal ? [DecimalInputFormatter()] : [],
               controller: TextEditingController(
                   text: context.readFormContext().get(config.name)?.toString()),
               enabled: config.shouldEnableField(context),
-              onChanged: (value) => onChanged(context,
-                  (numeric || decimal) ? numericTransformer(value) : value),
-              decoration: defaultDecoration,
+              onChanged: (value) {
+                onChanged(context,
+                  (numeric || decimal) ? numericTransformer(value) : value);
+              },
+              decoration: defaultDecoration.copyWith(
+                hintText: config.placeholder,
+                hintStyle: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(100),
+                ),
+              ),
               keyboardType: (numeric || decimal)
                   ?  TextInputType.numberWithOptions(decimal: decimal)
                   : keyboardType,
               maxLines: maxLines,
               obscureText: obscureText,
-            ));
+            );
+        });
   }
 
   num? numericTransformer(String? value) {

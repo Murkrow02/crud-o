@@ -267,9 +267,12 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(_getFormTitle(context),
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                Padding(
+                  padding: const EdgeInsets.only(left: 25),
+                  child: Text(_getFormTitle(context),
+                      style: const TextStyle(
+                          fontSize: 22, fontWeight: FontWeight.bold)),
+                ),
                 if (state is FormSavingState)
                   const CircularProgressIndicator.adaptive()
                 else if (state is FormReadyState)

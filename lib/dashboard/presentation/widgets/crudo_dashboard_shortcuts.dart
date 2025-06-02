@@ -56,17 +56,17 @@ class CrudoDashboardShortcuts extends StatelessWidget {
                 .primary,
           ),
         ),
-        IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () async {
-            var shortcutsActionDialog = await _buildShortcutsEditDialog(
-                context);
-            return showDialog(
-              context: context,
-              builder: (context) => shortcutsActionDialog,
-            );
-          },
-        ),
+        // IconButton(
+        //   icon: const Icon(Icons.edit),
+        //   onPressed: () async {
+        //     var shortcutsActionDialog = await _buildShortcutsEditDialog(
+        //         context);
+        //     return showDialog(
+        //       context: context,
+        //       builder: (context) => shortcutsActionDialog,
+        //     );
+        //   },
+        // ),
       ],
     );
   }
