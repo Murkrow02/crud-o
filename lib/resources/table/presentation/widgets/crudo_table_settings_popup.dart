@@ -24,9 +24,9 @@ class _ToggleColumnVisibilityPopupState
         width: 400,
         child: GridView.builder(
           shrinkWrap: true,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            childAspectRatio: 4,
+          gridDelegate:  SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: MediaQuery.of(context).size.width < 600 ? 1 : 2,
+            childAspectRatio: MediaQuery.of(context).size.width < 600 ? 8 : 6,
           ),
           itemCount: widget.settingsController.columns.length,
           itemBuilder: (context, index) {
