@@ -76,14 +76,15 @@ class CrudoImagePicker extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Row(
+          title:  Row(
             children: [
               Icon(Icons.image),
               const SizedBox(width: 10),
-              Text('Seleziona un\'immagine'),
+              Text(config.label ?? config.name)
             ],
           ),
           content: const Text('Come vuoi selezionare l\'immagine?',textAlign: TextAlign.center),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
           actions: [
             ElevatedButton.icon(
               onPressed: () => Navigator.of(context).pop(true),
