@@ -24,7 +24,7 @@ class CrudoDatetimeField extends StatelessWidget {
     return CrudoField(
       config: config,
       editModeBuilder: (context, onChanged) => DateTimeField(
-        decoration: defaultDecoration,
+        decoration: defaultDecoration(context),
         enabled: config.shouldEnableField(context),
         onChanged: (DateTime? value) => onChanged(context, value),
         initialValue: context.readFormContext().get(config.name) as DateTime?,
