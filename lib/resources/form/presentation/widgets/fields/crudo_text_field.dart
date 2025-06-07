@@ -42,11 +42,8 @@ class CrudoTextField extends StatelessWidget {
                 onChanged(context,
                   (numeric || decimal) ? numericTransformer(value) : value);
               },
-              decoration: defaultDecoration.copyWith(
+              decoration: defaultDecoration(context).copyWith(
                 hintText: config.placeholder,
-                hintStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(100),
-                ),
               ),
               keyboardType: (numeric || decimal)
                   ?  TextInputType.numberWithOptions(decimal: decimal)

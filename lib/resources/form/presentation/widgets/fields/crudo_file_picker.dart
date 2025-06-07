@@ -163,10 +163,13 @@ class _CrudoFilePickerState extends State<CrudoFilePicker> {
         }),
         if (_selectedFiles.length < widget.maxFilesCount && context.readResourceContext().getCurrentOperationType() != ResourceOperationType.view)
           Expanded(
-            child: Center(
-              child: IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: _pickFile,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: IconButton(
+                  icon:  Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 40),
+                  onPressed: _pickFile,
+                ),
               ),
             ),
           ),

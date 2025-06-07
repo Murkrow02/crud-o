@@ -10,18 +10,28 @@ export 'crudo_text_field.dart';
 export 'crudo_repeater_field.dart';
 export 'crudo_file_picker.dart';
 
-
-InputDecoration defaultDecoration = InputDecoration(
+InputDecoration defaultDecoration(BuildContext context) => InputDecoration(
   floatingLabelBehavior: FloatingLabelBehavior.always,
   labelStyle: const TextStyle(color: Colors.grey),
   filled: true,
   fillColor: Colors.white,
+  hintStyle: TextStyle(color: Colors.grey.shade300),
   contentPadding: const EdgeInsets.symmetric(vertical: 19.0, horizontal: 10.0),
-  border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
-  enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
-  focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10.0), borderSide: BorderSide.none),
-);
 
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10.0),
+    borderSide: BorderSide.none,
+  ),
+
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10.0),
+    borderSide: BorderSide(width: 1.5, color: Colors.grey.shade200),
+  ),
+
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(10.0),
+    borderSide: BorderSide(width: 2, color: Theme.of(context).primaryColor.withAlpha(80) ),
+  ),
+
+  // You can simulate the bottom line using a focused `suffix` or `bottom padding` if needed
+);

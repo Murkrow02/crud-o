@@ -148,7 +148,7 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
     if (loading) {
       return TextField(
         enabled: false,
-        decoration: defaultDecoration.copyWith(
+        decoration: defaultDecoration(context).copyWith(
           hintText: 'Caricamento...',
         ),
       );
