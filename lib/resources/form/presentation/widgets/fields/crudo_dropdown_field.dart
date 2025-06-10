@@ -8,6 +8,8 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
   final InputDecoration decoration;
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
+  final Future<List<TModel>> Function(String)? searchFuture;
+
   final bool multiple;
   final List<TModel>? items;
 
@@ -17,7 +19,8 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
       required this.items,
       required this.itemBuilder,
       required this.valueBuilder,
-      this.decoration = const InputDecoration(),
+      this.searchFuture,
+  this.decoration = const InputDecoration(),
       this.multiple = false,
       this.errorText = 'Errore nel caricamento dei dati',
       });
@@ -29,6 +32,7 @@ class CrudoDropdownField<TModel, TValue> extends StatelessWidget {
       retry: false,
       itemBuilder: itemBuilder,
       valueBuilder: valueBuilder,
+      searchFuture: searchFuture,
       futureProvider: items != null
           ? () => Future.value(items)
           : () => _errorFuture().then((value) => value),
