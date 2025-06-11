@@ -17,7 +17,7 @@ String toDashCase(String input) {
 void main(List<String> arguments) {
   // Resource name
   final name = Input(
-    prompt: 'Name of the resource',
+    prompt: 'Name of the resource (e.g. ShippingAddress)',
     validator: (String x) {
       if (x.isEmpty) {
         throw 'Name cannot be empty';
