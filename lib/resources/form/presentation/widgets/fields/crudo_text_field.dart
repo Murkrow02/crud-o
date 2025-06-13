@@ -30,6 +30,7 @@ class CrudoTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final numeric = decimal || this.numeric;
     return CrudoField(
         config: config,
         editModeBuilder: (context, onChanged) {
@@ -40,12 +41,12 @@ class CrudoTextField extends StatelessWidget {
               enabled: config.shouldEnableField(context),
               onChanged: (value) {
                 onChanged(context,
-                  (numeric || decimal) ? numericTransformer(value) : value);
+                  (numeric) ? numericTransformer(value) : value);
               },
               decoration: defaultDecoration(context).copyWith(
                 hintText: config.placeholder,
               ),
-              keyboardType: (numeric || decimal)
+              keyboardType: (numeric)
                   ?  TextInputType.numberWithOptions(decimal: decimal)
                   : keyboardType,
               maxLines: maxLines,

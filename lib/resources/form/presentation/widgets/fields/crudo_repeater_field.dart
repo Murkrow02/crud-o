@@ -97,13 +97,8 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
               if (widget.showAddButton && widget.config.shouldEnableField(context)) ...[
                 const SizedBox(height: 8),
                 IconButton(
-                  style: ButtonStyle(
-                    backgroundColor: MaterialStateProperty.all(
-                        Theme.of(context).colorScheme.primary),
-                  ),
                   onPressed: () => _addRepeaterItem(),
-                  icon: Icon(Icons.add,
-                      color: Theme.of(context).colorScheme.onPrimary),
+                  icon:  Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 40),
                 ),
               ]
             ],

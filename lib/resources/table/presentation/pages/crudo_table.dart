@@ -27,7 +27,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     extends StatelessWidget {
   final List<CrudoTableColumn<TModel>> Function(BuildContext context)
       columnBuilder;
-  final List<CrudoAction>? customActions;
+  final List<CrudoAction>? additionalRowActions;
   final bool searchable;
   final bool enableColumnHiding;
   final Future<PaginatedResponse<TModel>> Function(PaginatedRequest request)?
@@ -56,7 +56,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   const CrudoTable({
     required this.columnBuilder,
-    this.customActions,
+    this.additionalRowActions,
     this.searchable = false,
     this.enableColumnHiding = false,
     this.customFuture,
@@ -405,7 +405,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   Future<List<CrudoAction>> _getActionsForItem(
       BuildContext context, TModel item) async {
     var defaultActions = await _defaultTableActionsForItem(context, item);
-    return defaultActions..addAll(customActions ?? []);
+    return defaultActions..insertAll(0,additionalRowActions ?? []);
   }
 
   /// Configure plutogrid package
