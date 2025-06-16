@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'crudo_fields.dart';
 
-class CrudoTextField extends StatelessWidget {
+class CrudoTextField extends StatefulWidget {
   final CrudoFieldConfiguration config;
   final TextInputType keyboardType;
   final FormFieldValidator<String>? validator;
@@ -29,30 +29,71 @@ class CrudoTextField extends StatelessWidget {
   });
 
   @override
+  State<CrudoTextField> createState() => _CrudoTextFieldState();
+}
+
+/*
+  * All the state management shit is just to re-gain focus after rebuild when
+  * the field is reactive ;)
+*/
+class _CrudoTextFieldState extends State<CrudoTextField> {
+  late TextEditingController _controller;
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+
+    final value = context.readFormContext().get(widget.config.name)?.toString();
+    _controller = TextEditingController(text: value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant CrudoTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final newValue = context.readFormContext().get(widget.config.name)?.toString();
+    if (_controller.text != newValue) {
+      _controller.text = newValue ?? '';
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final numeric = decimal || this.numeric;
+    final numeric = widget.decimal || widget.numeric;
+
     return CrudoField(
-        config: config,
-        editModeBuilder: (context, onChanged) {
-          return TextField(
-              inputFormatters: decimal ? [DecimalInputFormatter()] : [],
-              controller: TextEditingController(
-                  text: context.readFormContext().get(config.name)?.toString()),
-              enabled: config.shouldEnableField(context),
-              onChanged: (value) {
-                onChanged(context,
-                  (numeric) ? numericTransformer(value) : value);
-              },
-              decoration: defaultDecoration(context).copyWith(
-                hintText: config.placeholder,
-              ),
-              keyboardType: (numeric)
-                  ?  TextInputType.numberWithOptions(decimal: decimal)
-                  : keyboardType,
-              maxLines: maxLines,
-              obscureText: obscureText,
+      config: widget.config,
+      editModeBuilder: (context, onChanged) {
+        return TextField(
+          controller: _controller,
+          focusNode: _focusNode,
+          inputFormatters: widget.decimal ? [DecimalInputFormatter()] : [],
+          enabled: widget.config.shouldEnableField(context),
+          onChanged: (value) {
+            onChanged(
+              context,
+              numeric ? numericTransformer(value) : value,
             );
-        });
+          },
+          decoration: defaultDecoration(context).copyWith(
+            hintText: widget.config.placeholder,
+          ),
+          keyboardType: numeric
+              ? TextInputType.numberWithOptions(decimal: widget.decimal)
+              : widget.keyboardType,
+          maxLines: widget.maxLines,
+          obscureText: widget.obscureText,
+        );
+      },
+    );
   }
 
   num? numericTransformer(String? value) {
