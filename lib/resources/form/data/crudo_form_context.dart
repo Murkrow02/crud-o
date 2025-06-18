@@ -1,4 +1,5 @@
 import 'package:crud_o/core/configuration/crudo_configuration.dart';
+import 'package:crud_o/core/utility/toaster.dart';
 import 'package:crud_o/resources/actions/crudo_action_result.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
@@ -238,67 +239,95 @@ class CrudoFormContext {
   /// Returns the result of a registered future operation
   T? getFutureResult<T>(String key) => futureResults[key] as T?;
 
-  /// Normalize form data to be sent to the API
-  /// This mainly converts repeater fields to a list of objects
+  /// Builds the JSON payload expected by the backend.
+  ///
+  /// * Plain keys (e.g. `"customer_id"`) are copied verbatim.
+  /// * Repeater keys (e.g. `"sale_items[0].price"`) are grouped into
+  ///   `List<Map<String,dynamic>>`.
+  /// * If a screen rebuild leaves a whole map on the placeholder key
+  ///   (`"sale_items[0]"`) that map is **ignored**, preventing the
+  ///   “_Map is not a subtype …” crash.
   Map<String, dynamic> exportFormData() {
-    var exportedData = <String, dynamic>{};
-    for (var key in _formData.keys) {
+    // Temp: parentKey → {index → scalar | map}
+    final Map<String, Map<int, dynamic>> repeaterBuckets = {};
+
+    // Final payload
+    final Map<String, dynamic> result = {};
+
+    // Split “parent[idx].child?”
+    final RegExp keyPattern = RegExp(r'^(\w+)\[(\d+)\](?:\.(\w+))?$');
+
+    // Collect errors to show one toast at the end
+    final Map<String, String> errors = {};
+
+    /* ───────────────────────── 1st pass ───────────────────────── */
+    for (final MapEntry<String, dynamic> field in _formData.entries) {
       try {
-        var value = _formData[key];
+        final Match? m = keyPattern.firstMatch(field.key);
 
-        // Match the key pattern for 'x[index].y' or 'x[index]'
-        var match = RegExp(r'^(\w+)\[(\d+)\](?:\.(\w+))?$').firstMatch(key);
-
-        // This is a classic field, not a repeater
-        if (match == null) {
-          // Fallback to simple assignment for non-nested keys
-          exportedData[key] = value;
+        // ── Plain field
+        if (m == null) {
+          result[field.key] = field.value;
           continue;
         }
 
-        // Let's handle the repeater now
-        var parentKey = match.group(1)!; // 'attributes'
-        var indexString = match.group(2)!; // '0'
-        var childKey = match.group(3); // 'name', or null if no dot
+        // ── Repeater field parts
+        final String parentKey = m.group(1)!;          // "sale_items"
+        final int    index     = int.parse(m.group(2)!);
+        final String? childKey = m.group(3);           // "price" | null
 
-        // Parse the index
-        int index = int.parse(indexString);
+        final bucket = repeaterBuckets.putIfAbsent(
+            parentKey, () => <int, dynamic>{});
 
-        // Ensure parent map exists
-        if (!exportedData.containsKey(parentKey)) {
-          exportedData[parentKey] = [];
-        }
-
-        // Ensure the list has enough elements to accommodate the current index
-        var list = exportedData[parentKey] as List?;
-        if (list == null) {
-          exportedData[parentKey] = list = [];
-        }
-
-        while (list.length <= index) {
-          list.add(childKey == null ? null : {});
-        }
+        final current = bucket[index];
 
         if (childKey == null) {
-          // If there's no second dot, set the list value directly
-          list[index] = value;
+          // Placeholder must stay scalar → drop accidental maps
+          if (field.value is! Map) bucket[index] = field.value;
         } else {
-          // If there is a second dot, ensure it's a Map<String, dynamic>
-          if (list[index] is! Map<String, dynamic>) {
-            list[index] = <String, dynamic>{};
-          }
-
-          // Set the nested value inside the map
-          (list[index] as Map<String, dynamic>)[childKey] = value;
+          // Ensure slot is a map, then set property
+          final map = (current is Map<String, dynamic>)
+              ? current
+              : <String, dynamic>{};
+          map[childKey] = field.value;
+          bucket[index] = map;
         }
-      } catch (e) {
+      } catch (ex, st) {
         CrudoConfiguration.logger().e(
-            "Error exporting form data for key '$key'", error: e, stackTrace: StackTrace.current);
-        continue;
+          'exportFormData failed on "${field.key}" : $ex',
+          error: ex,
+          stackTrace: st,
+        );
+        errors[field.key] = ex.toString();
       }
     }
 
-    return exportedData;
+    /* ───────────────────────── 2nd pass ─────────────────────────
+     Transform every {index → value} bucket into a dense List      */
+    repeaterBuckets.forEach((parentKey, byIndex) {
+      if (byIndex.isEmpty) return;
+
+      final int maxIndex =
+      byIndex.keys.reduce((a, b) => a > b ? a : b);
+
+      final List<dynamic> dense =
+      List<dynamic>.filled(maxIndex + 1, null, growable: false);
+
+      byIndex.forEach((i, v) => dense[i] = v);
+
+      result[parentKey] = dense;
+    });
+
+    /* ───────────────────────── Errors toast ───────────────────── */
+    if (errors.isNotEmpty) {
+      CrudoConfiguration.logger()
+          .e('exportFormData finished with ${errors.length} error(s): $errors');
+      Toaster.error(
+        'Errore durante l\'esportazione del form.\nDettagli: $errors',
+      );
+    }
+
+    return result;
   }
 
 }

@@ -56,30 +56,23 @@ class CrudoFormBloc<TResource extends CrudoResource<TModel>,
   Future<void> _onCreateItem(
       CreateFormModelEvent event, Emitter<CrudoFormState> emit) async {
     try {
-      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 14");
 
       emit(FormSavingState(formData: event.formData));
 
-      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 15");
 
       var apiModel = await resource.repository
           .add(event.createData);
 
-      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 16");
 
       emit(FormSavedState(model: apiModel));
 
-      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 17");
 
     } on ApiValidationException catch (e) {
-      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 18");
 
       emit(FormReadyState(formData: event.formData, apiErrors: e.errors, force: true));
 
-      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 19");
 
     } catch (e, s) {
-      CrudoConfiguration.logger().i("DEBUG SAVE CHECKPOINT 20");
       emit(FormErrorState(tracedError: TracedError(e, s)));
     }
   }
