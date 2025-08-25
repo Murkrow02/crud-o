@@ -1,6 +1,6 @@
 
-import 'package:crud_o/resources/actions/crudo_action.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o_core/resources/actions/crudo_action.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 

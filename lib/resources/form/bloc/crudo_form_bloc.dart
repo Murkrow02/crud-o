@@ -1,12 +1,9 @@
 import 'dart:async';
 
-import 'package:crud_o/core/exceptions/api_validation_exception.dart';
-import 'package:crud_o/core/models/traced_error.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/resource_operation_type.dart';
+import 'package:crud_o_core/exceptions/api_validation_exception.dart';
+import 'package:crud_o_core/models/traced_error.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../../core/configuration/crudo_configuration.dart';
 import 'crudo_form_event.dart';
 import 'crudo_form_state.dart';
 

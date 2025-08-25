@@ -1,5 +1,5 @@
-import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
-import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
+import 'package:crud_o_core/networking/rest/requests/paginated_request.dart';
+import 'package:crud_o_core/networking/rest/responses/paginated_response.dart';
 import 'package:flutter/cupertino.dart';
 
 class CrudoTableFilter<TModel> {

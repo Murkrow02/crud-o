@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:crud_o/core/configuration/rest_client_configuration.dart';
-import 'package:crud_o/core/networking/rest/rest_client.dart';
+import 'package:crud_o_core/configuration/rest_client_configuration.dart';
+import 'package:crud_o_core/networking/rest/rest_client.dart';
 import 'package:flutter/material.dart';
 import 'package:futuristic/futuristic.dart';
 

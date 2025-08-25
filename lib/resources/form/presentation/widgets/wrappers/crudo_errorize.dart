@@ -1,4 +1,4 @@
-import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/data/crudo_field_entry.dart';
 import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';

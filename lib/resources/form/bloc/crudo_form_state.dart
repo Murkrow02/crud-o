@@ -1,8 +1,7 @@
-import 'package:crud_o/core/models/traced_error.dart';
-import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
-import 'package:crud_o/resources/resource_operation_type.dart';
+import 'package:crud_o_core/models/traced_error.dart';
+import 'package:crud_o_core/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
-import 'package:crud_o/core/exceptions/api_validation_exception.dart';
+import 'package:crud_o_core/exceptions/api_validation_exception.dart';
 
 abstract class CrudoFormState extends Equatable {
   @override

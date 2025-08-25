@@ -1,8 +1,8 @@
 import 'dart:typed_data';
-import 'package:crud_o/auth/crudo_auth.dart';
-import 'package:crud_o/auth/data/models/crudo_user.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/resource_provider.dart';
+import 'package:crud_o_core/auth/crudo_auth.dart';
+import 'package:crud_o_core/auth/data/models/crudo_user.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
+import 'package:crud_o_core/resources/resource_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:futuristic/futuristic.dart';
 import 'package:provider/provider.dart';
@@ -57,7 +57,7 @@ class CrudoDashboard extends StatelessWidget {
                   children: [
                     SizedBox(
                       height: 50,
-                      child: Futuristic<Uint8List>(
+                      child: Futuristic<Uint8List?>(
                         autoStart: true,
                         futureBuilder: user.getAvatar,
                         dataBuilder: (context, data) {

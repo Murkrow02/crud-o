@@ -1,6 +1,6 @@
 import 'package:crud_o/resources/form/presentation/widgets/crudo_form.dart';
-import 'package:crud_o/resources/resource_context.dart';
-import 'package:crud_o/resources/resource_operation_type.dart';
+import 'package:crud_o_core/resources/resource_context.dart';
+import 'package:crud_o_core/resources/resource_operation_type.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 

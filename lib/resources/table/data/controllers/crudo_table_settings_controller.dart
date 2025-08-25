@@ -1,4 +1,4 @@
-import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o/resources/table/data/models/crudo_table_column.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';

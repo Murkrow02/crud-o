@@ -1,7 +1,7 @@
 import 'package:crud_o/dashboard/presentation/widgets/crudo_dashboard_shortcut.dart';
-import 'package:crud_o/resources/actions/crudo_action.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
-import 'package:crud_o/resources/resource_provider.dart';
+import 'package:crud_o_core/resources/actions/crudo_action.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
+import 'package:crud_o_core/resources/resource_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futuristic/futuristic.dart';

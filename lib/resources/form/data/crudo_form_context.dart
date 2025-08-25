@@ -1,12 +1,12 @@
-import 'package:crud_o/core/configuration/crudo_configuration.dart';
-import 'package:crud_o/core/utility/toaster.dart';
-import 'package:crud_o/resources/actions/crudo_action_result.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
+import 'package:crud_o_core/core/utility/toaster.dart';
+import 'package:crud_o_core/resources/actions/crudo_action_result.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
 import 'package:crud_o/resources/form/data/crudo_file.dart';
-import 'package:crud_o/resources/resource_context.dart';
-import 'package:crud_o/resources/resource_operation_type.dart';
+import 'package:crud_o_core/resources/resource_context.dart';
+import 'package:crud_o_core/resources/resource_operation_type.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 

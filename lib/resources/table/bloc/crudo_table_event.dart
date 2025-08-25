@@ -1,6 +1,6 @@
-import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
+import 'package:crud_o_core/networking/rest/responses/paginated_response.dart';
 import 'package:equatable/equatable.dart';
-import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
+import 'package:crud_o_core/networking/rest/requests/paginated_request.dart';
 
 abstract class CrudoTableEvent extends Equatable {
   @override

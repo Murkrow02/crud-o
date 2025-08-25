@@ -1,17 +1,18 @@
-import 'package:crud_o/common/dialogs/confirmation_dialog.dart';
 import 'package:crud_o/common/widgets/error_alert.dart';
 import 'package:crud_o/common/widgets/save_and_close_icon.dart';
 import 'package:crud_o/common/widgets/save_and_create_another_icon.dart';
 import 'package:crud_o/common/widgets/save_and_edit_icon.dart';
-import 'package:crud_o/core/configuration/crudo_configuration.dart';
-import 'package:crud_o/core/utility/toaster.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_bloc.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_event.dart';
 import 'package:crud_o/resources/form/bloc/crudo_form_state.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o_core/core/utility/toaster.dart';
+import 'package:crud_o_core/resources/crudo_form_display_type.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/data/crudo_form_context.dart';
-import 'package:crud_o/resources/resource_operation_type.dart';
-import 'package:crud_o/resources/resource_context.dart';
+import 'package:crud_o_core/resources/resource_operation_type.dart';
+import 'package:crud_o_core/resources/resource_context.dart';
+import 'package:crud_o_core/ui/confirmation_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futuristic/futuristic.dart';
@@ -563,8 +564,6 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     return customTitle ?? context.read<TResource>().singularName();
   }
 }
-
-enum CrudoFormDisplayType { fullPage, dialog, widget }
 
 enum CrudoFormSaveBehaviour { saveAndCreateAnother, saveAndEdit, saveAndClose }
 

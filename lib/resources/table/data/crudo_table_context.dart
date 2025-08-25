@@ -1,6 +1,6 @@
-import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
-import 'package:crud_o/core/networking/rest/responses/paginated_response.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o_core/networking/rest/requests/paginated_request.dart';
+import 'package:crud_o_core/networking/rest/responses/paginated_response.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_bloc.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_event.dart';
 import 'package:crud_o/resources/table/bloc/crudo_table_state.dart';

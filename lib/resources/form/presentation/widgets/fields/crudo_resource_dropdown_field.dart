@@ -1,8 +1,7 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
-import 'package:crud_o/core/networking/rest/requests/paginated_request.dart';
-import 'package:crud_o/core/networking/rest/requests/rest_request.dart';
-import 'package:crud_o/core/utility/toaster.dart';
-import 'package:crud_o/resources/crudo_resource.dart';
+import 'package:crud_o_core/networking/rest/requests/paginated_request.dart';
+import 'package:crud_o_core/networking/rest/requests/rest_request.dart';
+import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_future_dropdown_field.dart';
