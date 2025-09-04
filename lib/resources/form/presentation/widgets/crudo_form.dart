@@ -207,6 +207,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         return _buildDialogFormWrapper(context, form);
       case CrudoFormDisplayType.widget:
         return _buildWidgetWrapper(context, form);
+      case CrudoFormDisplayType.widgetPlain:
+        return _buildWidgetPlainWrapper(context, form);
     }
   }
 
@@ -285,6 +287,13 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
         );
       }),
     );
+  }
+
+  Widget _buildWidgetPlainWrapper(BuildContext context, Widget form) {
+    return BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
+        builder: (context, state) {
+          return form;
+        });
   }
 
   /// These are errors that are not related to a specific field
