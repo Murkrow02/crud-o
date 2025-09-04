@@ -89,7 +89,7 @@ String resourceStub(String name, List<String> components) {
 
   // Conditional imports for form, table, and policy pages
   var imports = [
-    "import 'package:crud_o/resources/crudo_resource.dart';",
+    "import 'package:crud_o_core/resources/crudo_resource.dart';",
     "import 'package:flutter/material.dart';",
     "import '${toSnakeCase(name)}_repository.dart';",
   ];
@@ -156,7 +156,7 @@ class ${titleCaseResource}Resource extends CrudoResource<$titleCaseResource> {
 String factoryStub(String name) {
   var titleCaseResource = name;
   return '''
-import 'package:crud_o/resources/resource_factory.dart';
+import 'package:crud_o_core/resources/resource_factory.dart';
 import 'package:flutter/material.dart';
 
 class ${titleCaseResource}Factory extends ResourceFactory<$titleCaseResource> {
@@ -183,7 +183,7 @@ String repositoryStub(String name) {
   var titleCaseResource = name;
   var titleCaseResourcePlural = '${titleCaseResource}s';
   return '''
-import 'package:crud_o/resources/resource_repository.dart';
+import 'package:crud_o_core/resources/resource_repository.dart';
 import '${toSnakeCase(name)}_factory.dart';
 
 class ${titleCaseResource}Repository extends ResourceRepository<$titleCaseResource> {
