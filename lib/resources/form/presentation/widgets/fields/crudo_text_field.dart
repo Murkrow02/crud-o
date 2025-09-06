@@ -47,6 +47,45 @@ class _CrudoTextFieldState extends State<CrudoTextField> {
 
     final value = context.readFormContext().get(widget.config.name)?.toString();
     _controller = TextEditingController(text: value);
+
+    // When focus is lost, make sure the *final* text is committed to the form.
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) {
+        final numeric = widget.decimal || widget.numeric;
+        final val = _controller.text;
+        final committed = numeric ? numericTransformer(val) : val;
+        // Use the field wrapper's onChanged to push to your form state.
+        // We'll call the onChanged passed in build via a helper.
+        _commitLatest(committed);
+      }
+    });
+  }
+
+  void _commitLatest(dynamic value) {
+    // This will be set by build() each frame.
+    _latestOnChanged?.call(context, value);
+  }
+
+  // We'll capture the onChanged callback from CrudoField each build.
+  void Function(BuildContext, dynamic)? _latestOnChanged;
+
+  @override
+  void didUpdateWidget(covariant CrudoTextField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Pull the value from the form only when we're not editing,
+    // and only if it's non-null and actually different.
+    final newValue =
+    context.readFormContext().get(widget.config.name)?.toString();
+
+    if (!_focusNode.hasFocus && newValue != null && _controller.text != newValue) {
+      // Update text without losing cursor/IME composing ranges unexpectedly.
+      _controller.value = _controller.value.copyWith(
+        text: newValue,
+        selection: TextSelection.collapsed(offset: newValue.length),
+        composing: TextRange.empty,
+      );
+    }
   }
 
   @override
@@ -57,33 +96,50 @@ class _CrudoTextFieldState extends State<CrudoTextField> {
   }
 
   @override
-  void didUpdateWidget(covariant CrudoTextField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    final newValue = context.readFormContext().get(widget.config.name)?.toString();
-    if (_controller.text != newValue) {
-      _controller.text = newValue ?? '';
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final numeric = widget.decimal || widget.numeric;
 
     return CrudoField(
       config: widget.config,
       editModeBuilder: (context, onChanged) {
+        // keep a reference so _commitLatest() can push reliably
+        _latestOnChanged = onChanged;
+
         return TextField(
           controller: _controller,
-          textInputAction: TextInputAction.done,
           focusNode: _focusNode,
           inputFormatters: widget.decimal ? [DecimalInputFormatter()] : [],
           enabled: widget.config.shouldEnableField(context),
+
+          // Push on every keystroke as before
           onChanged: (value) {
             onChanged(
               context,
               numeric ? numericTransformer(value) : value,
             );
           },
+
+          // Make the keyboard's return act as "Done" (dismiss)
+          textInputAction: widget.maxLines == 1
+              ? TextInputAction.done
+              : TextInputAction.newline,
+
+          // When user taps Done, commit the final text and close keyboard
+          onSubmitted: (value) {
+            onChanged(context, numeric ? numericTransformer(value) : value);
+            _focusNode.unfocus();
+          },
+
+          // Also fires on blur; ensures last autocorrect is saved
+          onEditingComplete: () {
+            final value = _controller.text;
+            onChanged(context, numeric ? numericTransformer(value) : value);
+          },
+
+          // (Optional) if you don't want iOS autocorrect to “change” text on blur:
+          // autocorrect: false,
+          // enableSuggestions: false,
+
           decoration: defaultDecoration(context).copyWith(
             hintText: widget.config.placeholder,
           ),
@@ -98,11 +154,7 @@ class _CrudoTextFieldState extends State<CrudoTextField> {
   }
 
   num? numericTransformer(String? value) {
-    return value == null
-        ? null
-        : value == ''
-            ? null
-            : num.tryParse(value.toString()) ?? 0;
+    return value == null || value.isEmpty ? null : num.tryParse(value) ?? 0;
   }
 }
 
