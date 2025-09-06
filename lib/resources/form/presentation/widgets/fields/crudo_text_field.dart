@@ -74,6 +74,7 @@ class _CrudoTextFieldState extends State<CrudoTextField> {
       editModeBuilder: (context, onChanged) {
         return TextField(
           controller: _controller,
+          textInputAction: TextInputAction.done,
           focusNode: _focusNode,
           inputFormatters: widget.decimal ? [DecimalInputFormatter()] : [],
           enabled: widget.config.shouldEnableField(context),
