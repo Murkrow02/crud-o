@@ -43,6 +43,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   // Map of data to pass to the resources.actions,
   final Map<String, dynamic>? actionData;
   final CrudoTableDisplayType displayType;
+  final double? widgetHeight;
   final bool paginated;
   final Function(BuildContext context,
       CrudoTableContext<TResource, TModel> tableContext)? filtersFormBuilder;
@@ -61,6 +62,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     this.enableColumnHiding = false,
     this.customFuture,
     this.displayType = CrudoTableDisplayType.widget,
+    this.widgetHeight,
     this.paginated = false,
     this.tableWrapperBuilder,
     this.onDataChanged,
@@ -173,7 +175,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
           ],
         ),
         Container(
-          height: MediaQuery.of(context).size.height * 0.5,
+          height: widgetHeight ?? MediaQuery.of(context).size.height * 0.5,
           margin: const EdgeInsets.all(10),
           child: _buildTable(context),
         )
