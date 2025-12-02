@@ -43,6 +43,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   // Map of data to pass to the resources.actions,
   final Map<String, dynamic>? actionData;
   final CrudoTableDisplayType displayType;
+  final bool createButtonAsFab;
   final double? widgetHeight;
   final bool paginated;
   final Function(BuildContext context,
@@ -62,6 +63,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     this.enableColumnHiding = false,
     this.customFuture,
     this.displayType = CrudoTableDisplayType.widget,
+    this.createButtonAsFab = false,
     this.widgetHeight,
     this.paginated = false,
     this.tableWrapperBuilder,
@@ -185,24 +187,51 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   /// Wrapper when table is displayed as a full page
   Widget _buildFullPageWrapper(
-      BuildContext context, CrudoTableContext<TResource, TModel> tableContext) {
+      BuildContext context,
+      CrudoTableContext<TResource, TModel> tableContext,
+      ) {
     return Scaffold(
       appBar: AppBar(
-          title: searchable
-              ? _buildSearchBar(context)
-              : Text(context.read<TResource>().pluralName()),
-          actions: [
-            if (enableColumnHiding)
-              _buildColumnHidingButton(context, tableContext),
-            _buildFiltersPopMenuButton(context),
-            _buildCreateActionButton(context)
-          ]),
+        title: searchable
+            ? _buildSearchBar(context)
+            : Text(context.read<TResource>().pluralName()),
+        actions: [
+          if (enableColumnHiding)
+            _buildColumnHidingButton(context, tableContext),
+
+          _buildFiltersPopMenuButton(context),
+
+          // Only show the create button here if NOT floating
+          if (!createButtonAsFab)
+            _buildCreateActionButton(context),
+        ],
+      ),
+
       body: Container(
-          margin: const EdgeInsets.all(10),
-          child: tableWrapperBuilder != null
-              ? tableWrapperBuilder!(_buildTable(context), context.readTableContext<
-                  TResource, TModel>())
-              : _buildTable(context)),
+        margin: const EdgeInsets.all(10),
+        child: tableWrapperBuilder != null
+            ? tableWrapperBuilder!(
+          _buildTable(context),
+          context.readTableContext<TResource, TModel>(),
+        )
+            : _buildTable(context),
+      ),
+
+      // Add FAB when enabled
+      floatingActionButton: createButtonAsFab
+          ? Futuristic<CrudoAction?>(
+        autoStart: true,
+        futureBuilder: () =>
+            context.read<TResource>().createAction(),
+        busyBuilder: (_) => const SizedBox(),
+        dataBuilder: (context, action) => action == null
+            ? const SizedBox()
+            : FloatingActionButton(
+          onPressed: () => _onCreateClicked(context),
+          child: Icon(action.icon),
+        ),
+      )
+          : null,
     );
   }
 
