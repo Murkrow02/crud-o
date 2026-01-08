@@ -192,6 +192,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       ) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.surface,
         title: searchable
             ? _buildSearchBar(context)
             : Text(context.read<TResource>().pluralName()),

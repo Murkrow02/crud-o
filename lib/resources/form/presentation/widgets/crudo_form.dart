@@ -226,6 +226,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           },
           child: Scaffold(
               appBar: AppBar(
+                backgroundColor: Theme.of(context).colorScheme.surface,
                 title: Text(_getFormTitle(context)),
                 actions: [
                   if (state is FormSavingState)
