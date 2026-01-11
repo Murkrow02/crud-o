@@ -214,6 +214,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
 
   /// Build the form wrapper for a full page
   Widget _buildFullPageFormWrapper(BuildContext context, Widget form) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
       builder: (context, state) {
         return PopScope(
@@ -226,7 +228,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           },
           child: Scaffold(
               appBar: AppBar(
-                backgroundColor: Theme.of(context).colorScheme.surface,
+                backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
+                foregroundColor: themeConfig.appBarForegroundColor,
+                elevation: themeConfig.appBarElevation,
                 title: Text(_getFormTitle(context)),
                 actions: [
                   if (state is FormSavingState)
@@ -237,7 +241,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                 ],
               ),
               body: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: themeConfig.formContentPadding,
                 child: form,
               )),
         );
@@ -260,6 +264,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   }
 
   Widget _buildWidgetWrapper(BuildContext context, Widget form) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
@@ -274,8 +280,9 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                 Padding(
                   padding: const EdgeInsets.only(left: 25),
                   child: Text(_getFormTitle(context),
-                      style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold)),
+                      style: TextStyle(
+                          fontSize: themeConfig.formTitleFontSize,
+                          fontWeight: themeConfig.formTitleFontWeight)),
                 ),
                 if (state is FormSavingState)
                   const CircularProgressIndicator.adaptive()

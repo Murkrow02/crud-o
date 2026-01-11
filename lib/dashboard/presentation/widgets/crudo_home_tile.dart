@@ -1,4 +1,5 @@
 import 'package:crud_o/dashboard/presentation/widgets/crudo_nav_tile.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:flutter/material.dart';
 
 class CrudoHomeTile extends StatelessWidget {
@@ -8,10 +9,11 @@ class CrudoHomeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
     return CrudoNavTile(
       selected: currentRoute == '/',
-      icon: Icons.home_rounded,
-      title: 'Dashboard',
+      icon: themeConfig.homeTileIcon,
+      title: themeConfig.homeTileTitle,
       navigationOrder: -1000,
       dense: false,
       onTap: onTap,

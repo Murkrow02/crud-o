@@ -1,3 +1,4 @@
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_counter/smooth_counter.dart';
 
@@ -19,11 +20,13 @@ class CrudoDashboardWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return LayoutBuilder(builder: (context, constraints) {
       return Container(
        // padding: const EdgeInsets.all(8),
         width:  _getWidth(constraints),
-        height: 150,
+        height: themeConfig.dashboardWidgetHeight,
         child: Card(child: child),
       );
     });

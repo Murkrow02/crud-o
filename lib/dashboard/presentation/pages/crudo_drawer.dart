@@ -4,6 +4,7 @@ import 'package:crud_o/dashboard/presentation/widgets/crudo_home_tile.dart';
 import 'package:crud_o/dashboard/presentation/widgets/crudo_nav_footer.dart';
 import 'package:crud_o/dashboard/presentation/widgets/crudo_nav_header.dart';
 import 'package:crud_o/dashboard/presentation/widgets/crudo_nav_tile.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o_core/resources/resource_provider.dart';
 import 'package:flutter/material.dart';
@@ -94,8 +95,12 @@ class _CrudoDrawerState extends State<CrudoDrawer> {
   }
 
   PreferredSizeWidget _buildHomeAppBar(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return AppBar(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
+      foregroundColor: themeConfig.appBarForegroundColor,
+      elevation: themeConfig.appBarElevation,
       leading: IconButton(
         icon: const Icon(Icons.menu_rounded),
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
@@ -106,18 +111,21 @@ class _CrudoDrawerState extends State<CrudoDrawer> {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
         key: _scaffoldKey,
         drawer: Drawer(
+          backgroundColor: themeConfig.sidebarBackgroundColor,
           child: SafeArea(
             child: Column(
               children: [
                 CrudoNavHeader(
                   config: widget.config,
-                  avatarRadius: 30,
-                  fontSize: 20,
+                  avatarRadius: themeConfig.navHeaderAvatarRadiusDrawer,
+                  fontSize: themeConfig.navHeaderFontSizeDrawer,
                 ),
 
                 CrudoHomeTile(
@@ -137,8 +145,8 @@ class _CrudoDrawerState extends State<CrudoDrawer> {
                         title: e.title,
                         navigationOrder: e.navigationOrder,
                         dense: false,
-                        height: 50,
-                        iconSize: 24,
+                        height: themeConfig.navTileDrawerHeight,
+                        iconSize: themeConfig.navTileDrawerIconSize,
                         onTap: () => _openExtra(e),
                       );
                     }
@@ -153,8 +161,8 @@ class _CrudoDrawerState extends State<CrudoDrawer> {
                       title: resource.pluralName(),
                       navigationOrder: entry.order,
                       dense: false,
-                      height: 50,
-                      iconSize: 24,
+                      height: themeConfig.navTileDrawerHeight,
+                      iconSize: themeConfig.navTileDrawerIconSize,
                       onTap: () => _go(route),
                     );
                   },

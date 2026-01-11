@@ -21,7 +21,7 @@ class CrudoNavFooter extends StatelessWidget {
           dense: true,
           leading: const Icon(Icons.logout, color: Colors.red),
           title: Text(
-            'Logout',
+            'Esci',
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
           onTap: () {

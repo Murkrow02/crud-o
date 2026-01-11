@@ -13,14 +13,16 @@ class ErrorAlert extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return SingleChildScrollView(
       child: Center(
         child: Container(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.error.withOpacity(0.8),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(themeConfig.errorAlertBorderRadius),
             ),
-            padding: const EdgeInsets.all(18.0),
+            padding: themeConfig.errorAlertPadding,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -28,7 +30,7 @@ class ErrorAlert extends StatelessWidget {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onError,
-                        fontSize: 24)),
+                        fontSize: themeConfig.errorAlertTitleFontSize)),
                 SizedBox(height: 10),
                 Visibility(
                   visible: kDebugMode,

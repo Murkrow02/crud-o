@@ -1,4 +1,5 @@
 import 'package:crud_o/dashboard/presentation/widgets/crudo_dashboard_widget.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_counter/smooth_counter.dart';
 
@@ -21,6 +22,8 @@ class CrudoCounterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return CrudoDashboardWidget(
         size: size,
         child: Center(
@@ -29,13 +32,14 @@ class CrudoCounterWidget extends StatelessWidget {
           children: [
             Text(title,
                 style: TextStyle(
-                    fontSize: 25,
+                    fontSize: themeConfig.counterWidgetTitleFontSize,
                     color: Theme.of(context).colorScheme.primary)),
             SmoothCounter(
               count: value,
               textStyle: TextStyle(
-                  fontSize: 50, color: Theme.of(context).colorScheme.tertiary),
-              duration: const Duration(milliseconds: 2000),
+                  fontSize: themeConfig.counterWidgetValueFontSize,
+                  color: Theme.of(context).colorScheme.tertiary),
+              duration: themeConfig.counterWidgetAnimationDuration,
             ),
           ],
         )));

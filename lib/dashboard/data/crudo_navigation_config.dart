@@ -35,6 +35,12 @@ class CrudoExtraNavItem {
   /// - true: replace (like sidebar), keeping Home as base
   final bool replace;
 
+  /// Whether clicking on this item when already selected should replace
+  /// the current page with a new instance.
+  /// - true (default): re-clicking replaces the page
+  /// - false: re-clicking does nothing
+  final bool replaceOnReselect;
+
   const CrudoExtraNavItem({
     required this.navigationOrder,
     required this.icon,
@@ -43,6 +49,7 @@ class CrudoExtraNavItem {
     this.pageBuilder,
     this.onTap,
     this.replace = false,
+    this.replaceOnReselect = true,
   }) : assert(
   pageBuilder != null || onTap != null,
   'CrudoExtraNavItem must provide either pageBuilder or onTap',

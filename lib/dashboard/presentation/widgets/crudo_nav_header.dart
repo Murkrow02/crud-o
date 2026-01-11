@@ -1,32 +1,38 @@
 import 'dart:typed_data';
 import 'package:crud_o/dashboard/data/crudo_navigation_config.dart';
 import 'package:crud_o_core/auth/data/models/crudo_user.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:flutter/material.dart';
 import 'package:futuristic/futuristic.dart';
 
 class CrudoNavHeader extends StatelessWidget {
   final CrudoNavigationConfig? config;
 
-  /// Style knobs (optional)
-  final double avatarRadius;
-  final double fontSize;
-  final EdgeInsets padding;
+  /// Style knobs (optional, uses theme defaults if not provided)
+  final double? avatarRadius;
+  final double? fontSize;
+  final EdgeInsets? padding;
 
   const CrudoNavHeader({
     super.key,
     this.config,
-    this.avatarRadius = 24,
-    this.fontSize = 18,
-    this.padding = const EdgeInsets.all(10),
+    this.avatarRadius,
+    this.fontSize,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
     final cfg = config;
+    final themeConfig = CrudoConfiguration.theme();
+
+    final effectiveAvatarRadius = avatarRadius ?? themeConfig.navHeaderAvatarRadiusSidebar;
+    final effectiveFontSize = fontSize ?? themeConfig.navHeaderFontSizeSidebar;
+    final effectivePadding = padding ?? themeConfig.navHeaderPadding;
 
     return Container(
-      padding: padding,
-      color: Theme.of(context).colorScheme.surfaceContainer,
+      padding: effectivePadding,
+      color: themeConfig.sidebarHeaderBackgroundColor ?? Theme.of(context).colorScheme.surfaceContainer,
       child: Column(
         children: [
           if (cfg?.getUserData != null)
@@ -43,8 +49,8 @@ class CrudoNavHeader extends StatelessWidget {
                 return Row(
                   children: [
                     SizedBox(
-                      height: avatarRadius * 2 + 2,
-                      width: avatarRadius * 2 + 2,
+                      height: effectiveAvatarRadius * 2 + 2,
+                      width: effectiveAvatarRadius * 2 + 2,
                       child: Futuristic<Uint8List?>(
                         autoStart: true,
                         futureBuilder: user.getAvatar,
@@ -53,7 +59,7 @@ class CrudoNavHeader extends StatelessWidget {
                           return CircleAvatar(
                             backgroundColor:
                             Theme.of(context).colorScheme.surface,
-                            radius: avatarRadius,
+                            radius: effectiveAvatarRadius,
                             backgroundImage: MemoryImage(data),
                           );
                         },
@@ -65,7 +71,7 @@ class CrudoNavHeader extends StatelessWidget {
                         user.getName(),
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: fontSize,
+                          fontSize: effectiveFontSize,
                           color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),

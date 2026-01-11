@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:animated_search_bar/animated_search_bar.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:crud_o_core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o_core/networking/rest/responses/paginated_response.dart';
 import 'package:crud_o_core/resources/actions/crudo_action.dart';
@@ -190,9 +191,13 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       BuildContext context,
       CrudoTableContext<TResource, TModel> tableContext,
       ) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
+        foregroundColor: themeConfig.appBarForegroundColor,
+        elevation: themeConfig.appBarElevation,
         title: searchable
             ? _buildSearchBar(context)
             : Text(context.read<TResource>().pluralName()),
@@ -442,29 +447,29 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
 
   /// Configure plutogrid package
   PlutoGridConfiguration _getGridConfiguration(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return PlutoGridConfiguration(
       style: PlutoGridStyleConfig(
         enableGridBorderShadow: false,
-        enableColumnBorderVertical: false,
-        enableColumnBorderHorizontal: true,
-        enableCellBorderVertical: false,
-        enableCellBorderHorizontal: true,
-        borderColor: const Color(0xFFE1E1E1),
+        enableColumnBorderVertical: themeConfig.tableEnableColumnBorderVertical,
+        enableColumnBorderHorizontal: themeConfig.tableEnableColumnBorderHorizontal,
+        enableCellBorderVertical: themeConfig.tableEnableCellBorderVertical,
+        enableCellBorderHorizontal: themeConfig.tableEnableCellBorderHorizontal,
+        borderColor: themeConfig.tableBorderColor,
         cellUnselectedColor: Colors.transparent,
-        evenRowColor: Colors.transparent,
-        rowColor: Colors.transparent,
+        evenRowColor: themeConfig.tableEvenRowColor ?? Colors.transparent,
+        rowColor: themeConfig.tableOddRowColor ?? Colors.transparent,
         gridBorderColor: Colors.transparent,
-        columnTextStyle: TextStyle(
+        columnTextStyle: themeConfig.tableColumnTextStyle ?? TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontSize: 14,
         ),
-        gridBackgroundColor: Colors.transparent,
-        //Theme.of(context).colorScheme.surface,
-        cellTextStyle: TextStyle(
+        gridBackgroundColor: themeConfig.tableGridBackgroundColor ?? Colors.transparent,
+        cellTextStyle: themeConfig.tableCellTextStyle ?? TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontSize: 14,
         ),
-        //rowColor: Theme.of(context).colorScheme.surface,
       ),
       columnSize: const PlutoGridColumnSizeConfig(
         autoSizeMode: PlutoAutoSizeMode.scale,

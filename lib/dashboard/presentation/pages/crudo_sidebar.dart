@@ -4,6 +4,7 @@ import 'package:crud_o/dashboard/presentation/widgets/crudo_home_tile.dart';
 import 'package:crud_o/dashboard/presentation/widgets/crudo_nav_footer.dart';
 import 'package:crud_o/dashboard/presentation/widgets/crudo_nav_header.dart';
 import 'package:crud_o/dashboard/presentation/widgets/crudo_nav_tile.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o_core/resources/resource_provider.dart';
 import 'package:flutter/material.dart';
@@ -12,13 +13,13 @@ import 'package:provider/provider.dart';
 class CrudoSideBar extends StatefulWidget {
   final Widget home;
   final CrudoNavigationConfig? config;
-  final double sidebarWidth;
+  final double? sidebarWidth;
 
   const CrudoSideBar({
     super.key,
     required this.home,
     this.config,
-    this.sidebarWidth = 280,
+    this.sidebarWidth,
   });
 
   @override
@@ -69,15 +70,17 @@ class _CrudoSideBarState extends State<CrudoSideBar> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final themeConfig = CrudoConfiguration.theme();
+    final effectiveSidebarWidth = widget.sidebarWidth ?? themeConfig.sidebarWidth;
 
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
-        backgroundColor: cs.surfaceContainerHighest,
+        backgroundColor: themeConfig.sidebarBackgroundColor ?? cs.surfaceContainerHighest,
         body: Row(
           children: [
             SizedBox(
-              width: widget.sidebarWidth,
+              width: effectiveSidebarWidth,
               child: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -86,8 +89,8 @@ class _CrudoSideBarState extends State<CrudoSideBar> {
                       const SizedBox(height: 8),
                       CrudoNavHeader(
                         config: widget.config,
-                        avatarRadius: 20,
-                        fontSize: 16,
+                        avatarRadius: themeConfig.navHeaderAvatarRadiusSidebar,
+                        fontSize: themeConfig.navHeaderFontSizeSidebar,
                       ),
                       CrudoHomeTile(
                         currentRoute: _currentRoute,

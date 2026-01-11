@@ -1,8 +1,8 @@
 
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:crud_o_core/resources/actions/crudo_action.dart';
 import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 
 class CrudoDashboardShortcut extends StatelessWidget {
@@ -19,24 +19,23 @@ class CrudoDashboardShortcut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     return Container(
-      width: 350,
+      width: themeConfig.dashboardShortcutWidth,
       decoration: BoxDecoration(
         border: Border(
           left: BorderSide(
-            color: Theme
-                .of(context)
-                .colorScheme
-                .primary,
-            width: 5,
+            color: themeConfig.dashboardShortcutBorderColor ?? Theme.of(context).colorScheme.primary,
+            width: themeConfig.dashboardShortcutBorderWidth,
           ),
         ),
-        color: Colors.white,
+        color: themeConfig.dashboardShortcutBackgroundColor,
       ),
       child: ListTile(
         dense: true,
         leading: icon,
-        title: Text(name, style: const TextStyle(fontSize: 16)),
+        title: Text(name, style: TextStyle(fontSize: themeConfig.dashboardShortcutTitleFontSize)),
         onTap: onTap,
       ),
     );

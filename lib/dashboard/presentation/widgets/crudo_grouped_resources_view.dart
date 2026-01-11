@@ -1,3 +1,4 @@
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:flutter/material.dart';
 import 'package:futuristic/futuristic.dart';
 
@@ -70,6 +71,8 @@ class _GroupSection<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeConfig = CrudoConfiguration.theme();
+
     // Build children once and remove "invisible" placeholders
     final builtChildren = <Widget>[];
     for (final item in items) {
@@ -91,13 +94,13 @@ class _GroupSection<T> extends StatelessWidget {
       // Make ExpansionTile feel less "default Material"
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 8),
-        childrenPadding: const EdgeInsets.only(left: 8, right: 8, bottom: 6),
+        tilePadding: themeConfig.groupSectionTilePadding,
+        childrenPadding: themeConfig.groupSectionChildrenPadding,
         title: Text(
           groupName,
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            fontWeight: themeConfig.groupSectionTitleFontWeight,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(themeConfig.groupSectionTitleOpacity),
           ),
         ),
         children: [

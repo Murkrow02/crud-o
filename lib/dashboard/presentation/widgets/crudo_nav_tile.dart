@@ -1,3 +1,4 @@
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:flutter/material.dart';
 
 class CrudoNavTile extends StatefulWidget {
@@ -7,8 +8,8 @@ class CrudoNavTile extends StatefulWidget {
   final VoidCallback onTap;
 
   final bool dense;
-  final double height;
-  final double iconSize;
+  final double? height;
+  final double? iconSize;
 
   /// Determines ordering among tiles
   final int navigationOrder;
@@ -21,8 +22,8 @@ class CrudoNavTile extends StatefulWidget {
     required this.onTap,
     required this.navigationOrder,
     this.dense = true,
-    this.height = 46,
-    this.iconSize = 20,
+    this.height,
+    this.iconSize,
   });
 
   @override
@@ -37,16 +38,23 @@ class _CrudoNavTileState extends State<CrudoNavTile> {
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final baseTextStyle = Theme.of(context).textTheme.bodyLarge;
+    final themeConfig = CrudoConfiguration.theme();
+
+    final height = widget.height ?? themeConfig.navTileHeight;
+    final iconSize = widget.iconSize ?? themeConfig.navTileIconSize;
+    final borderRadius = themeConfig.navTileBorderRadius;
+    final indicatorWidth = themeConfig.navTileIndicatorWidth;
+    final indicatorHeight = themeConfig.navTileIndicatorHeight;
 
     final bg = widget.selected
-        ? cs.primaryContainer.withAlpha(isDark ? 80 : 20)
+        ? themeConfig.navTileSelectedBackgroundColor ?? cs.primaryContainer.withAlpha(isDark ? 80 : 20)
         : _isHovering
-        ? cs.surfaceContainerHighest.withAlpha(isDark ? 40 : 40)
+        ? themeConfig.navTileHoverBackgroundColor ?? cs.surfaceContainerHighest.withAlpha(isDark ? 40 : 40)
         : Colors.transparent;
 
     final fg = widget.selected
-        ? cs.primary
-        : cs.onSurface.withAlpha(_isHovering ? 220 : 160);
+        ? themeConfig.navTileSelectedForegroundColor ?? cs.primary
+        : themeConfig.navTileUnselectedForegroundColor ?? cs.onSurface.withAlpha(_isHovering ? 220 : 160);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovering = true),
@@ -58,17 +66,17 @@ class _CrudoNavTileState extends State<CrudoNavTile> {
         margin: const EdgeInsets.symmetric(vertical: 2),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(borderRadius),
             splashColor: cs.primary.withOpacity(0.10),
             highlightColor: cs.primary.withOpacity(0.05),
             child: SizedBox(
-              height: widget.height,
+              height: height,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
@@ -76,10 +84,10 @@ class _CrudoNavTileState extends State<CrudoNavTile> {
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 400),
                       curve: Curves.easeOutCubic,
-                      width: 3,
-                      height: widget.selected ? 20 : 0,
+                      width: indicatorWidth,
+                      height: widget.selected ? indicatorHeight : 0,
                       decoration: BoxDecoration(
-                        color: cs.primary,
+                        color: themeConfig.navTileSelectedForegroundColor ?? cs.primary,
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
@@ -90,7 +98,7 @@ class _CrudoNavTileState extends State<CrudoNavTile> {
                       curve: Curves.easeOutCubic,
                       child: Icon(
                         widget.icon,
-                        size: widget.iconSize,
+                        size: iconSize,
                         color: fg,
                       ),
                     ),
