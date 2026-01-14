@@ -11,8 +11,8 @@ dependencies:
   animated_custom_dropdown:
     git: https://github.com/Murkrow02/flutter-custom-dropdown
   crud_o_core:
-    path: ../crud-o-core
-    #git: https://github.com/Murkrow02/crud-o-core
+    #path: ../crud-o-core
+    git: https://github.com/Murkrow02/crud-o-core
   #  animated_custom_dropdown:
   #    path: ../flutter-custom-dropdown
   animated_search_bar: ^2.7.2
