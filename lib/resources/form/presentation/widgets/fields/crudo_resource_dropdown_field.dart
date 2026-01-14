@@ -1,5 +1,4 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
-import 'package:crud_o_core/networking/rest/requests/paginated_request.dart';
 import 'package:crud_o_core/networking/rest/requests/rest_request.dart';
 import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
@@ -8,14 +7,16 @@ import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_future_d
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+/// A dropdown field that loads items from a Crudo resource repository.
+/// Automatically handles fetching items and supports search functionality.
 class CrudoResourceDropdownField<TResource extends CrudoResource<TModel>, TModel,
     TValue> extends StatelessWidget {
 
   /// Standard crud_o field configuration
   final CrudoFieldConfiguration config;
 
-  /// A custom decoration for the dropdown
-  final CustomDropdownDecoration decoration;
+  /// A custom decoration for the dropdown (uses theme if not provided)
+  final CustomDropdownDecoration? decoration;
   final Widget Function(TModel item) itemBuilder;
   final TValue Function(TModel item) valueBuilder;
 
@@ -28,17 +29,18 @@ class CrudoResourceDropdownField<TResource extends CrudoResource<TModel>, TModel
   final bool nullable;
   final int minSearchLength;
 
-  const CrudoResourceDropdownField(
-      {super.key,
-      required this.config,
-      required this.itemBuilder,
-      required this.valueBuilder,
-      this.selectedItem,
-      this.nullable = false,
-      this.searchHintText,
-      this.minSearchLength = 1,
-      this.customRequest,
-      this.decoration = const CustomDropdownDecoration()});
+  const CrudoResourceDropdownField({
+    super.key,
+    required this.config,
+    required this.itemBuilder,
+    required this.valueBuilder,
+    this.selectedItem,
+    this.nullable = false,
+    this.searchHintText,
+    this.minSearchLength = 1,
+    this.customRequest,
+    this.decoration,
+  });
 
   @override
   Widget build(BuildContext context) {

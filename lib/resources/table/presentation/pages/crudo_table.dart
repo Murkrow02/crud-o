@@ -18,6 +18,7 @@ import 'package:crud_o/resources/table/presentation/widgets/crudo_table_footer.d
 import 'package:crud_o_core/resources/crudo_resource.dart';
 import 'package:crud_o/resources/table/presentation/widgets/crudo_table_settings_popup.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:futuristic/futuristic.dart';
 import 'package:pluto_grid_plus/pluto_grid_plus.dart';
@@ -129,8 +130,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       columnMenuDelegate: CrudoTableColumnMenu(),
       onSorted: (PlutoGridOnSortedEvent event) =>
           _onTableSorted(event, context),
-      noRowsWidget: const Center(
-          child: Text('Nessun elemento', style: TextStyle(fontSize: 20))),
+      noRowsWidget: _buildEmptyStateWidget(context),
       onLoaded: (PlutoGridOnLoadedEvent event) async {
         var tableContext = context.readTableContext<TResource, TModel>();
         tableContext.tableManager = event.stateManager;
@@ -166,23 +166,56 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
   /// Wrapper when table is displayed as a widget
   Widget _buildWidgetWrapper(BuildContext context, Widget table,
       CrudoTableContext<TResource, TModel> tableContext) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            if (enableColumnHiding)
-              _buildColumnHidingButton(context, tableContext),
-            _buildCreateActionButton(context),
-          ],
-        ),
-        Container(
-          height: widgetHeight ?? MediaQuery.of(context).size.height * 0.5,
-          margin: const EdgeInsets.all(10),
-          child: _buildTable(context),
-        )
-      ],
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        // side: BorderSide(
+        //   color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.5),
+        // ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header with title and actions
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            child: Row(
+              children: [
+                Text(
+                  context.read<TResource>().pluralName(),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const Spacer(),
+                if (enableColumnHiding)
+                  _buildIconButtonWithTooltip(
+                    context: context,
+                    icon: Icons.view_column_outlined,
+                    tooltip: 'Gestisci colonne',
+                    onPressed: () => _showColumnSettings(context, tableContext),
+                  ),
+                if (filtersFormBuilder != null)
+                  _buildFiltersButton(context, tableContext),
+                _buildCreateActionButton(context),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Table content
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(12),
+              bottomRight: Radius.circular(12),
+            ),
+            child: SizedBox(
+              height: widgetHeight ?? MediaQuery.of(context).size.height * 0.5,
+              child: _buildTable(context),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -192,77 +225,191 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       CrudoTableContext<TResource, TModel> tableContext,
       ) {
     final themeConfig = CrudoConfiguration.theme();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: themeConfig.tableGridBackgroundColor ?? colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
-        foregroundColor: themeConfig.appBarForegroundColor,
-        elevation: themeConfig.appBarElevation,
+        backgroundColor: themeConfig.appBarBackgroundColor ?? colorScheme.surface,
+        foregroundColor: themeConfig.appBarForegroundColor ?? colorScheme.onSurface,
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
+        elevation: 0,
+        scrolledUnderElevation: 1,
         title: searchable
             ? _buildSearchBar(context)
-            : Text(context.read<TResource>().pluralName()),
+            : Text(
+                context.read<TResource>().pluralName(),
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
         actions: [
           if (enableColumnHiding)
-            _buildColumnHidingButton(context, tableContext),
-
-          _buildFiltersPopMenuButton(context),
-
-          // Only show the create button here if NOT floating
+            _buildIconButtonWithTooltip(
+              context: context,
+              icon: Icons.view_column_outlined,
+              tooltip: 'Gestisci colonne',
+              onPressed: () => _showColumnSettings(context, tableContext),
+            ),
+          if (filtersFormBuilder != null)
+            _buildFiltersButton(context, tableContext),
           if (!createButtonAsFab)
             _buildCreateActionButton(context),
+          const SizedBox(width: 8),
         ],
       ),
 
-      body: Container(
-        margin: const EdgeInsets.all(10),
-        child: tableWrapperBuilder != null
-            ? tableWrapperBuilder!(
-          _buildTable(context),
-          context.readTableContext<TResource, TModel>(),
-        )
-            : _buildTable(context),
+      body: Column(
+        children: [
+          // Active filters indicator
+          _buildActiveFiltersBar(context, tableContext),
+          // Main table content
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: tableWrapperBuilder != null
+                    ? tableWrapperBuilder!(
+                        _buildTable(context),
+                        context.readTableContext<TResource, TModel>(),
+                      )
+                    : _buildTable(context),
+              ),
+            ),
+          ),
+        ],
       ),
 
-      // Add FAB when enabled
+      // Enhanced FAB
       floatingActionButton: createButtonAsFab
           ? Futuristic<CrudoAction?>(
-        autoStart: true,
-        futureBuilder: () =>
-            context.read<TResource>().createAction(),
-        busyBuilder: (_) => const SizedBox(),
-        dataBuilder: (context, action) => action == null
-            ? const SizedBox()
-            : FloatingActionButton(
-          onPressed: () => _onCreateClicked(context),
-          child: Icon(action.icon),
-        ),
-      )
+              autoStart: true,
+              futureBuilder: () => context.read<TResource>().createAction(),
+              busyBuilder: (_) => const SizedBox(),
+              dataBuilder: (context, action) => action == null
+                  ? const SizedBox()
+                  : FloatingActionButton.extended(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        _onCreateClicked(context);
+                      },
+                      icon: Icon(action.icon),
+                      label: Text(action.label),
+                      elevation: 2,
+                    ),
+            )
           : null,
+    );
+  }
+
+  /// Build active filters indicator bar
+  Widget _buildActiveFiltersBar(BuildContext context,
+      CrudoTableContext<TResource, TModel> tableContext) {
+    return BlocBuilder<CrudoTableBloc, CrudoTableState>(
+      builder: (context, state) {
+        if (state is! TableLoadedState<TModel>) return const SizedBox();
+
+        final filters = tableContext.getFiltersData();
+        final activeFilters = filters.entries
+            .where((e) => e.value != null && e.value.toString().isNotEmpty)
+            .toList();
+
+        if (activeFilters.isEmpty) return const SizedBox();
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Icon(
+                Icons.filter_list,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              Text(
+                'Filtri attivi:',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              ...activeFilters.map((filter) => Chip(
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                label: Text(
+                  '${filter.key}: ${filter.value}',
+                  style: const TextStyle(fontSize: 11),
+                ),
+                deleteIcon: const Icon(Icons.close, size: 14),
+                onDeleted: () {
+                  final newFilters = Map<String, dynamic>.from(filters);
+                  newFilters.remove(filter.key);
+                  tableContext.setFilters(newFilters);
+                },
+              )),
+              TextButton.icon(
+                onPressed: () => tableContext.setFilters({}),
+                icon: const Icon(Icons.clear_all, size: 16),
+                label: const Text('Rimuovi tutti', style: TextStyle(fontSize: 12)),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
   /// Use a custom search bar to search the table
   Widget _buildSearchBar(BuildContext context) {
+    var themeConfig = CrudoConfiguration.theme();
     return BlocBuilder<CrudoTableBloc, CrudoTableState>(
       builder: (context, state) {
         return AnimatedSearchBar(
           label: context.read<TResource>().pluralName(),
-          labelStyle: const TextStyle(
-            fontSize: 20,
+          searchIcon: Icon(
+            Icons.search_rounded,
+            color: themeConfig.tableSearchIconColor ??
+                Theme.of(context).colorScheme.onSurface,
           ),
-          duration: const Duration(milliseconds: 300),
-          animationDuration: const Duration(milliseconds: 300),
+          closeIcon: Icon(
+            Icons.close_rounded,
+            color: themeConfig.tableSearchIconColor ??
+                Theme.of(context).colorScheme.onSurface,
+          ),
+          labelStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          duration: const Duration(milliseconds: 250),
+          animationDuration: const Duration(milliseconds: 250),
           searchDecoration: InputDecoration(
-            hintText: 'Cerca',
+            hintText: 'Cerca...',
             hintStyle: TextStyle(
-              color: Theme.of(context).colorScheme.onPrimary,
+              color: themeConfig.tableSearchBarHintColor ??
+                  Theme.of(context).colorScheme.onSurface,
             ),
             alignLabelWithHint: true,
             border: InputBorder.none,
           ),
-          height: 50,
+          height: 48,
           onFieldSubmitted: (value) {
             if (state is TableLoadedState<TModel>) {
+              HapticFeedback.selectionClick();
               context.read<CrudoTableBloc>().add(UpdateTableEvent(
                   request: state.request.copyWith(search: value, page: 1)));
             }
@@ -334,8 +481,8 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       title: '',
       field: 'resources.actions',
       frozen: PlutoColumnFrozen.end,
-      width: 10,
-      enableDropToResize: true,
+      width: 56,
+      enableDropToResize: false,
       enableColumnDrag: false,
       enableRowDrag: false,
       enableRowChecked: false,
@@ -348,7 +495,11 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         return Futuristic<List<CrudoAction>>(
           futureBuilder: () => _getActionsForItem(context, item),
           autoStart: true,
-          busyBuilder: (_) => const CircularProgressIndicator.adaptive(),
+          busyBuilder: (_) => const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator.adaptive(strokeWidth: 2),
+          ),
           dataBuilder: (context, actions) => actions == null || actions.isEmpty
               ? const SizedBox()
               : _buildActionsMenu(context, columnContext, item, actions),
@@ -362,33 +513,102 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
       PlutoColumnRendererContext columnContext,
       TModel item,
       List<CrudoAction> actions) {
-    return PopupMenuButton(
-        padding: const EdgeInsets.only(right: 10),
-        icon: Icon(Icons.more_vert,
-            color: Theme.of(context).colorScheme.onSurface),
-        itemBuilder: (context) => actions.map((action) {
-              return PopupMenuItem(
-                onTap: () async {
-                  action
-                      .execute(context,
-                          data: {
-                            'id': columnContext.cell.value.id.toString(),
-                            'model': item,
-                          }..addAll(actionData ?? {}))
-                      .then((res) {
-                    var actionResult = res as CrudoActionResult;
-                    if (actionResult.refreshTable == true) {
-                      refreshTable(context);
-                    }
-                  });
-                },
-                child: ListTile(
-                  leading: Icon(action.icon, color: action.color),
-                  title:
-                      Text(action.label, style: TextStyle(color: action.color)),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => _showActionsBottomSheet(context, columnContext, item, actions),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Icon(
+            Icons.more_horiz_rounded,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            size: 22,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showActionsBottomSheet(
+      BuildContext context,
+      PlutoColumnRendererContext columnContext,
+      TModel item,
+      List<CrudoAction> actions) {
+    HapticFeedback.mediumImpact();
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle indicator
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              );
-            }).toList());
+                // Actions list
+                ...actions.map((action) => ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: (action.color ?? Theme.of(context).colorScheme.primary).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      action.icon,
+                      color: action.color ?? Theme.of(context).colorScheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    action.label,
+                    style: TextStyle(
+                      color: action.color,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(bottomSheetContext);
+                    HapticFeedback.selectionClick();
+                    action.execute(
+                      context,
+                      data: {
+                        'id': columnContext.cell.value.id.toString(),
+                        'model': item,
+                      }..addAll(actionData ?? {}),
+                    ).then((res) {
+                      var actionResult = res as CrudoActionResult;
+                      if (actionResult.refreshTable == true) {
+                        refreshTable(context);
+                      }
+                    });
+                  },
+                )),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   /// Map the model to the cells of the table
@@ -493,6 +713,160 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
     context.read<CrudoTableBloc>().add(LoadTableEvent());
   }
 
+  /// Build empty state widget for when table has no rows
+  Widget _buildEmptyStateWidget(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.inbox_rounded,
+                size: 40,
+                color: colorScheme.primary.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Nessun elemento',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.8),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Non ci sono dati da visualizzare',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.5),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Helper method to build icon button with tooltip
+  Widget _buildIconButtonWithTooltip({
+    required BuildContext context,
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            HapticFeedback.selectionClick();
+            onPressed();
+          },
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              icon,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Show column settings dialog
+  void _showColumnSettings(BuildContext context, CrudoTableContext<TResource, TModel> tableContext) {
+    showDialog(
+      context: context,
+      builder: (context) => CrudoTableSettingsPopup(
+        settingsController: tableContext.settingsController,
+      ),
+    );
+  }
+
+  /// Build filters button with badge indicator
+  Widget _buildFiltersButton(BuildContext context, CrudoTableContext<TResource, TModel> tableContext) {
+    return BlocBuilder<CrudoTableBloc, CrudoTableState>(
+      builder: (context, state) {
+        final filters = tableContext.getFiltersData();
+        final activeCount = filters.entries
+            .where((e) => e.value != null && e.value.toString().isNotEmpty)
+            .length;
+
+        return Stack(
+          children: [
+            _buildIconButtonWithTooltip(
+              context: context,
+              icon: Icons.filter_alt_outlined,
+              tooltip: 'Filtri',
+              onPressed: () => _showFiltersPopup(context, tableContext),
+            ),
+            if (activeCount > 0)
+              Positioned(
+                right: 4,
+                top: 4,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  child: Text(
+                    '$activeCount',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Show filters popup
+  void _showFiltersPopup(BuildContext context, CrudoTableContext<TResource, TModel> tableContext) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (bottomSheetContext) {
+        return CrudoTableFiltersPopup<TResource, TModel>(
+          tableContext: tableContext,
+          filtersFormBuilder: filtersFormBuilder!,
+        );
+      },
+    );
+  }
+
   Widget _buildColumnHidingButton(
       BuildContext context, CrudoTableContext<TResource, TModel> tableContext) {
     return IconButton(
@@ -515,9 +889,31 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
         busyBuilder: (_) => const SizedBox(),
         dataBuilder: (context, action) => action == null
             ? const SizedBox()
-            : IconButton(
-                icon: Icon(action.icon),
-                onPressed: () => _onCreateClicked(context),
+            : Tooltip(
+                message: action.label,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _onCreateClicked(context);
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        action.icon,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                ),
               ));
   }
 

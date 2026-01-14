@@ -228,9 +228,14 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           },
           child: Scaffold(
               appBar: AppBar(
-                backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
-                foregroundColor: themeConfig.appBarForegroundColor,
+                backgroundColor: themeConfig.appBarBackgroundColor ??
+                    Theme.of(context).colorScheme.surface,
+                foregroundColor: themeConfig.appBarForegroundColor ??
+                    Theme.of(context).colorScheme.onSurface,
                 elevation: themeConfig.appBarElevation,
+                iconTheme: IconThemeData(
+                    color:
+                        Theme.of(context).colorScheme.onSurface),
                 title: Text(_getFormTitle(context)),
                 actions: [
                   if (state is FormSavingState)
@@ -275,7 +280,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Padding(
                   padding: const EdgeInsets.only(left: 25),
@@ -300,8 +305,8 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   Widget _buildWidgetPlainWrapper(BuildContext context, Widget form) {
     return BlocBuilder<CrudoFormBloc<TResource, TModel>, CrudoFormState>(
         builder: (context, state) {
-          return form;
-        });
+      return form;
+    });
   }
 
   /// These are errors that are not related to a specific field
@@ -345,6 +350,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
     return [
       // Custom user actions
       if (actionsBuilder != null) ...actionsBuilder!(context),
+      if (actionsBuilder != null) const SizedBox(width: 8),
 
       // Enter edit mode action (only if able to edit)
       if (context.readResourceContext().getCurrentOperationType() ==
@@ -359,7 +365,7 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
             autoStart: true,
             busyBuilder: (_) => const CircularProgressIndicator.adaptive(),
             dataBuilder: (context, canEdit) {
-              if(canEdit == null || canEdit == false) {
+              if (canEdit == null || canEdit == false) {
                 return const SizedBox();
               }
               return IconButton(
@@ -384,13 +390,10 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
   /// Called when the save button is pressed
   void _onSave(BuildContext context) {
     try {
-
-
       if (customSaveAction != null) {
         customSaveAction!(context);
         return;
       }
-
 
       // Validate form fields TODO
 
@@ -398,31 +401,24 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
       var saveData = context.readFormContext().exportFormData();
       context.readFormContext().validationErrors = {};
 
-
-
       // Call before validate callback
       if (beforeValidate != null) {
         saveData = beforeValidate!(context, saveData);
       }
-
 
       // Call before save callback
       if (beforeSave != null) {
         saveData = beforeSave!.call(context, saveData);
       }
 
-
       // Edit
       if (context.readResourceContext().getCurrentOperationType() ==
           ResourceOperationType.edit) {
         if (onUpdate != null) {
-
           context.readFormContext().formBloc.add(CustomUpdateEvent<TModel>(
               formData: context.readFormContext().getFormData(),
               updateFunction: onUpdate!(context, saveData)));
-
         } else {
-
           context.read<CrudoFormBloc<TResource, TModel>>().add(
                 UpdateFormModelEvent(
                     updateData: saveData,
@@ -430,30 +426,22 @@ class CrudoForm<TResource extends CrudoResource<TModel>, TModel extends Object>
                     id: context.readResourceContext().id),
               );
         }
-
       }
 
       // Create
       if (context.readResourceContext().getCurrentOperationType() ==
           ResourceOperationType.create) {
         if (onCreate != null) {
-
-
           context.readFormContext().formBloc.add(CustomCreateEvent<TModel>(
               formData: context.readFormContext().getFormData(),
               createFunction: onCreate!(context, saveData)));
-
-
         } else {
-
           context.read<CrudoFormBloc<TResource, TModel>>().add(
                 CreateFormModelEvent(
                     formData: context.readFormContext().getFormData(),
                     createData: saveData,
                     resourceContext: context.read()),
               );
-
-
         }
       }
     } catch (e, s) {

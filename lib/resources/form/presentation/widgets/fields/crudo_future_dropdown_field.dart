@@ -1,16 +1,16 @@
 import 'package:animated_custom_dropdown/custom_dropdown.dart';
 import 'package:collection/collection.dart';
-import 'package:crud_o_core/lang/temp_lang.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
-import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:futuristic/futuristic.dart';
 
-import 'crudo_fields.dart';
 
+/// A styled dropdown field that loads items from a Future.
+/// Supports search functionality and uses theme configuration for consistent styling.
 class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final CrudoFieldConfiguration config;
   final String errorText;
@@ -23,26 +23,76 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   final String? searchHintText;
   final int minSearchLength;
   final bool retry;
-  final CustomDropdownDecoration decoration;
+  final CustomDropdownDecoration? decoration;
 
-  const CrudoFutureDropdownField(
-      {super.key,
-      required this.config,
-      required this.itemBuilder,
-      required this.valueBuilder,
-      required this.futureProvider,
-      this.searchFuture,
-      this.searchHintText,
-      this.minSearchLength = 1,
-      this.multiple = false,
-      this.nullable = false,
-      this.retry = true,
-      this.decoration = const CustomDropdownDecoration(),
-      this.errorText = 'Errore nel caricamento dei dati'});
+  const CrudoFutureDropdownField({
+    super.key,
+    required this.config,
+    required this.itemBuilder,
+    required this.valueBuilder,
+    required this.futureProvider,
+    this.searchFuture,
+    this.searchHintText,
+    this.minSearchLength = 1,
+    this.multiple = false,
+    this.nullable = false,
+    this.retry = true,
+    this.decoration,
+    this.errorText = 'Error loading data',
+  });
+
+  /// Creates a themed CustomDropdownDecoration based on theme configuration.
+  CustomDropdownDecoration _getThemedDecoration(BuildContext context) {
+    final theme = CrudoConfiguration.theme();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final fillColor = theme.dropdownBackgroundColor ??
+        theme.fieldFillColor ??
+        colorScheme.surface;
+    final borderColor = theme.dropdownBorderColor ??
+        theme.fieldBorderColor ??
+        colorScheme.outline.withOpacity(0.3);
+    final expandedBorderColor = theme.dropdownExpandedBorderColor ??
+        theme.fieldFocusedBorderColor ??
+        colorScheme.primary.withOpacity(0.6);
+
+    return CustomDropdownDecoration(
+      closedFillColor: fillColor,
+      expandedFillColor: fillColor,
+      closedBorder: Border.all(
+        color: borderColor,
+        width: theme.fieldBorderWidth,
+      ),
+      expandedBorder: Border.all(
+        color: expandedBorderColor,
+        width: theme.fieldFocusedBorderWidth,
+      ),
+      closedBorderRadius: BorderRadius.circular(theme.dropdownBorderRadius),
+      expandedBorderRadius: BorderRadius.circular(theme.dropdownBorderRadius),
+      closedSuffixIcon: Icon(
+        Icons.keyboard_arrow_down_rounded,
+        color: colorScheme.onSurface.withOpacity(0.5),
+      ),
+      expandedSuffixIcon: Icon(
+        Icons.keyboard_arrow_up_rounded,
+        color: colorScheme.primary,
+      ),
+      hintStyle: theme.fieldHintStyle ?? TextStyle(
+        color: colorScheme.onSurface.withOpacity(0.4),
+      ),
+      listItemStyle: TextStyle(
+        color: colorScheme.onSurface,
+        fontSize: 15,
+      ),
+      headerStyle: TextStyle(
+        color: colorScheme.onSurface,
+        fontSize: 15,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Clear data if we got a new future
     _clearDataIfNewFuture(context);
 
     return CrudoField(
@@ -63,8 +113,6 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       errorBuilder: (context, error, retry) =>
           _buildError(context, error, retry),
       dataBuilder: (context, data) {
-        // At first use the data from the future, then use the data from the form in case devs wants to dynamically change the items
-        // It is important to set dropdown data also in the view mode if dev wants to take data from the form in the view mode
         if (context.readFormContext().getDropdownData(config.name) == null &&
             data!.isNotEmpty) {
           context.readFormContext().setDropdownData(config.name, data);
@@ -83,7 +131,12 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
             config: config,
             child: initialItem != null
                 ? itemBuilder(initialItem)
-                : const Text('N/A'),
+                : Text(
+                    '—',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
           );
         }
       },
@@ -95,19 +148,60 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       print(error);
     }
 
+    final theme = CrudoConfiguration.theme();
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       width: double.infinity,
-      color: Theme.of(context).colorScheme.error.withOpacity(0.4),
+      decoration: BoxDecoration(
+        color: colorScheme.error.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(theme.fieldBorderRadius),
+        border: Border.all(
+          color: colorScheme.error.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(errorText),
-          const SizedBox(height: 8),
-          if (this.retry)
-            ElevatedButton(
-              onPressed: retry,
-              child: const Text('Riprova'),
+          Row(
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                color: colorScheme.error,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  errorText,
+                  style: TextStyle(
+                    color: colorScheme.error,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (this.retry) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: TextButton.icon(
+                onPressed: retry,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Retry'),
+                style: TextButton.styleFrom(
+                  foregroundColor: colorScheme.error,
+                  backgroundColor: colorScheme.error.withOpacity(0.1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
             ),
+          ],
         ],
       ),
     );
@@ -144,18 +238,43 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
       throw UnimplementedError('Multiple selection not implemented yet');
     }
 
-    // Little placeholder for lazy loading display
+    final theme = CrudoConfiguration.theme();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Modern loading placeholder
     if (loading) {
-      return TextField(
-        enabled: false,
-        decoration: defaultDecoration(context).copyWith(
-          hintText: 'Caricamento...',
+      return Container(
+        padding: theme.fieldContentPadding,
+        decoration: BoxDecoration(
+          color: theme.fieldFillColor ?? colorScheme.surface,
+          borderRadius: BorderRadius.circular(theme.dropdownBorderRadius),
+          border: Border.all(
+            color: theme.fieldBorderColor ?? colorScheme.outline.withOpacity(0.3),
+            width: theme.fieldBorderWidth,
+          ),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colorScheme.primary.withOpacity(0.6),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Loading...',
+              style: TextStyle(
+                color: colorScheme.onSurface.withOpacity(0.5),
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    // Decide whether to use `.searchRequest` or the regular constructor
-    bool useSearchRequest = true; // Or set the condition based on your logic
     return _buildCustomDropdown(
         items: items,
         context: context,
@@ -203,6 +322,10 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
   }) {
     // Fire handleDropdownChange if the value is not in the items list
     _handleDropdownChange(context, config, initialItem, skipRebuild: true);
+
+    final themedDecoration = decoration ?? _getThemedDecoration(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         Expanded(
@@ -210,19 +333,24 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
             builder: (context) {
               if (searchFuture != null) {
                 return CustomDropdown<TModel>.searchRequest(
-                  decoration: decoration,
+                  decoration: themedDecoration,
                   minSearchLength: minSearchLength,
-                  searchHintText: searchHintText ?? 'Cerca...',
+                  searchHintText: searchHintText ?? 'Search...',
                   initialItem: initialItem,
                   enabled: config.shouldEnableField(context),
-                  hintText: config.label,
+                  hintText: config.placeholder ?? config.label,
                   items: items,
                   listItemBuilder: (context, item, isSelected, onItemSelect) =>
                       itemBuilder(item),
                   headerBuilder: (context, selectedItem, enabled) =>
                       initialItem != null
                           ? itemBuilder(initialItem)
-                          : Text(config.label ?? config.name),
+                          : Text(
+                              config.placeholder ?? config.label ?? config.name,
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.4),
+                              ),
+                            ),
                   onChanged: (value) => _handleDropdownChange(
                       context, config, value,
                       notifyValueChanged: true),
@@ -233,15 +361,20 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
                 return CustomDropdown<TModel>(
                   initialItem: initialItem,
                   enabled: config.shouldEnableField(context),
-                  hintText: config.label,
+                  hintText: config.placeholder ?? config.label,
                   items: items,
-                  decoration: decoration,
+                  decoration: themedDecoration,
                   listItemBuilder: (context, item, isSelected, onItemSelect) =>
                       itemBuilder(item),
                   headerBuilder: (context, selectedItem, enabled) =>
                       initialItem != null
                           ? itemBuilder(initialItem)
-                          : Text(config.label ?? config.name),
+                          : Text(
+                              config.placeholder ?? config.label ?? config.name,
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.4),
+                              ),
+                            ),
                   onChanged: (value) => _handleDropdownChange(
                       context, config, value,
                       notifyValueChanged: true),
@@ -250,19 +383,27 @@ class CrudoFutureDropdownField<TModel, TValue> extends StatelessWidget {
             },
           ),
         ),
-        Visibility(
-          visible: nullable,
-          child: SizedBox(
-            width: 40,
+        if (nullable)
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
             child: IconButton(
-              icon: const Icon(Icons.clear),
+              icon: Icon(
+                Icons.clear_rounded,
+                color: colorScheme.onSurface.withOpacity(0.4),
+                size: 20,
+              ),
               onPressed: () {
                 context.readFormContext().set(config.name, null);
                 context.readFormContext().rebuild();
               },
+              style: IconButton.styleFrom(
+                backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ),
-        ),
       ],
     );
   }

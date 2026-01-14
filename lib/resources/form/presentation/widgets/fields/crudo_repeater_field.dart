@@ -1,20 +1,14 @@
-import 'package:crud_o_core/lang/temp_lang.dart';
-import 'package:crud_o_core/resources/crudo_resource.dart';
+import 'package:crud_o_core/configuration/crudo_theme_config.dart';
 import 'package:crud_o/resources/form/presentation/widgets/fields/crudo_field.dart';
 import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
-import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:crud_o_core/resources/resource_context.dart';
 import 'package:crud_o_core/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
-/*
-*   A field that repeats n times a child form
-*   The value of this field is how many items are added
-*   The value is null if no items are added
-*
-*   This is really convoluted shit, fix when spare time ;)
-*/
+/// A field that repeats n times a child form with modern styling.
+/// Uses theme configuration for consistent styling.
 class CrudoRepeaterField extends StatefulWidget {
   final CrudoFieldConfiguration config;
   final Widget Function(BuildContext context, int index) itemBuilder;
@@ -23,6 +17,7 @@ class CrudoRepeaterField extends StatefulWidget {
   final bool showAddButton;
   final Decoration? containerDecoration;
   final CrudoRepeaterController? controller;
+  final String addButtonLabel;
 
   const CrudoRepeaterField({
     super.key,
@@ -33,6 +28,7 @@ class CrudoRepeaterField extends StatefulWidget {
     this.showAddButton = true,
     this.containerDecoration,
     this.controller,
+    this.addButtonLabel = 'Add item',
   });
 
   @override
@@ -46,23 +42,23 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
   void initState() {
     super.initState();
 
-    // Bind controller to this state if provided
     widget.controller?.bind(this);
 
-    // Initialize the repeater with the initial item count
     _itemsCount = context.readResourceContext().getCurrentOperationType() ==
             ResourceOperationType.view
-        ? 0 // WHY?
+        ? 0
         : (context.readFormContext().get('${widget.config.name}_count')
                 as int? ??
-            widget
-                .initialItemCount); // When form gets rebuilt this gets reset so make sure to use itemsCount from the form context to keep it persistent across rebuilds
+            widget.initialItemCount);
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = CrudoConfiguration.theme();
+    final colorScheme = Theme.of(context).colorScheme;
+
     var alreadyFlattened = context.readFormContext().getExtra(
-        '${widget.config.name}_flattened'); // Temp logic to flatten data
+        '${widget.config.name}_flattened');
 
     if ((widget.autoFlattenData && alreadyFlattened == null) ||
         !alreadyFlattened) {
@@ -75,31 +71,34 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
           .setExtra('${widget.config.name}_flattened', true);
     }
 
+    final borderColor = theme.repeaterBorderColor ??
+        colorScheme.outline.withOpacity(0.25);
+    final backgroundColor = theme.repeaterBackgroundColor ??
+        colorScheme.surface.withOpacity(0.5);
+
     return CrudoField(
       config: widget.config.copyWith(name: '${widget.config.name}_count'),
       viewModeBuilder: (context) => CrudoViewField(
           config: widget.config, child: _buildRepeaterItems(context)),
       editModeBuilder: (context, onChanged) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          padding: const EdgeInsets.all(16),
           decoration: widget.containerDecoration ??
               BoxDecoration(
+                color: backgroundColor,
                 border: Border.all(
-                  color: Colors.grey.withOpacity(0.5),
-                  width: 1,
+                  color: borderColor,
+                  width: 1.5,
                 ),
-                borderRadius: BorderRadius.circular(5),
+                borderRadius: BorderRadius.circular(theme.repeaterBorderRadius),
               ),
           child: Column(
             children: [
               _buildRepeaterItems(context),
               if (widget.showAddButton && widget.config.shouldEnableField(context)) ...[
-                const SizedBox(height: 8),
-                IconButton(
-                  onPressed: () => _addRepeaterItem(),
-                  icon:  Icon(Icons.add_circle, color: Theme.of(context).primaryColor, size: 40),
-                ),
+                const SizedBox(height: 12),
+                _buildAddButton(context, theme, colorScheme),
               ]
             ],
           ),
@@ -108,50 +107,125 @@ class _CrudoRepeaterFieldState extends State<CrudoRepeaterField> {
     );
   }
 
+  Widget _buildAddButton(BuildContext context, CrudoThemeConfig theme, ColorScheme colorScheme) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _addRepeaterItem,
+        borderRadius: BorderRadius.circular(theme.fieldBorderRadius),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(theme.fieldBorderRadius),
+            border: Border.all(
+              color: colorScheme.primary.withOpacity(0.3),
+              width: 1.5,
+              strokeAlign: BorderSide.strokeAlignInside,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.add_rounded,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                widget.addButtonLabel,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildRepeaterItems(BuildContext context) {
-    // Render placeholder if 0 items
+    final theme = CrudoConfiguration.theme();
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (_itemsCount == 0 && widget.config.placeholder != null) {
-      return Center(
-        child: Text(
-          widget.config.placeholder!,
-          style: const TextStyle(
-            color: Colors.grey,
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Column(
+            children: [
+              Icon(
+                Icons.inbox_rounded,
+                size: 32,
+                color: colorScheme.onSurface.withOpacity(0.3),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                widget.config.placeholder!,
+                style: TextStyle(
+                  color: colorScheme.onSurface.withOpacity(0.5),
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
         ),
       );
     }
 
-    return ListView.builder(
+    return ListView.separated(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: _itemsCount,
+      separatorBuilder: (context, index) => Divider(
+        height: 24,
+        color: colorScheme.outline.withOpacity(0.15),
+      ),
       itemBuilder: (context, index) {
-        return ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 0.0, vertical: 0.0),
-          dense: true,
-          title: widget.itemBuilder(context, index),
-          trailing: SizedBox(
-            width: 20,
-            height: 20,
-            child: Visibility(
-              visible:
-                  context.readResourceContext().getCurrentOperationType() !=
-                      ResourceOperationType.view && widget.config.shouldEnableField(context),
-              child: IconButton(
-                style: ButtonStyle(
-                  padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
-                  backgroundColor: MaterialStateProperty.all(
-                      Theme.of(context).colorScheme.error),
-                ),
-                onPressed: () => _removeRepeaterItem(index),
-                icon: Icon(Icons.remove,
-                    size: 14, color: Theme.of(context).colorScheme.onError),
-              ),
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: widget.itemBuilder(context, index),
             ),
-          ),
+            if (context.readResourceContext().getCurrentOperationType() !=
+                    ResourceOperationType.view &&
+                widget.config.shouldEnableField(context))
+              Padding(
+                padding: const EdgeInsets.only(left: 8, top: 8),
+                child: _buildRemoveButton(context, index, theme, colorScheme),
+              ),
+          ],
         );
       },
+    );
+  }
+
+  Widget _buildRemoveButton(BuildContext context, int index, CrudoThemeConfig theme, ColorScheme colorScheme) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _removeRepeaterItem(index),
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: theme.repeaterRemoveButtonSize,
+          height: theme.repeaterRemoveButtonSize,
+          decoration: BoxDecoration(
+            color: colorScheme.error.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            Icons.close_rounded,
+            size: 16,
+            color: colorScheme.error,
+          ),
+        ),
+      ),
     );
   }
 

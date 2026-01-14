@@ -2,12 +2,14 @@ import 'package:crud_o_core/resources/actions/crudo_action.dart';
 import 'package:crud_o/resources/form/data/crudo_form_context.dart';
 import 'package:crud_o/resources/form/presentation/widgets/crudo_view_field.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_errorize.dart';
-import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_field_wrapper.dart';
 import 'package:crud_o/resources/form/presentation/widgets/wrappers/crudo_labelize.dart';
+import 'package:crud_o_core/configuration/crudo_configuration.dart';
 import 'package:crud_o_core/resources/resource_context.dart';
 import 'package:crud_o_core/resources/resource_operation_type.dart';
 import 'package:flutter/material.dart';
 
+/// The base widget for all form fields in the Crudo framework.
+/// Handles view mode, edit mode, validation errors, labels, and actions.
 class CrudoField extends StatelessWidget {
   final Widget Function(BuildContext context,
           void Function(BuildContext context, dynamic value) onChanged)
@@ -26,8 +28,9 @@ class CrudoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = CrudoConfiguration.theme();
 
-    if(!config.shouldRenderField(context)) {
+    if (!config.shouldRenderField(context)) {
       return const SizedBox.shrink();
     }
 
@@ -36,13 +39,14 @@ class CrudoField extends StatelessWidget {
         'You can provide either viewModeBuilder or viewModeValue, not both');
 
     // Set default value if no value is provided
-    if(config.defaultValue != null && context.readFormContext().get(config.name) == null) {
+    if (config.defaultValue != null &&
+        context.readFormContext().get(config.name) == null) {
       context.readFormContext().set(config.name, config.defaultValue);
     }
 
     return Container(
       key: config.getFieldKey(context),
-      padding: config.padding ?? const EdgeInsets.symmetric(vertical: 10),
+      padding: config.padding ?? theme.fieldContainerPadding,
       child: Row(
         children: [
           Expanded(
@@ -54,27 +58,59 @@ class CrudoField extends StatelessWidget {
                 : CrudoErrorize(
                     config: config,
                     child: CrudoLabelize(
-                        label: config.label ?? config.name,
-                        child: editModeBuilder(context, _onChanged)),
+                      label: config.label ?? config.name,
+                      isRequired: config.required,
+                      child: editModeBuilder(context, _onChanged),
+                    ),
                   ),
           ),
           if (config.actions.isNotEmpty)
-            for (var action in config.actions)
-              IconButton(
-                icon: Icon(action.icon),
-                onPressed: () => action.execute(context),
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var action in config.actions)
+                    _buildActionButton(context, action),
+                ],
               ),
+            ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context, CrudoAction action) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(left: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: IconButton(
+        icon: Icon(
+          action.icon,
+          size: 20,
+          color: colorScheme.primary,
+        ),
+        onPressed: () => action.execute(context),
+        splashRadius: 20,
+        tooltip: action.label,
       ),
     );
   }
 
   Widget _defaultViewModeBuilder(BuildContext context) {
     return CrudoViewField(
-        config: config,
-        child: Text(viewModeValue ??
+      config: config,
+      child: Text(
+        viewModeValue ??
             context.readFormContext().get(config.name)?.toString() ??
-            ''));
+            '—',
+      ),
+    );
   }
 
   void _onChanged(BuildContext context, dynamic value) {

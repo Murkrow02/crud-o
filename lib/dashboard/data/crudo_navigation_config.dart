@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 
 class CrudoNavigationConfig {
+  final Widget? appBarTitle;
   final Widget? afterAvatar;
   final Widget? beforeLogout;
   final Future<CrudoUser> Function()? getUserData;
@@ -10,6 +11,7 @@ class CrudoNavigationConfig {
   final List<CrudoExtraNavItem> extraItems;
 
   const CrudoNavigationConfig({
+    this.appBarTitle,
     this.afterAvatar,
     this.beforeLogout,
     this.getUserData,

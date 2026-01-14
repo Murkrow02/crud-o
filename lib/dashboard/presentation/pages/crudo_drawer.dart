@@ -99,13 +99,13 @@ class _CrudoDrawerState extends State<CrudoDrawer> {
 
     return AppBar(
       backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
-      foregroundColor: themeConfig.appBarForegroundColor,
+      foregroundColor: themeConfig.appBarForegroundColor ?? Theme.of(context).colorScheme.onSurface,
       elevation: themeConfig.appBarElevation,
       leading: IconButton(
-        icon: const Icon(Icons.menu_rounded),
+        icon: Icon(Icons.menu_rounded, color: themeConfig.appBarForegroundColor ?? Theme.of(context).colorScheme.onSurface),
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
       ),
-      title: const Text(''),
+      title: widget.config?.appBarTitle ?? const SizedBox.shrink()
     );
   }
 
