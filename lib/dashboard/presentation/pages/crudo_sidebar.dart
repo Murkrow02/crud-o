@@ -121,6 +121,15 @@ class _CrudoSideBarState extends State<CrudoSideBar> {
                                   return;
                                 }
 
+                                // If already selected and replaceOnReselect is true, re-navigate
+                                if (selected && e.replaceOnReselect) {
+                                  _contentNavKey.currentState!.pushNamedAndRemoveUntil(
+                                    e.routeName,
+                                    (route) => false,
+                                  );
+                                  return;
+                                }
+
                                 // NAVIGATION mode (stack cleared like resources)
                                 _go(e.routeName);
                               },
