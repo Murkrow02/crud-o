@@ -407,7 +407,7 @@ class CrudoTable<TResource extends CrudoResource<TModel>, TModel>
             border: InputBorder.none,
           ),
           height: 48,
-          onFieldSubmitted: (value) {
+          onChanged: (value) {
             if (state is TableLoadedState<TModel>) {
               HapticFeedback.selectionClick();
               context.read<CrudoTableBloc>().add(UpdateTableEvent(
