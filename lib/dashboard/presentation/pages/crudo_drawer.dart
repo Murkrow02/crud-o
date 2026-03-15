@@ -98,14 +98,14 @@ class _CrudoDrawerState extends State<CrudoDrawer> {
     final themeConfig = CrudoConfiguration.theme();
 
     return AppBar(
-      backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
-      foregroundColor: themeConfig.appBarForegroundColor ?? Theme.of(context).colorScheme.onSurface,
-      elevation: themeConfig.appBarElevation,
-      leading: IconButton(
-        icon: Icon(Icons.menu_rounded, color: themeConfig.appBarForegroundColor ?? Theme.of(context).colorScheme.onSurface),
-        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-      ),
-      title: widget.config?.appBarTitle ?? const SizedBox.shrink()
+        backgroundColor: themeConfig.appBarBackgroundColor ?? Theme.of(context).colorScheme.surface,
+        foregroundColor: themeConfig.appBarForegroundColor ?? Theme.of(context).colorScheme.onSurface,
+        elevation: themeConfig.appBarElevation,
+        leading: IconButton(
+          icon: Icon(Icons.menu_rounded, color: themeConfig.appBarForegroundColor ?? Theme.of(context).colorScheme.onSurface),
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        ),
+        title: widget.config?.appBarTitle ?? const SizedBox.shrink()
     );
   }
 
@@ -195,12 +195,18 @@ class _CrudoDrawerState extends State<CrudoDrawer> {
               final index = int.parse(match.group(1)!);
               final registered = context.read<RegisteredResources>();
 
-              if (index >= 0 && index < registered.tables.length) {
-                final tablePage = registered.tables[index];
-                return MaterialPageRoute(
-                  settings: settings,
-                  builder: (_) => tablePage,
-                );
+              // FIX: Use index on the resources list, not the tables list,
+              // to ensure perfect alignment with _routeNameOfResource
+              if (index >= 0 && index < registered.resources.length) {
+                final resource = registered.resources[index];
+
+                // Double-check that this resource actually has a table page
+                if (resource.tablePage != null) {
+                  return MaterialPageRoute(
+                    settings: settings,
+                    builder: (_) => resource.tablePage!,
+                  );
+                }
               }
             }
 
